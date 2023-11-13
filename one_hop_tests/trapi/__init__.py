@@ -3,6 +3,7 @@ Code to submit OneHop tests to TRAPI
 """
 from sys import stderr
 from typing import Optional, Dict, Set
+
 from reasoner_validator.validator import TRAPIResponseValidator
 from reasoner_validator.report import ValidationReporter
 from reasoner_validator.trapi import call_trapi, TRAPISchemaValidator
@@ -42,17 +43,11 @@ class UnitTestReport(ValidationReporter):
     Not to be confused with the translator.sri.testing.report_db.TestReport, which is the comprehensive set
     of all JSON reports from a single SRI Testing harness test run.
     """
-    def __init__(
-            self,
-            test_case: Dict,
-            test_name: str,
-            strict_validation: Optional[bool] = None
-    ):
+    def __init__(self, test_case: Dict, test_name: str):
         error_msg_prefix = generate_test_error_msg_prefix(test_case, test_name=test_name)
         ValidationReporter.__init__(
             self,
-            prefix=error_msg_prefix,
-            strict_validation=strict_validation
+            prefix=error_msg_prefix
         )
         self.messages: Dict[str, Set[str]] = {
             "skipped": set(),
@@ -62,10 +57,8 @@ class UnitTestReport(ValidationReporter):
             "info": set()
         }
 
-    def get_messages(self) -> Dict[str, Set[str]]:
-        # TODO: Maybe need to convert the Set values to List values,
-        #       for ease of JSON serialization later
-        return self.messages
+    def get_messages(self) -> Dict[str, List[str]]:
+        return {test_name: list(message_set) for test_name, message_set in self.messages.items()}
 
     def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
         """
@@ -141,36 +134,35 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-async def execute_trapi_lookup(case, creator, rbag, test_report: UnitTestReport):
+def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
-    :param case: input data test case
-    :param creator: unit test-specific query message creator
-    :param rbag: dictionary of results
-    :param test_report: UnitTestReport(ValidationReporter), class wrapper object for asserting and reporting errors
-
-    :return: None
+    :param testcase: input data test case
+    :param creator: unit test-specific TRAPI query message creator
+    :return: results: Dict of results
     """
+    test_report: UnitTestReport = UnitTestReport(test_case=testcase, test_name=creator.__name__)
+
     trapi_request: Optional[Dict]
     output_element: Optional[str]
     output_node_binding: Optional[str]
 
-    trapi_request, output_element, output_node_binding = creator(case)
+    trapi_request, output_element, output_node_binding = creator(testcase)
 
     if not trapi_request:
         # output_element and output_node_binding were
         # expropriated by the 'creator' to return error information
         context = output_element.split("|")
         test_report.report(
-            "critical.trapi.request.invalid",
+            code="critical.trapi.request.invalid",
             identifier=context[1],
             context=context[0],
             reason=output_node_binding
         )
     else:
-        trapi_version = case['trapi_version']
-        biolink_version = case['biolink_version']
+        trapi_version = testcase['trapi_version']
+        biolink_version = testcase['biolink_version']
 
         # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
         validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=trapi_version)
@@ -179,22 +171,22 @@ async def execute_trapi_lookup(case, creator, rbag, test_report: UnitTestReport)
         if not test_report.has_messages():
             # if no messages are reported, then continue with the validation
 
-            if 'ara_source' in case and case['ara_source']:
+            if 'ara_source' in testcase and testcase['ara_source']:
                 # sanity check!
-                assert 'kp_source' in case and case['kp_source']
+                assert 'kp_source' in testcase and testcase['kp_source']
 
                 # Here, we need annotate the TRAPI request query graph to
                 # constrain an ARA query to the test case specified 'kp_source'
                 trapi_request = constrain_trapi_request_to_kp(
-                    trapi_request=trapi_request, kp_source=case['kp_source']
+                    trapi_request=trapi_request, kp_source=testcase['kp_source']
                 )
 
             # Make the TRAPI call to the Case targeted KP or ARA resource, using the case-documented input test edge
-            trapi_response = await call_trapi(case['url'], trapi_request)
+            trapi_response = await call_trapi(testcase['url'], trapi_request)
 
             # Record the raw TRAPI query input and output for later test harness reference
-            rbag.request = trapi_request
-            rbag.response = trapi_response
+            results.request = trapi_request
+            results.response = trapi_response
 
             # Second sanity check: was the web service (HTTP) call itself successful?
             status_code: int = trapi_response['status_code']
@@ -207,7 +199,6 @@ async def execute_trapi_lookup(case, creator, rbag, test_report: UnitTestReport)
                 response: Optional[Dict] = trapi_response['response_json']
 
                 if response:
-
                     # Report 'trapi_version' and 'biolink_version' recorded
                     # in the 'response_json' (if the tags are provided)
                     if 'schema_version' not in response:
@@ -225,12 +216,6 @@ async def execute_trapi_lookup(case, creator, rbag, test_report: UnitTestReport)
                             f"execute_trapi_lookup() using Biolink Model version: '{biolink_version}'",
                             file=stderr
                         )
-
-                    validator: TRAPIResponseValidator = TRAPIResponseValidator(
-                        trapi_version=trapi_version,
-                        biolink_version=biolink_version
-                    )
-
                     # If nothing badly wrong with the TRAPI Response to this point, then we also check
                     # whether the test input edge was returned in the Response Message knowledge graph
                     #
@@ -246,15 +231,21 @@ async def execute_trapi_lookup(case, creator, rbag, test_report: UnitTestReport)
                     # the contents for which ought to be returned in
                     # the TRAPI Knowledge Graph, as a Result mapping?
                     #
-                    if not validator.case_input_found_in_response(case, response, trapi_version):
-                        subject_id = case['subject'] if 'subject' in case else case['subject_id']
-                        object_id = case['object'] if 'object' in case else case['object_id']
-                        test_edge_id: str = f"{case['idx']}|({subject_id}#{case['subject_category']})" + \
-                                            f"-[{case['predicate']}]->" + \
-                                            f"({object_id}#{case['object_category']})"
+                    validator: TRAPIResponseValidator = TRAPIResponseValidator(
+                        trapi_version=trapi_version,
+                        biolink_version=biolink_version
+                    )
+                    if not validator.case_input_found_in_response(testcase, response, trapi_version):
+                        subject_id = testcase['subject'] if 'subject' in testcase else testcase['subject_id']
+                        object_id = testcase['object'] if 'object' in testcase else testcase['object_id']
+                        test_edge_id: str = f"{testcase['idx']}|({subject_id}#{testcase['subject_category']})" + \
+                                            f"-[{testcase['predicate']}]->" + \
+                                            f"({object_id}#{testcase['object_category']})"
                         test_report.report(
                             code="error.trapi.response.knowledge_graph.missing_expected_edge",
                             identifier=test_edge_id
                         )
                 else:
                     test_report.report(code="error.trapi.response.empty")
+
+    return test_report
