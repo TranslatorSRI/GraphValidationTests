@@ -45,6 +45,7 @@ include = [
 python = ">=3.9,<3.13"
 reasoner-validator = "^3.9.4"
 translator-testing-model = '*'
+pytest-asyncio = "^0.21.1"
 
 # [tool.poetry.group.dev.dependencies]
 

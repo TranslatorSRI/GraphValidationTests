@@ -1,27 +1,11 @@
 """
 Ontology KP interface
 """
-import requests
 from reasoner_validator.biolink import get_biolink_model_toolkit
+from one_hop_tests.trapi import post_query
 
 ONTOLOGY_KP_TRAPI_SERVER = "https://ontology-kp.apps.renci.org/query"
 NODE_NORMALIZER_SERVER = "https://nodenormalization-sri.renci.org/get_normalized_nodes"
-
-
-def post(url, message, params=None):
-    """
-    :param url
-    :param message
-    :param params
-    """
-    if params is None:
-        response = requests.post(url, json=message)
-    else:
-        response = requests.post(url, json=message, params=params)
-    if not response.status_code == 200:
-        print('\nOntology server HTTP error code:', response.status_code)
-        return {}
-    return response.json()
 
 
 def convert_to_preferred(curie, allowed_list):
@@ -30,7 +14,7 @@ def convert_to_preferred(curie, allowed_list):
     :param allowed_list
     """
     j = {'curies': [curie]}
-    result = post(NODE_NORMALIZER_SERVER, j)
+    result = post_query(NODE_NORMALIZER_SERVER, j)
     if not result:
         return None
     new_ids = [v['identifier'] for v in result[curie]['equivalent_identifiers']]
@@ -66,7 +50,7 @@ def get_ontology_ancestors(curie, btype):
             }
         }
     }
-    response = post(ONTOLOGY_KP_TRAPI_SERVER, m)
+    response = post_query(ONTOLOGY_KP_TRAPI_SERVER, m, server="Ontology KP")
     original_prefix = curie.split(':')[0]
     ancestors = []
     if response:

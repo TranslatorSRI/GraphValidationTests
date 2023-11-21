@@ -2,7 +2,8 @@
 Code to submit OneHop tests to TRAPI
 """
 from sys import stderr
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, List
+import requests
 
 from reasoner_validator.validator import TRAPIResponseValidator
 from reasoner_validator.report import ValidationReporter
@@ -10,6 +11,27 @@ from reasoner_validator.trapi import call_trapi, TRAPISchemaValidator
 
 from logging import getLogger
 logger = getLogger()
+
+
+def post_query(url: str, query: Dict, params=None, server: str = ""):
+    """
+    :param url, str URL target for HTTP POST
+    :param query, JSON query for posting
+    :param params
+    :param server, str human-readable name of server called (for error message reports)
+    """
+    if params is None:
+        response = requests.post(url, json=query)
+    else:
+        response = requests.post(url, json=query, params=params)
+    if not response.status_code == 200:
+        print(
+            f"Server {server} at '\nUrl: '{url}', Query: '{query}' with " +
+            f"parameters '{params}' returned HTTP error code: '{response.status_code}'",
+            file=stderr
+        )
+        return {}
+    return response.json()
 
 
 def generate_test_error_msg_prefix(case: Dict, test_name: str) -> str:
@@ -134,7 +156,7 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
+async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
@@ -249,3 +271,46 @@ def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
                     test_report.report(code="error.trapi.response.empty")
 
     return test_report
+
+
+def retrieve_ars_result(response_id: str, verbose: bool):
+    global trapi_response
+
+    if verbose:
+        print(f"Trying to retrieve ARS Response UUID '{response_id}'...")
+
+    response_content: Optional = None
+    status_code: int = 404
+
+    for ars_host in ARS_HOSTS:
+        if verbose:
+            print(f"\n...from {ars_host}", end=None)
+
+        status_code, response_content = retrieve_trapi_response(
+            host_url=f"https://{ars_host}/ars/api/messages/",
+            response_id=response_id
+        )
+        if status_code != 200:
+            continue
+
+    if status_code != 200:
+        print(f"Unsuccessful HTTP status code '{status_code}' reported for ARS PK '{response_id}'?")
+        return
+
+    # Unpack the response content into a dict
+    try:
+        response_dict = response_content.json()
+    except Exception as e:
+        print(f"Cannot decode ARS PK '{response_id}' to a Translator Response, exception: {e}")
+        return
+
+    if 'fields' in response_dict:
+        if 'actor' in response_dict['fields'] and str(response_dict['fields']['actor']) == '9':
+            print("The supplied response id is a collection id. Please supply the UUID for a response")
+        elif 'data' in response_dict['fields']:
+            print(f"Validating ARS PK '{response_id}' TRAPI Response result...")
+            trapi_response = response_dict['fields']['data']
+        else:
+            print("ARS response dictionary is missing 'fields.data'?")
+    else:
+        print("ARS response dictionary is missing 'fields'?")
