@@ -10,23 +10,45 @@ import pytest
 pytest_plugins = ('pytest_asyncio',)
 
 
+@pytest.mark.parametrize(
+    "curie,category,result",
+    [
+        (
+            "CHEMBL.COMPOUND:CHEMBL2333026",
+            "biolink:SmallMolecule",
+            ""
+        )
+    ]
+)
 @pytest.mark.asyncio
-async def test_post_good_query():
-    post_query(url="", query={}, params=None, server="Post Good Query")
+async def test_post_query_to_ontology_kp(curie: str, category: str, result):
+    query = {
+        "message": {
+            "query_graph": {
+                "nodes": {
+                    "a": {
+                        "ids": [curie]
+                    },
+                    "b": {
+                        "categories": [category]
+                    }
+                },
+                "edges": {
+                    "ab": {
+                        "subject": "a",
+                        "object": "b",
+                        "predicates": ["biolink:subclass_of"]
+                    }
+                }
+            }
+        }
+    }
+    response = post_query(url=ONTOLOGY_KP_TRAPI_SERVER, query=query, server="Post Ontology KP Query")
+    assert response
 
 
 @pytest.mark.asyncio
-async def test_post_bad_query():
-    post_query(url="", query={}, params=None, server="Post Bad Query")
-
-
-@pytest.mark.asyncio
-async def test_ontology_kp():
-    post_query(url=ONTOLOGY_KP_TRAPI_SERVER, query={}, params=None, server="Post Ontology KP Query")
-
-
-@pytest.mark.asyncio
-async def test_node_normalization():
+async def test_post_query_to_node_normalization():
     j = {'curies': ['HGNC:12791']}
     result = post_query(url=NODE_NORMALIZER_SERVER, query=j, server="Post Node Normalizer Query")
     assert result

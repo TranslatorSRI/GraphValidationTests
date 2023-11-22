@@ -213,7 +213,8 @@ async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
                     trapi_request=trapi_request, kp_source=testcase['kp_source']
                 )
 
-            # Make the TRAPI call to the Case targeted KP or ARA resource, using the case-documented input test edge
+            # Make the TRAPI call to the Case targeted KP or ARA resource,
+            # using the case-documented input test edge
             trapi_response = await call_trapi(testcase['url'], trapi_request)
 
             # Capture the raw TRAPI query input and output

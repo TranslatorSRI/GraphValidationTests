@@ -1,6 +1,7 @@
 """
 Ontology KP interface
 """
+from typing import Optional
 from reasoner_validator.biolink import get_biolink_model_toolkit
 from one_hop_tests.trapi import post_query
 
@@ -96,7 +97,7 @@ def get_ontology_parent(curie, btype):
         return None
 
 
-def get_parent_concept(curie, category, biolink_version):
+def get_parent_concept(curie, category, biolink_version) -> Optional[str]:
     """
     :param curie: CURIE of a concept instance
     :param category: Biolink Category of the concept instance

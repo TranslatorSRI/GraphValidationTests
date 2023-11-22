@@ -6,7 +6,7 @@ from typing import Set, Dict, List, Tuple, Optional
 from bmt import utils
 from reasoner_validator.versioning import SemVer
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
-import one_hop_tests.ontology_kp
+from one_hop_tests.ontology_kp import get_parent_concept
 
 
 def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]:
@@ -317,7 +317,7 @@ def raise_entity(request, target: str):
 
     category = request[f"{target}_category"]
     entity = request[f"{target}_id"] if f"{target}_id" in request else request[target]
-    parent_entity = ontology_kp.get_parent(entity, category, biolink_version=request['biolink_version'])
+    parent_entity = get_parent_concept(entity, category, biolink_version=request['biolink_version'])
     if parent_entity is None:
         return no_parent_error(
             unit_test_name=f"raise_{target}_entity",
