@@ -12,6 +12,14 @@ from reasoner_validator.trapi import call_trapi, TRAPISchemaValidator
 from logging import getLogger
 logger = getLogger()
 
+ARS_HOSTS = [
+    'ars-prod.transltr.io',
+    'ars.test.transltr.io',
+    'ars.ci.transltr.io',
+    'ars-dev.transltr.io',
+    'ars.transltr.io'
+]
+
 
 def post_query(url: str, query: Dict, params=None, server: str = ""):
     """
@@ -78,6 +86,8 @@ class UnitTestReport(ValidationReporter):
             "warning": set(),
             "info": set()
         }
+        self.trapi_request: Optional[Dict] = None
+        self.trapi_response: Optional[Dict[str, int]] = None
 
     def get_messages(self) -> Dict[str, List[str]]:
         return {test_name: list(message_set) for test_name, message_set in self.messages.items()}
@@ -206,9 +216,10 @@ async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
             # Make the TRAPI call to the Case targeted KP or ARA resource, using the case-documented input test edge
             trapi_response = await call_trapi(testcase['url'], trapi_request)
 
-            # Record the raw TRAPI query input and output for later test harness reference
-            results.request = trapi_request
-            results.response = trapi_response
+            # Capture the raw TRAPI query input and output
+            # for possibly later test harness access
+            test_report.trapi_request = trapi_request
+            test_report.trapi_response = trapi_response
 
             # Second sanity check: was the web service (HTTP) call itself successful?
             status_code: int = trapi_response['status_code']
@@ -271,6 +282,27 @@ async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
                     test_report.report(code="error.trapi.response.empty")
 
     return test_report
+
+
+def retrieve_trapi_response(host_url: str, response_id: str):
+    try:
+        response_content = requests.get(
+            f"{host_url}{response_id}",
+            headers={'accept': 'application/json'}
+        )
+        if response_content:
+            status_code = response_content.status_code
+            if status_code == 200:
+                print(f"...Result returned from '{host_url}'!")
+        else:
+            status_code = 404
+
+    except Exception as e:
+        print(f"Remote host {host_url} unavailable: Connection attempt to {host_url} triggered an exception: {e}")
+        response_content = None
+        status_code = 404
+
+    return status_code, response_content
 
 
 def retrieve_ars_result(response_id: str, verbose: bool):

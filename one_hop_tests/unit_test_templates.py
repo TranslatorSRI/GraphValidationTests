@@ -6,7 +6,7 @@ from typing import Set, Dict, List, Tuple, Optional
 from bmt import utils
 from reasoner_validator.versioning import SemVer
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
-import ontology_kp
+import one_hop_tests.ontology_kp
 
 
 def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]:

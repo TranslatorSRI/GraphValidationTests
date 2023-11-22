@@ -2,10 +2,10 @@
 One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
-
+from typing import Dict, List
 from translator_testing_model.datamodel.pydanticmodel import TestCase
 from one_hop_tests.trapi import execute_trapi_lookup, UnitTestReport
-from one_hop_tests import (
+from one_hop_tests.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,
@@ -82,5 +82,5 @@ class OneHopTest:
         # }
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
         report: UnitTestReport
-        return {test_name: report.get_messages() for test_name, report in results.items()}
+        return {test_name: report.get_messages() for test_name, report in self.results.items()}
 

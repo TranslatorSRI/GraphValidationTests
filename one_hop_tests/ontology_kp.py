@@ -96,7 +96,7 @@ def get_ontology_parent(curie, btype):
         return None
 
 
-def get_parent(curie, category, biolink_version):
+def get_parent_concept(curie, category, biolink_version):
     """
     :param curie: CURIE of a concept instance
     :param category: Biolink Category of the concept instance
@@ -126,9 +126,3 @@ def get_parent(curie, category, biolink_version):
     if original_parent_prefix == input_prefix:
         return preferred_parent
     return convert_to_preferred(preferred_parent, [input_prefix])
-
-
-if __name__ == '__main__':
-    # print(get_parent('PUBCHEM.COMPOUND:208898','biolink:ChemicalSubstance'))
-    # print(get_parent('DRUGBANK:DB00394','biolink:ChemicalSubstance'))
-    print(get_parent('CHEMBL.COMPOUND:CHEMBL2333026', 'biolink:ChemicalSubstance', biolink_version="2.2.0"))
