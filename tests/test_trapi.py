@@ -1,7 +1,7 @@
 """
 Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 """
-
+from typing import Optional
 from one_hop_tests.trapi import post_query
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 
@@ -13,15 +13,20 @@ pytest_plugins = ('pytest_asyncio',)
 @pytest.mark.parametrize(
     "curie,category,result",
     [
-        (
+        (   # Query 0 - chemical compounds are NOT in ontology hierarchy
             "CHEMBL.COMPOUND:CHEMBL2333026",
             "biolink:SmallMolecule",
-            ""
+            None
+        ),
+        (   # Query 1 - MONDO disease terms are in an ontology term hierarchy
+            "MONDO:0011027",
+            "biolink:Disease",
+            "MONDO:0015967"
         )
     ]
 )
 @pytest.mark.asyncio
-async def test_post_query_to_ontology_kp(curie: str, category: str, result):
+async def test_post_query_to_ontology_kp(curie: str, category: str, result: Optional[str]):
     query = {
         "message": {
             "query_graph": {
