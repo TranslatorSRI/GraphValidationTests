@@ -10,6 +10,9 @@ from reasoner_validator.report import ValidationReporter
 from reasoner_validator.trapi import call_trapi, TRAPISchemaValidator
 
 from logging import getLogger
+
+from translator_testing_model.datamodel.pydanticmodel import TestAsset
+
 logger = getLogger()
 
 ARS_HOSTS = [
@@ -73,8 +76,8 @@ class UnitTestReport(ValidationReporter):
     Not to be confused with the translator.sri.testing.report_db.TestReport, which is the comprehensive set
     of all JSON reports from a single SRI Testing harness test run.
     """
-    def __init__(self, test_case: Dict, test_name: str):
-        error_msg_prefix = generate_test_error_msg_prefix(test_case, test_name=test_name)
+    def __init__(self, test_case: TestCase, test_name: str):
+        error_msg_prefix = test_name  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
         ValidationReporter.__init__(
             self,
             prefix=error_msg_prefix
@@ -166,11 +169,12 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
+async def execute_trapi_lookup(url: str, testcase: TestAsset, creator) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
-    :param testcase: input data test case
+    :param url: str, target TRAPI url endpoint to be tested
+    :param testcase: TestCase, input data test case
     :param creator: unit test-specific TRAPI query message creator
     :return: results: Dict of results
     """
@@ -213,9 +217,9 @@ async def execute_trapi_lookup(testcase, creator) -> UnitTestReport:
                     trapi_request=trapi_request, kp_source=testcase['kp_source']
                 )
 
-            # Make the TRAPI call to the Case targeted KP or ARA resource,
-            # using the case-documented input test edge
-            trapi_response = await call_trapi(testcase['url'], trapi_request)
+            # Make the TRAPI call to the TestCase targeted ARS, KP or
+            # ARA resource, using the case-documented input test edge
+            trapi_response = await call_trapi(url, trapi_request)
 
             # Capture the raw TRAPI query input and output
             # for possibly later test harness access
