@@ -115,7 +115,16 @@ env_spec = {
 }
 
 
-def get_test_asset(query_type, expected_output, input_curie, output_curie) -> TestAsset:
+_id: int = 0
+
+
+def generate_test_asset_id() -> str:
+    global _id
+    _id += 1
+    return f"TestAsset:{_id:0>5}"
+
+
+def get_test_asset(input_curie, relationship, output_curie, expected_output) -> TestAsset:
     # query_type, expected_output, input_curie, output_curie
     #
     #    mapped onto
@@ -126,11 +135,12 @@ def get_test_asset(query_type, expected_output, input_curie, output_curie) -> Te
     #     TestCase-agnostic semantic parameters representing the specification
     #     of a Translator test target with inputs and (expected) outputs.
     #     """
-    #     input_id: Optional[str] = Field(None)
+    #     input_id: str = Field(...)
     #     input_name: Optional[str] = Field(None)
-    #     output_id: Optional[str] = Field(None)
+    #     predicate: str = Field(...)
+    #     output_id: str = Field(...)
     #     output_name: Optional[str] = Field(None)
-    #     expected_output: Optional[ExpectedOutputEnum] = Field(None)
+    #     expected_output: ExpectedOutputEnum = Field(...)
     #     test_issue: Optional[TestIssueEnum] = Field(None)
     #     semantic_severity: Optional[SemanticSeverityEnum] = Field(None)
     #     in_v1: Optional[bool] = Field(None)
@@ -143,30 +153,45 @@ def get_test_asset(query_type, expected_output, input_curie, output_curie) -> Te
     #           (inherited from TestEntity) should generally be defined to specify
     #           TestAsset membership in a \"Block List\" collection  """
     #      )
-    return TestAsset()
+    return TestAsset.construct(
+        id=generate_test_asset_id(),
+        input_id=input_curie,
+        predicate=relationship,
+        output_id=output_curie,
+        expected_output=expected_output
+    )
 
 
 def run_onehop_tests(
-        env, query_type, expected_output, input_curie, output_curie, log_level: Optional[str] = None
+        env: str,
+        input_curie: str,
+        relationship: str,
+        output_curie: str,
+        expected_output: str,
+        log_level: Optional[str] = None
 ) -> Dict:
     """
     Run a batter of "One Hop" knowledge graph test cases using specified test asset information.
     :param env: str, Target Translator execution environment for the test, one of 'dev', 'ci', 'test' or 'prod'.
-    :param query_type: str, e.g. 'treats_creative'  # currently ignored by this particular TestRunner
+    :param input_curie: str, CURIE identifying the input ('subject') concept
+    :param relationship: str, name of Biolink Model predicate defining the statement relationship being tested.
+    :param output_curie: str, CURIE identifying the output ('object') concept
     :param expected_output: category of expected output (values from ExpectedOutputEnum in TranslatorTestingModel)
-    :param input_curie:
-    :param output_curie:
     :param log_level:
     :return:
     """
     ars_env = env_spec[env]
     one_hop_test: OneHopTest = OneHopTest(url=f"https://{ars_env}.transltr.io/ars/api/", log_level=log_level)
 
-    assert expected_output in ExpectedOutputEnum
+    assert expected_output in ExpectedOutputEnum.__members__
+
+    # TODO: if output_curie is allowed to be multivalued here, how should the code be run?
 
     # OneHop tests directly use Test Assets to internally configure and run its Test Cases
-    testasset: TestAsset = get_test_asset(expected_output, input_curie, output_curie)
-    one_hop_test.run(test_asset=testasset)
+    test_asset: TestAsset = get_test_asset(input_curie, relationship, output_curie, expected_output)
+
+    one_hop_test.run(test_asset=test_asset)
+
     return one_hop_test.get_result()
 
 
@@ -175,10 +200,10 @@ def get_parameters():
 
     # Sample command line interface parameters:
     #     --env 'ci'
-    #     --query_type 'treats_creative'  # currently ignored by this TestRunner
-    #     --expected_output 'TopAnswer,TopAnswer'
     #     --input_curie 'MONDO:0005301'
+    #     --relationship 'treats'
     #     --output_curie  'PUBCHEM.COMPOUND:107970,UNII:3JB47N2Q2P'
+    #     --expected_output 'Acceptable'
 
     parser = ArgumentParser(description="Translator SRI Automated Test Harness")
 
@@ -190,27 +215,29 @@ def get_parameters():
     )
 
     parser.add_argument(
-        "--query_type",
-        type=str,
-        help="Query Type (see Translator Testing Model; currently ignored by this TestRunner)",
-    )
-
-    parser.add_argument(
-        "--expected_output",
-        type=str,
-        help="Expected output (may be a comma separated string of CURIEs)",
-    )
-
-    parser.add_argument(
         "--input_curie",
         type=str,
         help="Input CURIE",
     )
 
     parser.add_argument(
+        "--relationship",
+        type=str,
+        help="Relationship ('Biolink Predicate') name",
+    )
+
+    # TODO: should this be multi-valued or not?
+    parser.add_argument(
         "--output_curie",
         type=str,
         help="Output CURIE (may be a comma separated string of CURIEs)",
+    )
+
+    # Not sure if this needs to be a parameter... could potentially be hard coded internally?
+    parser.add_argument(
+        "--expected_output",
+        type=str,
+        help="Expected output value drawn from the ExpectedOutputEnum of the Translator Testing Model",
     )
 
     parser.add_argument(

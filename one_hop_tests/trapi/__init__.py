@@ -76,12 +76,12 @@ class UnitTestReport(ValidationReporter):
     Not to be confused with the translator.sri.testing.report_db.TestReport, which is the comprehensive set
     of all JSON reports from a single SRI Testing harness test run.
     """
-    def __init__(self, test_case: TestCase, test_name: str):
-        error_msg_prefix = test_name  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
+    def __init__(self, test_asset: TestAsset, test_name: str):
         ValidationReporter.__init__(
             self,
-            prefix=error_msg_prefix
+            prefix=test_name  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
         )
+        self.test_asset = test_asset
         self.messages: Dict[str, Set[str]] = {
             "skipped": set(),
             "critical": set(),
@@ -169,22 +169,22 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-async def execute_trapi_lookup(url: str, testcase: TestAsset, creator) -> UnitTestReport:
+async def execute_trapi_lookup(url: str, test_asset: TestAsset, creator) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
     :param url: str, target TRAPI url endpoint to be tested
-    :param testcase: TestCase, input data test case
+    :param test_asset: TestCase, input data test case
     :param creator: unit test-specific TRAPI query message creator
     :return: results: Dict of results
     """
-    test_report: UnitTestReport = UnitTestReport(test_case=testcase, test_name=creator.__name__)
+    test_report: UnitTestReport = UnitTestReport(test_asset=test_asset, test_name=creator.__name__)
 
     trapi_request: Optional[Dict]
     output_element: Optional[str]
     output_node_binding: Optional[str]
 
-    trapi_request, output_element, output_node_binding = creator(testcase)
+    trapi_request, output_element, output_node_binding = creator(test_asset)
 
     if not trapi_request:
         # output_element and output_node_binding were
@@ -197,8 +197,8 @@ async def execute_trapi_lookup(url: str, testcase: TestAsset, creator) -> UnitTe
             reason=output_node_binding
         )
     else:
-        trapi_version = testcase['trapi_version']
-        biolink_version = testcase['biolink_version']
+        trapi_version = test_asset['trapi_version']
+        biolink_version = test_asset['biolink_version']
 
         # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
         validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=trapi_version)
@@ -207,14 +207,14 @@ async def execute_trapi_lookup(url: str, testcase: TestAsset, creator) -> UnitTe
         if not test_report.has_messages():
             # if no messages are reported, then continue with the validation
 
-            if 'ara_source' in testcase and testcase['ara_source']:
+            if 'ara_source' in test_asset and test_asset['ara_source']:
                 # sanity check!
-                assert 'kp_source' in testcase and testcase['kp_source']
+                assert 'kp_source' in test_asset and test_asset['kp_source']
 
                 # Here, we need annotate the TRAPI request query graph to
                 # constrain an ARA query to the test case specified 'kp_source'
                 trapi_request = constrain_trapi_request_to_kp(
-                    trapi_request=trapi_request, kp_source=testcase['kp_source']
+                    trapi_request=trapi_request, kp_source=test_asset['kp_source']
                 )
 
             # Make the TRAPI call to the TestCase targeted ARS, KP or
@@ -273,12 +273,12 @@ async def execute_trapi_lookup(url: str, testcase: TestAsset, creator) -> UnitTe
                         trapi_version=trapi_version,
                         biolink_version=biolink_version
                     )
-                    if not validator.case_input_found_in_response(testcase, response, trapi_version):
-                        subject_id = testcase['subject'] if 'subject' in testcase else testcase['subject_id']
-                        object_id = testcase['object'] if 'object' in testcase else testcase['object_id']
-                        test_edge_id: str = f"{testcase['idx']}|({subject_id}#{testcase['subject_category']})" + \
-                                            f"-[{testcase['predicate']}]->" + \
-                                            f"({object_id}#{testcase['object_category']})"
+                    if not validator.case_input_found_in_response(test_asset, response, trapi_version):
+                        subject_id = test_asset['subject'] if 'subject' in test_asset else test_asset['subject_id']
+                        object_id = test_asset['object'] if 'object' in test_asset else test_asset['object_id']
+                        test_edge_id: str = f"{test_asset['idx']}|({subject_id}#{test_asset['subject_category']})" + \
+                                            f"-[{test_asset['predicate']}]->" + \
+                                            f"({object_id}#{test_asset['object_category']})"
                         test_report.report(
                             code="error.trapi.response.knowledge_graph.missing_expected_edge",
                             identifier=test_edge_id
