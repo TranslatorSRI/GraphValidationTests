@@ -4,7 +4,7 @@ from the legacy SRI_Testing project)
 """
 from typing import Dict, List, Optional
 from argparse import ArgumentParser
-from translator_testing_model.datamodel.pydanticmodel import TestAsset
+from translator_testing_model.datamodel.pydanticmodel import TestAsset, ExpectedOutputEnum
 from one_hop_tests.trapi import execute_trapi_lookup, UnitTestReport
 from one_hop_tests.unit_test_templates import (
     by_subject,
@@ -22,7 +22,7 @@ class OneHopTest:
     def __init__(self, url: str, log_level: Optional[str]):
         """
         OneHopTest constructor.
-        
+
         :param url: str, target environment endpoint being targeted for testing
         :param log_level: str, logging level for diagnostics
         """
@@ -120,31 +120,52 @@ def get_test_asset(query_type, expected_output, input_curie, output_curie) -> Te
     #
     #    mapped onto
     #
-    # class TestCase(TestEntity):
+    # class TestAsset(TestEntity):
     #     """
-    #     Represents a single enumerated instance of Test Case,
-    #     derived from a  given TestAsset and used to probe a particular test condition.
+    #     Represents a Test Asset, which is a single specific instance of
+    #     TestCase-agnostic semantic parameters representing the specification
+    #     of a Translator test target with inputs and (expected) outputs.
     #     """
-    #     inputs: Optional[List[str]] = Field(default_factory=list)
-    #     outputs: Optional[List[str]] = Field(default_factory=list)
-    #     preconditions: Optional[List[str]] = Field(default_factory=list)
+    #     input_id: Optional[str] = Field(None)
+    #     input_name: Optional[str] = Field(None)
+    #     output_id: Optional[str] = Field(None)
+    #     output_name: Optional[str] = Field(None)
+    #     expected_output: Optional[ExpectedOutputEnum] = Field(None)
+    #     test_issue: Optional[TestIssueEnum] = Field(None)
+    #     semantic_severity: Optional[SemanticSeverityEnum] = Field(None)
+    #     in_v1: Optional[bool] = Field(None)
+    #     well_known: Optional[bool] = Field(None)
     #     id: str = Field(..., description="""A unique identifier for a Test Entity""")
     #     name: Optional[str] = Field(None, description="""A human-readable name for a Test Entity""")
     #     description: Optional[str] = Field(None, description="""A human-readable description for a Test Entity""")
     #     tags: Optional[List[str]] = Field(
-    #                   default_factory=list,
-    #                   description="""A human-readable tags for categorical memberships of a
-    #                                  TestEntity (preferably a URI or CURIE). Typically used to
-    #
+    #           default_factory=list, description="""One or more 'tags' slot values
+    #           (inherited from TestEntity) should generally be defined to specify
+    #           TestAsset membership in a \"Block List\" collection  """
+    #      )
     return TestAsset()
 
 
 def run_onehop_tests(
         env, query_type, expected_output, input_curie, output_curie, log_level: Optional[str] = None
 ) -> Dict:
+    """
+    Run a batter of "One Hop" knowledge graph test cases using specified test asset information.
+    :param env: str, Target Translator execution environment for the test, one of 'dev', 'ci', 'test' or 'prod'.
+    :param query_type: str, e.g. 'treats_creative'  # currently ignored by this particular TestRunner
+    :param expected_output: category of expected output (values from ExpectedOutputEnum in TranslatorTestingModel)
+    :param input_curie:
+    :param output_curie:
+    :param log_level:
+    :return:
+    """
     ars_env = env_spec[env]
     one_hop_test: OneHopTest = OneHopTest(url=f"https://{ars_env}.transltr.io/ars/api/", log_level=log_level)
-    testasset: TestAsset = get_test_asset(query_type, expected_output, input_curie, output_curie)
+
+    assert expected_output in ExpectedOutputEnum
+
+    # OneHop tests directly use Test Assets to internally configure and run its Test Cases
+    testasset: TestAsset = get_test_asset(expected_output, input_curie, output_curie)
     one_hop_test.run(test_asset=testasset)
     return one_hop_test.get_result()
 
@@ -164,7 +185,7 @@ def get_parameters():
     parser.add_argument(
         "env",
         type=str,
-        choices=['dev', 'ci', 'test' 'prod'],
+        choices=['dev', 'ci', 'test', 'prod'],
         help="Target Translator execution environment for the test.",
     )
 
