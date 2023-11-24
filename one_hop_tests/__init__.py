@@ -210,6 +210,7 @@ def get_parameters():
     parser.add_argument(
         "env",
         type=str,
+        required=True,
         choices=['dev', 'ci', 'test', 'prod'],
         help="Target Translator execution environment for the test.",
     )
@@ -217,12 +218,14 @@ def get_parameters():
     parser.add_argument(
         "--input_curie",
         type=str,
+        required=True,
         help="Input CURIE",
     )
 
     parser.add_argument(
         "--relationship",
         type=str,
+        required=True,
         help="Relationship ('Biolink Predicate') name",
     )
 
@@ -230,6 +233,7 @@ def get_parameters():
     parser.add_argument(
         "--output_curie",
         type=str,
+        required=True,
         help="Output CURIE (may be a comma separated string of CURIEs)",
     )
 
@@ -237,6 +241,7 @@ def get_parameters():
     parser.add_argument(
         "--expected_output",
         type=str,
+        required=True,
         help="Expected output value drawn from the ExpectedOutputEnum of the Translator Testing Model",
     )
 
