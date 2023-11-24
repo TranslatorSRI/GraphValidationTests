@@ -36,7 +36,7 @@ class OneHopTest:
         in a given test environment for a given query type.
 
         :param test_asset: TestAsset, test to be processed for target TestCases.
-        :return: None (use 'get_result()' method below)
+        :return: None (use 'get_results()' method below)
         """
         self.results["by_subject"] = execute_trapi_lookup(
             self.url, test_asset, by_subject
@@ -57,7 +57,7 @@ class OneHopTest:
             self.url, test_asset, raise_predicate_by_subject
         )
 
-    def get_result(self) -> Dict[str, Dict[str, List[str]]]:
+    def get_results(self) -> Dict[str, Dict[str, List[str]]]:
         # The ARS_test_Runner with the following command:
         #
         #       ARS_Test_Runner
@@ -118,7 +118,7 @@ env_spec = {
 _id: int = 0
 
 
-def generate_test_asset_id() -> str:
+def _generate_test_asset_id() -> str:
     global _id
     _id += 1
     return f"TestAsset:{_id:0>5}"
@@ -154,7 +154,7 @@ def get_test_asset(input_curie, relationship, output_curie, expected_output) -> 
     #           TestAsset membership in a \"Block List\" collection  """
     #      )
     return TestAsset.construct(
-        id=generate_test_asset_id(),
+        id=_generate_test_asset_id(),
         input_id=input_curie,
         predicate=relationship,
         output_id=output_curie,
@@ -192,7 +192,7 @@ def run_onehop_tests(
 
     one_hop_test.run(test_asset=test_asset)
 
-    return one_hop_test.get_result()
+    return one_hop_test.get_results()
 
 
 def get_parameters():
@@ -258,4 +258,5 @@ def get_parameters():
 
 if __name__ == '__main__':
     args = get_parameters()
-    run_onehop_tests(**vars(args))
+    results: Dict = run_onehop_tests(**vars(args))
+    print(results)
