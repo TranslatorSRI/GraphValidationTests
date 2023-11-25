@@ -130,7 +130,7 @@ def _generate_test_asset_id() -> str:
     return f"TestAsset:{_id:0>5}"
 
 
-def get_test_asset(input_curie, relationship, output_curie, expected_output) -> TestAsset:
+def build_test_asset(input_curie, relationship, output_curie, expected_output) -> TestAsset:
     # query_type, expected_output, input_curie, output_curie
     #
     #    mapped onto
@@ -179,7 +179,8 @@ def run_onehop_tests(
         log_level: Optional[str] = None
 ) -> Dict:
     """
-    Run a batter of "One Hop" knowledge graph test cases using specified test asset information.
+    Run a battery of "One Hop" knowledge graph test cases using specified test asset information.
+
     :param env: str, Target Translator execution environment for the test, one of 'dev', 'ci', 'test' or 'prod'.
     :param input_curie: str, CURIE identifying the input ('subject') concept
     :param relationship: str, name of Biolink Model predicate defining the statement relationship being tested.
@@ -203,7 +204,7 @@ def run_onehop_tests(
     # TODO: if output_curie is allowed to be multivalued here, how should the code be run?
 
     # OneHop tests directly use Test Assets to internally configure and run its Test Cases
-    test_asset: TestAsset = get_test_asset(input_curie, relationship, output_curie, expected_output)
+    test_asset: TestAsset = build_test_asset(input_curie, relationship, output_curie, expected_output)
 
     one_hop_test.run(test_asset=test_asset)
 

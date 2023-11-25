@@ -2,7 +2,7 @@
 Unit tests for pieces of the OneHopTests code
 """
 
-from one_hop_tests import _generate_test_asset_id, get_test_asset
+from one_hop_tests import _generate_test_asset_id, build_test_asset
 from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum
 
 
@@ -24,7 +24,7 @@ def test_get_test_asset():
     relationship = 'treats'
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
-    test_asset = get_test_asset(input_curie, relationship, output_curie, expected_output)
+    test_asset = build_test_asset(input_curie, relationship, output_curie, expected_output)
     assert test_asset.id == "TestAsset:00004"
     assert test_asset.input_id == input_curie
     assert test_asset.predicate == relationship

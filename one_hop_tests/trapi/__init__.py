@@ -192,7 +192,10 @@ async def execute_trapi_lookup(
     output_element: Optional[str]
     output_node_binding: Optional[str]
 
-    trapi_request, output_element, output_node_binding = creator(test_asset)
+    # Need to access the TestAsset fields as a dictionary
+    _test_asset = test_asset.dict()
+
+    trapi_request, output_element, output_node_binding = creator(_test_asset)
 
     if not trapi_request:
         # output_element and output_node_binding were
@@ -205,24 +208,23 @@ async def execute_trapi_lookup(
             reason=output_node_binding
         )
     else:
-        trapi_version = test_asset['trapi_version']
-        biolink_version = test_asset['biolink_version']
 
         # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
         validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=trapi_version)
         validator.validate(trapi_request, component="Query")
         test_report.merge(validator)
         if not test_report.has_messages():
+
             # if no messages are reported, then continue with the validation
 
-            if 'ara_source' in test_asset and test_asset['ara_source']:
+            if 'ara_source' in _test_asset and _test_asset['ara_source']:
                 # sanity check!
-                assert 'kp_source' in test_asset and test_asset['kp_source']
+                assert 'kp_source' in _test_asset and _test_asset['kp_source']
 
                 # Here, we need annotate the TRAPI request query graph to
                 # constrain an ARA query to the test case specified 'kp_source'
                 trapi_request = constrain_trapi_request_to_kp(
-                    trapi_request=trapi_request, kp_source=test_asset['kp_source']
+                    trapi_request=trapi_request, kp_source=_test_asset['kp_source']
                 )
 
             # Make the TRAPI call to the TestCase targeted ARS, KP or
@@ -281,12 +283,12 @@ async def execute_trapi_lookup(
                         trapi_version=trapi_version,
                         biolink_version=biolink_version
                     )
-                    if not validator.case_input_found_in_response(test_asset, response, trapi_version):
-                        subject_id = test_asset['subject'] if 'subject' in test_asset else test_asset['subject_id']
-                        object_id = test_asset['object'] if 'object' in test_asset else test_asset['object_id']
-                        test_edge_id: str = f"{test_asset['idx']}|({subject_id}#{test_asset['subject_category']})" + \
-                                            f"-[{test_asset['predicate']}]->" + \
-                                            f"({object_id}#{test_asset['object_category']})"
+                    if not validator.case_input_found_in_response(_test_asset, response, trapi_version):
+                        subject_id = _test_asset['subject'] if 'subject' in _test_asset else _test_asset['subject_id']
+                        object_id = _test_asset['object'] if 'object' in _test_asset else _test_asset['object_id']
+                        test_edge_id: str = f"{_test_asset['idx']}|({subject_id}#{_test_asset['subject_category']})" + \
+                                            f"-[{_test_asset['predicate']}]->" + \
+                                            f"({object_id}#{_test_asset['object_category']})"
                         test_report.report(
                             code="error.trapi.response.knowledge_graph.missing_expected_edge",
                             identifier=test_edge_id

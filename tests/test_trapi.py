@@ -4,7 +4,7 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from one_hop_tests import get_test_asset
+from one_hop_tests import build_test_asset
 from one_hop_tests.trapi import post_query, execute_trapi_lookup
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 from one_hop_tests.unit_test_templates import by_subject
@@ -71,6 +71,6 @@ async def test_execute_trapi_lookup():
     relationship = 'treats'
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
-    test_asset = get_test_asset(input_curie, relationship, output_curie, expected_output)
+    test_asset = build_test_asset(input_curie, relationship, output_curie, expected_output)
     report = execute_trapi_lookup(url, test_asset, by_subject)
     pass
