@@ -19,16 +19,33 @@ from one_hop_tests.unit_test_templates import (
 
 class OneHopTest:
 
-    def __init__(self, url: str, log_level: Optional[str]):
+    def __init__(
+            self,
+            url: str,
+            trapi_version: Optional[str] = None,
+            biolink_version: Optional[str] = None,
+            log_level: Optional[str] = None
+    ):
         """
         OneHopTest constructor.
 
         :param url: str, target environment endpoint being targeted for testing
-        :param log_level: str, logging level for diagnostics
+        :param trapi_version: Optional[str], target TRAPI version (default: current release)
+        :param biolink_version: Optional[str], target Biolink Model version (default: current release)
+        :param log_level: Optional[str], logging level for diagnostics
         """
         self.url: str = url
+        self.trapi_version = trapi_version
+        self.biolink_version = biolink_version
         self.log_level: Optional[str] = log_level
         self.results: Dict = dict()
+
+    def test_case_wrapper(self, test_asset: TestAsset):
+        def test_case(test_type) -> UnitTestReport:
+            return await execute_trapi_lookup(
+                self.url, self.trapi_version, self.biolink_version, test_asset, test_type
+            )
+        return test_case
 
     def run(self, test_asset: TestAsset):
         """
@@ -38,24 +55,13 @@ class OneHopTest:
         :param test_asset: TestAsset, test to be processed for target TestCases.
         :return: None (use 'get_results()' method below)
         """
-        self.results["by_subject"] = execute_trapi_lookup(
-            self.url, test_asset, by_subject
-        )
-        self.results["inverse_by_new_subject"] = execute_trapi_lookup(
-            self.url, test_asset, inverse_by_new_subject
-        )
-        self.results["by_object"] = execute_trapi_lookup(
-            self.url, test_asset, by_object
-        )
-        self.results["raise_subject_entity"] = execute_trapi_lookup(
-            self.url, test_asset, raise_subject_entity
-        )
-        self.results["raise_object_by_subject"] = execute_trapi_lookup(
-            self.url, test_asset, raise_object_by_subject
-        )
-        self.results["raise_predicate_by_subject"] = execute_trapi_lookup(
-            self.url, test_asset, raise_predicate_by_subject
-        )
+        test_case = self.test_case_wrapper(test_asset=test_asset)
+        self.results["by_subject"] = test_case(by_subject)
+        self.results["inverse_by_new_subject"] = test_case(inverse_by_new_subject)
+        self.results["by_object"] = test_case(by_object)
+        self.results["raise_subject_entity"] = test_case(raise_subject_entity)
+        self.results["raise_object_by_subject"] = test_case(raise_object_by_subject)
+        self.results["raise_predicate_by_subject"] = test_case(raise_predicate_by_subject)
 
     def get_results(self) -> Dict[str, Dict[str, List[str]]]:
         # The ARS_test_Runner with the following command:
@@ -168,6 +174,8 @@ def run_onehop_tests(
         relationship: str,
         output_curie: str,
         expected_output: str,
+        trapi_version: Optional[str] = None,
+        biolink_version: Optional[str] = None,
         log_level: Optional[str] = None
 ) -> Dict:
     """
@@ -177,11 +185,18 @@ def run_onehop_tests(
     :param relationship: str, name of Biolink Model predicate defining the statement relationship being tested.
     :param output_curie: str, CURIE identifying the output ('object') concept
     :param expected_output: category of expected output (values from ExpectedOutputEnum in TranslatorTestingModel)
+    :param trapi_version: Optional[str], target TRAPI version (default: current release)
+    :param biolink_version: Optional[str], target Biolink Model version (default: current release)
     :param log_level:
     :return:
     """
     ars_env = env_spec[env]
-    one_hop_test: OneHopTest = OneHopTest(url=f"https://{ars_env}.transltr.io/ars/api/", log_level=log_level)
+    one_hop_test: OneHopTest = OneHopTest(
+        url=f"https://{ars_env}.transltr.io/ars/api/",
+        trapi_version=trapi_version,
+        biolink_version=biolink_version,
+        log_level=log_level
+    )
 
     assert expected_output in ExpectedOutputEnum.__members__
 
@@ -246,11 +261,25 @@ def get_parameters():
     )
 
     parser.add_argument(
+        "--trapi_version",
+        type=str,
+        help="TRAPI version expected for knowledge graph access (default: use current default release)",
+        default=None
+    )
+
+    parser.add_argument(
+        "--biolink_version",
+        type=str,
+        help="Biolink Model version expected for knowledge graph access (default: use current default release)",
+        default=None
+    )
+
+    parser.add_argument(
         "--log_level",
         type=str,
         choices=["ERROR", "WARNING", "INFO", "DEBUG"],
         help="Level of the logs.",
-        default="WARNING",
+        default="WARNING"
     )
 
     return parser.parse_args()

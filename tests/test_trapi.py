@@ -73,3 +73,4 @@ async def test_execute_trapi_lookup():
     expected_output = 'Acceptable'
     test_asset = get_test_asset(input_curie, relationship, output_curie, expected_output)
     report = execute_trapi_lookup(url, test_asset, by_subject)
+    pass

@@ -6,17 +6,17 @@ from one_hop_tests import _generate_test_asset_id, get_test_asset
 from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum
 
 
-def test_generate_test_asset_id():
-    assert _generate_test_asset_id() == "TestAsset:00001"
-    assert _generate_test_asset_id() == "TestAsset:00002"
-    assert _generate_test_asset_id() == "TestAsset:00003"
-
-
 def test_expected_output_enum():
     expected_output = 'Acceptable'
     assert expected_output in ExpectedOutputEnum.__members__
     not_an_expected_output = 'UnforeseenEvent'
     assert not_an_expected_output not in ExpectedOutputEnum.__members__
+
+
+def test_generate_test_asset_id():
+    assert _generate_test_asset_id() == "TestAsset:00001"
+    assert _generate_test_asset_id() == "TestAsset:00002"
+    assert _generate_test_asset_id() == "TestAsset:00003"
 
 
 def test_get_test_asset():
@@ -25,7 +25,7 @@ def test_get_test_asset():
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
     test_asset = get_test_asset(input_curie, relationship, output_curie, expected_output)
-    assert test_asset.id == "TestAsset:00001"
+    assert test_asset.id == "TestAsset:00004"
     assert test_asset.input_id == input_curie
     assert test_asset.predicate == relationship
     assert test_asset.output_id == output_curie

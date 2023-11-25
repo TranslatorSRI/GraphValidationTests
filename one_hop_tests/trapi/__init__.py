@@ -169,11 +169,19 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-async def execute_trapi_lookup(url: str, test_asset: TestAsset, creator) -> UnitTestReport:
+async def execute_trapi_lookup(
+        url: str,
+        trapi_version: str,
+        biolink_version: str,
+        test_asset: TestAsset,
+        creator
+) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
     :param url: str, target TRAPI url endpoint to be tested
+    :param trapi_version: Optional[str], target TRAPI version
+    :param biolink_version: Optional[str], target Biolink Model version
     :param test_asset: TestCase, input data test case
     :param creator: unit test-specific TRAPI query message creator
     :return: results: Dict of results
