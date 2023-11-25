@@ -41,13 +41,13 @@ class OneHopTest:
         self.results: Dict = dict()
 
     def test_case_wrapper(self, test_asset: TestAsset):
-        def test_case(test_type) -> UnitTestReport:
+        async def test_case(test_type) -> UnitTestReport:
             return await execute_trapi_lookup(
-                self.url, self.trapi_version, self.biolink_version, test_asset, test_type
+                self.url, test_asset, test_type, self.trapi_version, self.biolink_version
             )
         return test_case
 
-    def run(self, test_asset: TestAsset):
+    async def run(self, test_asset: TestAsset):
         """
         Wrapper to invoke a OneHopTest on a single TestAsset
         in a given test environment for a given query type.
@@ -56,12 +56,12 @@ class OneHopTest:
         :return: None (use 'get_results()' method below)
         """
         test_case = self.test_case_wrapper(test_asset=test_asset)
-        self.results["by_subject"] = test_case(by_subject)
-        self.results["inverse_by_new_subject"] = test_case(inverse_by_new_subject)
-        self.results["by_object"] = test_case(by_object)
-        self.results["raise_subject_entity"] = test_case(raise_subject_entity)
-        self.results["raise_object_by_subject"] = test_case(raise_object_by_subject)
-        self.results["raise_predicate_by_subject"] = test_case(raise_predicate_by_subject)
+        self.results["by_subject"] = await test_case(by_subject)
+        self.results["inverse_by_new_subject"] = await test_case(inverse_by_new_subject)
+        self.results["by_object"] = await test_case(by_object)
+        self.results["raise_subject_entity"] = await test_case(raise_subject_entity)
+        self.results["raise_object_by_subject"] = await test_case(raise_object_by_subject)
+        self.results["raise_predicate_by_subject"] = await test_case(raise_predicate_by_subject)
 
     def get_results(self) -> Dict[str, Dict[str, List[str]]]:
         # The ARS_test_Runner with the following command:
@@ -143,26 +143,49 @@ def build_test_asset(input_curie, relationship, output_curie, expected_output) -
     #     """
     #     input_id: str = Field(...)
     #     input_name: Optional[str] = Field(None)
-    #     predicate: str = Field(...)
+    #     input_category: Optional[str] = Field(None)
+    #     predicate_id: Optional[str] = Field(None)
+    #     predicate_name: str = Field(...)
     #     output_id: str = Field(...)
     #     output_name: Optional[str] = Field(None)
+    #     output_category: Optional[str] = Field(None)
+    #     association: Optional[str] = Field(
+    #                 None,
+    #                 description="""Specific Biolink Model association 'category'
+    #                 which applies to the test asset defined knowledge statement"""
+    #     )
+    #     qualifiers: Optional[List[Qualifier]] = Field(
+    #                 default_factory=list,
+    #                 description="""Optional qualifiers which constrain to the test asset defined knowledge statement.
+    #                 Note that this field records such qualifier slots and values as tag=value pairs, where
+    #                 the tag is the Biolink Model qualifier slot named and the value is an acceptable
+    #                 (Biolink Model enum?) value of the said qualifier slot."""
+    #     )
     #     expected_output: ExpectedOutputEnum = Field(...)
     #     test_issue: Optional[TestIssueEnum] = Field(None)
     #     semantic_severity: Optional[SemanticSeverityEnum] = Field(None)
     #     in_v1: Optional[bool] = Field(None)
     #     well_known: Optional[bool] = Field(None)
+    #     test_reference: Optional[str] = Field(
+    #                     None,
+    #                     description="""Document URL where original test source
+    #                                    particulars are registered (e.g. Github repo)"""
+    #     )
+    #     runner_settings: List[str] = Field(
+    #                      default_factory=list, description="""Settings for the test harness, e.g. \"inferred\""""
+    #     )
     #     id: str = Field(..., description="""A unique identifier for a Test Entity""")
     #     name: Optional[str] = Field(None, description="""A human-readable name for a Test Entity""")
     #     description: Optional[str] = Field(None, description="""A human-readable description for a Test Entity""")
     #     tags: Optional[List[str]] = Field(
-    #           default_factory=list, description="""One or more 'tags' slot values
-    #           (inherited from TestEntity) should generally be defined to specify
-    #           TestAsset membership in a \"Block List\" collection  """
+    #                     default_factory=list, description="""One or more 'tags' slot values
+    #                     (inherited from TestEntity) should generally be defined to specify
+    #                     TestAsset membership in a \"Block List\" collection"""
     #      )
     return TestAsset.construct(
         id=_generate_test_asset_id(),
         input_id=input_curie,
-        predicate=relationship,
+        predicate_name=relationship,
         output_id=output_curie,
         expected_output=expected_output
     )

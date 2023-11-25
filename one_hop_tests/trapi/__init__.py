@@ -169,21 +169,56 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
+def get_predicate_id(predicate_name: str) -> str:
+    """
+    SME's (like Jenn) like plain English (possibly capitalized) names
+    for their predicates, whereas, we need regular Biolink CURIES here.
+    :param predicate_name:
+    :return: str, predicate CURIE (presumed to be from the Biolink Model?)
+    """
+    # TODO: maybe validate the predicate name here against the Biolink Model?
+    predicate = predicate_name.lower().replace(" ", "_")
+    return f"biolink:{predicate}"
+
+
+def translate_test_asset(test_asset: TestAsset, biolink_version: str) -> Dict[str, str]:
+    """
+    Need to access the TestAsset fields as a dictionary with some
+    edge attributes relabelled to reasoner-validator expectations.
+
+    :param test_asset: TestAsset received from TestHarness
+    :param biolink_version: Biolink Model release assumed for graphs assessed by One Hop testing.
+    :return: Dict[str,str], reasoner-validator indexed test edge data.
+    """
+    test_edge: Dict[str, str] = dict()
+
+    test_edge["idx"] = test_asset.id
+    test_edge["subject_id"] = test_asset.input_id
+    test_edge["predicate"] = test_asset.predicate_id \
+        if test_asset.predicate_id else get_predicate_id(predicate_name=test_asset.predicate_name)
+    test_edge["object_id"] = test_asset.output_id
+    test_edge["subject_category"] = test_asset.output_id
+    test_edge["object_category"] = test_asset.output_id
+    test_edge["biolink_version"] = biolink_version
+
+    return test_edge
+
+
 async def execute_trapi_lookup(
         url: str,
-        trapi_version: str,
-        biolink_version: str,
         test_asset: TestAsset,
-        creator
+        creator,
+        trapi_version: Optional[str] = None,
+        biolink_version: Optional[str] = None,
 ) -> UnitTestReport:
     """
     Method to execute a TRAPI lookup, using the 'creator' test template.
 
     :param url: str, target TRAPI url endpoint to be tested
-    :param trapi_version: Optional[str], target TRAPI version
-    :param biolink_version: Optional[str], target Biolink Model version
     :param test_asset: TestCase, input data test case
     :param creator: unit test-specific TRAPI query message creator
+    :param trapi_version: Optional[str], target TRAPI version
+    :param biolink_version: Optional[str], target Biolink Model version
     :return: results: Dict of results
     """
     test_report: UnitTestReport = UnitTestReport(test_asset=test_asset, test_name=creator.__name__)
@@ -192,8 +227,7 @@ async def execute_trapi_lookup(
     output_element: Optional[str]
     output_node_binding: Optional[str]
 
-    # Need to access the TestAsset fields as a dictionary
-    _test_asset = test_asset.dict()
+    _test_asset = translate_test_asset(test_asset=test_asset, biolink_version=biolink_version)
 
     trapi_request, output_element, output_node_binding = creator(_test_asset)
 
@@ -217,15 +251,17 @@ async def execute_trapi_lookup(
 
             # if no messages are reported, then continue with the validation
 
-            if 'ara_source' in _test_asset and _test_asset['ara_source']:
-                # sanity check!
-                assert 'kp_source' in _test_asset and _test_asset['kp_source']
-
-                # Here, we need annotate the TRAPI request query graph to
-                # constrain an ARA query to the test case specified 'kp_source'
-                trapi_request = constrain_trapi_request_to_kp(
-                    trapi_request=trapi_request, kp_source=_test_asset['kp_source']
-                )
+            # TODO: this is SRI_Testing harness functionality which we don't yet support here?
+            #
+            # if 'ara_source' in _test_asset and _test_asset['ara_source']:
+            #     # sanity check!
+            #     assert 'kp_source' in _test_asset and _test_asset['kp_source']
+            #
+            #     # Here, we need annotate the TRAPI request query graph to
+            #     # constrain an ARA query to the test case specified 'kp_source'
+            #     trapi_request = constrain_trapi_request_to_kp(
+            #         trapi_request=trapi_request, kp_source=_test_asset['kp_source']
+            #     )
 
             # Make the TRAPI call to the TestCase targeted ARS, KP or
             # ARA resource, using the case-documented input test edge
@@ -258,12 +294,10 @@ async def execute_trapi_lookup(
                     if 'biolink_version' not in response:
                         test_report.report(code="warning.trapi.response.biolink_version.missing")
                     else:
-                        biolink_version: str = response['biolink_version'] \
+                        biolink_version = response['biolink_version'] \
                             if not biolink_version else biolink_version
-                        print(
-                            f"execute_trapi_lookup() using Biolink Model version: '{biolink_version}'",
-                            file=stderr
-                        )
+                        logger.info(f"execute_trapi_lookup() using Biolink Model version: '{biolink_version}'")
+
                     # If nothing badly wrong with the TRAPI Response to this point, then we also check
                     # whether the test input edge was returned in the Response Message knowledge graph
                     #
@@ -284,11 +318,10 @@ async def execute_trapi_lookup(
                         biolink_version=biolink_version
                     )
                     if not validator.case_input_found_in_response(_test_asset, response, trapi_version):
-                        subject_id = _test_asset['subject'] if 'subject' in _test_asset else _test_asset['subject_id']
-                        object_id = _test_asset['object'] if 'object' in _test_asset else _test_asset['object_id']
-                        test_edge_id: str = f"{_test_asset['idx']}|({subject_id}#{_test_asset['subject_category']})" + \
+                        test_edge_id: str = f"{_test_asset['idx']}|" \
+                                            f"({_test_asset['subject_id']}#{_test_asset['subject_category']})" + \
                                             f"-[{_test_asset['predicate']}]->" + \
-                                            f"({object_id}#{_test_asset['object_category']})"
+                                            f"({_test_asset['object_id']}#{_test_asset['object_category']})"
                         test_report.report(
                             code="error.trapi.response.knowledge_graph.missing_expected_edge",
                             identifier=test_edge_id

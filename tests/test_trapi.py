@@ -5,7 +5,7 @@ from typing import Optional
 import pytest
 
 from one_hop_tests import build_test_asset
-from one_hop_tests.trapi import post_query, execute_trapi_lookup
+from one_hop_tests.trapi import post_query, UnitTestReport, execute_trapi_lookup
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 from one_hop_tests.unit_test_templates import by_subject
 
@@ -66,11 +66,17 @@ async def test_post_query_to_node_normalization():
 
 @pytest.mark.asyncio
 async def test_execute_trapi_lookup():
-    url: str = ""  # where do I send this TRAPI test query? The ARS?
+    url: str = ""  # where do I send this test TRAPI query? The ARS?
     input_curie = 'MONDO:0005301'
     relationship = 'treats'
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
     test_asset = build_test_asset(input_curie, relationship, output_curie, expected_output)
-    report = execute_trapi_lookup(url, test_asset, by_subject)
-    pass
+    report: UnitTestReport = await execute_trapi_lookup(
+        url=url,
+        test_asset=test_asset,
+        creator=by_subject,
+        trapi_version="1.4",
+        # biolink_version=None
+    )
+    assert report
