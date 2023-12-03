@@ -54,14 +54,28 @@ async def test_post_query_to_ontology_kp(curie: str, category: str, result: Opti
     assert response
 
 
+@pytest.mark.parametrize(
+    "curie,category",
+    [
+        # Query 0 - HGNC id
+        ("HGNC:12791", "biolink:Gene"),
+
+        # Query 1 - MONDO term
+        ("MONDO:0011027", "biolink:Disease"),
+
+        # Query 2 - HP term
+        ("HP:0040068", "biolink:PhenotypicFeature")
+    ]
+)
 @pytest.mark.asyncio
-async def test_post_query_to_node_normalization():
-    j = {'curies': ['HGNC:12791']}
+async def test_post_query_to_node_normalization(curie: str, category: str):
+    j = {'curies': [curie]}
     result = post_query(url=NODE_NORMALIZER_SERVER, query=j, server="Post Node Normalizer Query")
     assert result
-    assert "HGNC:12791" in result
-    assert "equivalent_identifiers" in result["HGNC:12791"]
-    assert len(result["HGNC:12791"]["equivalent_identifiers"])
+    assert curie in result
+    assert "equivalent_identifiers" in result[curie]
+    assert len(result[curie]["equivalent_identifiers"])
+    assert category in result[curie]["type"]
 
 
 @pytest.mark.asyncio

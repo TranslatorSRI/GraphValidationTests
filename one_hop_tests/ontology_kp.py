@@ -5,7 +5,7 @@ from typing import Optional
 from reasoner_validator.biolink import get_biolink_model_toolkit
 from one_hop_tests.trapi import post_query
 
-ONTOLOGY_KP_TRAPI_SERVER = "https://ontology-kp.apps.renci.org/query"
+ONTOLOGY_KP_TRAPI_SERVER = "https://automat.renci.org/ubergraph-nonredundant/1.4/query"
 NODE_NORMALIZER_SERVER = "https://nodenormalization-sri.renci.org/get_normalized_nodes"
 
 
@@ -105,7 +105,7 @@ def get_parent_concept(curie, category, biolink_version) -> Optional[str]:
     """
     tk = get_biolink_model_toolkit(biolink_version=biolink_version)
     if not tk.is_category(category):
-        assert False, f"{category} is not a Biolink Model Category!"
+        assert False, f"'{category}' is not a Biolink Model Category!"
 
     # Not every Biolink Category has a prefix namespace with ontological hierarchy.
     # We replace the previous hard coded namespace list with retrieval of id_prefixes

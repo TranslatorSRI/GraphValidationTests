@@ -22,13 +22,12 @@ import pytest
             "3.5.4",
             "MONDO:0015967"
         ),
-        # (   # Query 2 - HP phenotype terms are in an ontology term hierarchy
-        #     # TODO: this particular lookup up seems to fail. Not sure why - asking Jim Balhoff
-        #     "HP:0032370",
-        #     "biolink:PhenotypicFeature",
-        #     "3.5.4",
-        #     "HP:0032224"
-        # )
+        (   # Query 2 - HP phenotype terms are in an ontology term hierarchy
+            "HP:0040068",  # "Abnormality of limb bone"
+            "biolink:PhenotypicFeature",
+            "3.5.4",
+            "HP:0040064"  # "Abnormality of limbs"
+        )
     ]
 )
 @pytest.mark.asyncio
