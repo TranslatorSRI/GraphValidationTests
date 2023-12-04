@@ -5,7 +5,7 @@ from typing import Optional
 import pytest
 
 from one_hop_tests import build_test_asset
-from one_hop_tests.trapi import post_query, UnitTestReport, execute_trapi_lookup
+from one_hop_tests.translator.trapi import post_query, UnitTestReport, execute_trapi_lookup
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 from one_hop_tests.unit_test_templates import by_subject
 

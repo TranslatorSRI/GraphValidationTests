@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from functools import lru_cache
 from argparse import ArgumentParser
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, ExpectedOutputEnum
-from one_hop_tests.trapi import execute_trapi_lookup, UnitTestReport
+from one_hop_tests.translator.trapi import execute_trapi_lookup, UnitTestReport
 from one_hop_tests.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -208,7 +208,8 @@ def target_component_urls(env: str, components: Optional[str] = None) -> List[st
     """
     Resolve target endpoints for running the test.
 
-    :param components: Optional[str], components to be tested (values from ComponentEnum in TranslatorTestingModel; default 'ars')
+    :param components: Optional[str], components to be tested
+                       (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
     :param env: target Translator execution environment of component(s) to be tested.
     :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
     """
@@ -220,11 +221,27 @@ def target_component_urls(env: str, components: Optional[str] = None) -> List[st
     else:
         component_list = ['ars']
     for component in component_list:
+        #   ComponentEnum:
+        #     permissible_values:
+        #       arax:
+        #       aragorn:
+        #       ars:
+        #       bte:
+        #       improving:
         if component == 'ars':
             endpoints.append(f"https://{env}.transltr.io/ars/api/")
+
+        # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
+        # elif component == 'arax':
+        #     pass
+        # elif component == 'aragorn':
+        #     pass
+        # elif component == 'bte':
+        #     pass
+        # elif component == 'improving':
+        #     pass
         else:
-            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
-            pass
+            raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
     return endpoints
 
 
