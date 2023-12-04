@@ -3,6 +3,7 @@ One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
 from typing import Dict, List, Optional
+from functools import lru_cache
 from argparse import ArgumentParser
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, ExpectedOutputEnum
 from one_hop_tests.trapi import execute_trapi_lookup, UnitTestReport
@@ -21,7 +22,7 @@ class OneHopTest:
 
     def __init__(
             self,
-            url: str,
+            endpoints: List[str],
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             log_level: Optional[str] = None
@@ -29,12 +30,12 @@ class OneHopTest:
         """
         OneHopTest constructor.
 
-        :param url: str, target environment endpoint being targeted for testing
+        :param endpoints: List[str], target environment endpoint(s) being targeted for testing
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param log_level: Optional[str], logging level for diagnostics
         """
-        self.url: str = url
+        self.endpoints: List[str] = endpoints
         self.trapi_version = trapi_version
         self.biolink_version = biolink_version
         self.log_level: Optional[str] = log_level
@@ -42,8 +43,10 @@ class OneHopTest:
 
     def test_case_wrapper(self, test_asset: TestAsset):
         async def test_case(test_type) -> UnitTestReport:
+            # TODO: eventually need to process multiple self.endpoints(?)
+            target_url: str = self.endpoints[0]
             return await execute_trapi_lookup(
-                self.url, test_asset, test_type, self.trapi_version, self.biolink_version
+                target_url, test_asset, test_type, self.trapi_version, self.biolink_version
             )
         return test_case
 
@@ -131,6 +134,15 @@ def _generate_test_asset_id() -> str:
 
 
 def build_test_asset(input_curie, relationship, output_curie, expected_output) -> TestAsset:
+    """
+    Construct a Python TestAsset object.
+
+    :param input_curie: test asset input 'subject' CURIE identifier
+    :param relationship: human-readable name of a predicate
+    :param output_curie:  test asset output 'object' CURIE identifier
+    :param expected_output: from ExpectedOutputEnum, values like Top_Answer, Acceptable, BadButForgivable, NeverShow, etc.
+    :return: TestAsset object
+    """
     # query_type, expected_output, input_curie, output_curie
     #
     #    mapped onto
@@ -191,12 +203,38 @@ def build_test_asset(input_curie, relationship, output_curie, expected_output) -
     )
 
 
+@lru_cache()
+def target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
+    """
+    Resolve target endpoints for running the test.
+
+    :param components: Optional[str], components to be tested (values from ComponentEnum in TranslatorTestingModel; default 'ars')
+    :param env: target Translator execution environment of component(s) to be tested.
+    :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
+    """
+    endpoints: List[str] = list()
+    component_list: List[str]
+    if components:
+        # TODO: need to validate/sanitize the list of components
+        component_list = components.split(",")
+    else:
+        component_list = ['ars']
+    for component in component_list:
+        if component == 'ars':
+            endpoints.append(f"https://{env}.transltr.io/ars/api/")
+        else:
+            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
+            pass
+    return endpoints
+
+
 def run_onehop_tests(
         env: str,
         input_curie: str,
         relationship: str,
         output_curie: str,
         expected_output: str,
+        components: Optional[str] = None,
         trapi_version: Optional[str] = None,
         biolink_version: Optional[str] = None,
         log_level: Optional[str] = None
@@ -209,14 +247,16 @@ def run_onehop_tests(
     :param relationship: str, name of Biolink Model predicate defining the statement relationship being tested.
     :param output_curie: str, CURIE identifying the output ('object') concept
     :param expected_output: category of expected output (values from ExpectedOutputEnum in TranslatorTestingModel)
+    :param components: Optional[str], components to be tested (values from ComponentEnum in TranslatorTestingModel; default 'ars')
     :param trapi_version: Optional[str], target TRAPI version (default: current release)
     :param biolink_version: Optional[str], target Biolink Model version (default: current release)
     :param log_level:
     :return:
     """
-    ars_env = env_spec[env]
+    endpoints: List[str] = target_component_urls(env=env_spec[env], components=components)
+
     one_hop_test: OneHopTest = OneHopTest(
-        url=f"https://{ars_env}.transltr.io/ars/api/",
+        endpoints=endpoints,
         trapi_version=trapi_version,
         biolink_version=biolink_version,
         log_level=log_level
@@ -247,11 +287,19 @@ def get_parameters():
     parser = ArgumentParser(description="Translator SRI Automated Test Harness")
 
     parser.add_argument(
-        "env",
+        "--env",
         type=str,
         required=True,
         choices=['dev', 'ci', 'test', 'prod'],
-        help="Target Translator execution environment for the test.",
+        help="Translator execution environment of the Translator Component targeted for testing.",
+    )
+
+    parser.add_argument(
+        "--components",
+        type=str,
+        help="Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum' " +
+             "(may be a comma separated string of such names; default: run the test against the 'ars')",
+        default=None
     )
 
     parser.add_argument(
