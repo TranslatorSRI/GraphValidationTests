@@ -59,7 +59,11 @@ def get_nested_tag_value(data: Dict, path: List[str], pos: int) -> Optional[str]
     if tag not in data:
         logger.debug(f"\tMissing tag path '{part_tag_path}'?")
         return None
-
+    pos += 1
+    if pos == len(path):
+        return data[tag]
+    else:
+        return get_nested_tag_value(data[tag], path, pos)
 
 def tag_value(json_data, tag_path) -> Optional[str]:
     """
@@ -199,7 +203,7 @@ def live_trapi_endpoint(url: str) -> Optional[Dict]:
 
     :param url: str, URL of TRAPI endpoint to be checked
     :return: Optional[Dict], Returns a Python dictionary version of the /meta_knowledge_graph
-                             JSON output  if endpoint is 'alive'; 'None' otherwise.
+                             JSON output if the endpoint is 'alive'; 'None' otherwise.
     """
     if not url:
         return None
@@ -375,13 +379,17 @@ def validate_testable_resource(
     :param service: Dict, indexed metadata about a component service (from the Registry)
     :param component: str, type of component, one of 'KP' or 'ARA'
     :param x_maturity: Optional[str], 'x_maturity' environment target for test run (system chooses if not specified)
-    :return: augmented resource metadata for a given KP or ARA service confirmed to be 'testable'
+    :return: augmented resource metadata for a given KP or ARA service confirmed to be accessible for testing
              for one selected x-maturity environment; None if unavailable
     """
     #
     # This 'overloaded' function actually checks a number of parameters that need to be present for testable resources.
     # If the validation of all parameters succeeds, it returns a dictionary of those values; otherwise, returns 'None'
     #
+    if not service:
+        logger.error("validate_testable_resource() service dictionary is empty?")
+        return None
+
     resource_metadata: Dict = dict()
 
     service_title = tag_value(service, "info.title")
