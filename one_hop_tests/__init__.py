@@ -16,6 +16,10 @@ from one_hop_tests.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
+from one_hop_tests.translator.registry import (
+    get_the_registry_data,
+    extract_component_test_metadata_from_registry
+)
 
 
 class OneHopTest:
@@ -203,6 +207,17 @@ def build_test_asset(input_curie, relationship, output_curie, expected_output) -
     )
 
 
+def get_component_infores(component: str):
+    infores_map = {
+        "arax": "arax",
+        "aragorn": "aragorn",
+        "bte": "biothings-explorer",
+        "improving": "improving-agent",
+    }
+    # TODO: what if the component is not yet registered in the model?
+    return f"infores:{infores_map.setdefault(component,component)}"
+
+
 @lru_cache()
 def target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
     """
@@ -221,27 +236,23 @@ def target_component_urls(env: str, components: Optional[str] = None) -> List[st
     else:
         component_list = ['ars']
     for component in component_list:
-        #   ComponentEnum:
-        #     permissible_values:
-        #       arax:
-        #       aragorn:
-        #       ars:
-        #       bte:
-        #       improving:
         if component == 'ars':
             endpoints.append(f"https://{env}.transltr.io/ars/api/")
-
-        # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
-        # elif component == 'arax':
-        #     pass
-        # elif component == 'aragorn':
-        #     pass
-        # elif component == 'bte':
-        #     pass
-        # elif component == 'improving':
-        #     pass
         else:
-            raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
+            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
+            registry_data: Dict = get_the_registry_data()
+            service_metadata = \
+                extract_component_test_metadata_from_registry(
+                    registry_data,
+                    "ARA",  # TODO: how can I also track KP's?
+                    target_source=get_component_infores(component),
+                    target_x_maturity=env
+                )
+            if not service_metadata:
+                raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
+
+            endpoints.append(service_metadata["url"])
+
     return endpoints
 
 

@@ -5,27 +5,194 @@ from typing import Optional, Dict, List, Tuple, Union
 import pytest
 
 from one_hop_tests.translator.registry import (
-    # MOCK_REGISTRY,
     # get_default_url,
-    # rewrite_github_url,
-    # query_smart_api,
-    # SMARTAPI_QUERY_PARAMETERS,
-    # tag_value,
+    query_smart_api,
+    SMARTAPI_QUERY_PARAMETERS,
+    tag_value,
     get_the_registry_data,
     # extract_component_test_metadata_from_registry,
     # get_testable_resources_from_registry,
     # get_testable_resource,
-    # source_of_interest,
+    source_of_interest,
     validate_testable_resource,
     live_trapi_endpoint,
     select_endpoint,
     # assess_trapi_version
 )
 
+import logging
+logger = logging.getLogger(__name__)
 
-def test_get_one_specific_target_kp():
+
+def test_get_the_registry_data():
     registry_data: Dict = get_the_registry_data()
     assert registry_data
+
+
+def test_default_empty_query():
+    registry_data = query_smart_api()
+    assert len(registry_data) > 0, "Default query failed"
+
+
+_QUERY_SMART_API_EXCEPTION_PREFIX = "Translator SmartAPI Registry Access Exception:"
+
+
+def test_fake_url():
+    registry_data: Dict = query_smart_api(url="fake URL")
+    assert registry_data and "Error" in registry_data, "Missing error message?"
+    assert registry_data["Error"].startswith(_QUERY_SMART_API_EXCEPTION_PREFIX), "Unexpected error message?"
+
+
+def test_query_smart_api():
+    registry_data = query_smart_api(parameters=SMARTAPI_QUERY_PARAMETERS)
+    assert "total" in registry_data, f"\tMissing 'total' tag in results?"
+    assert registry_data["total"] > 0, f"\tZero 'total' in results?"
+    assert "hits" in registry_data, f"\tMissing 'hits' tag in results?"
+    for index, service in enumerate(registry_data['hits']):
+        if "info" not in service:
+            logger.debug(f"\tMissing 'hits' tag in hit entry? Ignoring entry...")
+            continue
+        info = service["info"]
+        if "title" not in info:
+            logger.debug(f"\tMissing 'title' tag in 'hit.info'? Ignoring entry...")
+            continue
+        title = info["title"]
+        logger.debug(f"\n{index} - '{title}':")
+        if "x-translator" not in info:
+            logger.debug(f"\tMissing 'x-translator' tag in 'hit.info'? Ignoring entry...")
+            continue
+        x_translator = info["x-translator"]
+        if "component" not in x_translator:
+            logger.debug(f"\tMissing 'component' tag in 'hit.info.x-translator'? Ignoring entry...")
+            continue
+        component = x_translator["component"]
+        if "x-trapi" not in info:
+            logger.debug(f"\tMissing 'x-trapi' tag in 'hit.info'? Ignoring entry...")
+            continue
+        x_trapi = info["x-trapi"]
+
+        if component == "KP":
+            if "test_data_location" not in x_trapi:
+                logger.debug(f"\tMissing 'test_data_location' tag in 'hit.info.x-trapi'? Ignoring entry...")
+                continue
+            else:
+                test_data_location = x_trapi["test_data_location"]
+                logger.debug(f"\t'hit.info.x-trapi.test_data_location': '{test_data_location}'")
+        else:
+            logger.debug(f"\tIs an ARA?")
+
+
+def test_empty_json_data():
+    value = tag_value({}, "testing.one.two.three")
+    assert not value
+
+
+_TEST_JSON_DATA = {
+        "testing": {
+            "one": {
+                "two": {
+                    "three": "The End!"
+                },
+
+                "another_one": "for_fun"
+            }
+        }
+    }
+
+
+def test_valid_tag_path():
+    value = tag_value(_TEST_JSON_DATA, "testing.one.two.three")
+    assert value == "The End!"
+
+
+
+def test_empty_tag_path():
+    value = tag_value(_TEST_JSON_DATA, "")
+    assert not value
+
+
+def test_missing_intermediate_tag_path():
+    value = tag_value(_TEST_JSON_DATA, "testing.one.four.five")
+    assert not value
+
+
+def test_missing_end_tag_path():
+    value = tag_value(_TEST_JSON_DATA, "testing.one.two.three.four")
+    assert not value
+
+
+def _wrap_infores(infores: str):
+    return {
+        "info": {
+            "title": "test_source_of_interest",
+            "x-translator": {
+                    "infores": infores
+            }
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        # the <infores> from the Registry is assumed to be non-empty (see usage in main code...)
+        # (<infores>, <target_sources>, <boolean return value>)
+        (_wrap_infores("infores-object-id"), None, "infores-object-id"),   # Empty <target_sources>
+        (_wrap_infores("infores-object-id"), set(), "infores-object-id"),  # Empty <target_sources>
+
+        # single matching element in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"infores-object-id"}, "infores-object-id"),
+
+        # match to single prefix wildcard pattern in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"infores-*"}, "infores-object-id"),
+
+        # match to single suffix wildcard pattern in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"*-object-id"}, "infores-object-id"),
+
+        # match to embedded wildcard pattern in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"infores-*-id"}, "infores-object-id"),
+
+        # mismatch to embedded wildcard pattern in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"infores-*-ID"}, None),
+
+        # only matches a single embedded wildcard pattern...
+        (_wrap_infores("infores-object-id"), {"infores-*-*"}, None),
+
+        # mismatch to single wildcard pattern in 'target_source' set
+        (_wrap_infores("infores-object-id"), {"another-*"}, None),
+        (
+            # exact match to single element in the 'target_source' set
+            _wrap_infores("infores-object-id"),
+            {
+                "another-infores-object-id",
+                "infores-object-id",
+                "yetanuder-infores-id"
+            },
+            "infores-object-id"
+        ),
+        (
+            # missing match to single element in the 'target_source' set
+            _wrap_infores("infores-object-id"),
+            {
+                "another-infores-object-id",
+                "yetanuder-infores-id"
+            },
+            None
+        ),
+        (   # missing match to single wildcard pattern
+            # embedded in the 'target_source' set
+            _wrap_infores("infores-object-id"),
+            {
+                "another-infores-object-id",
+                "yetanuder-*",
+                "some-other-infores-id"
+            },
+            None
+        ),
+    ]
+)
+def test_source_of_interest(query: Tuple):
+    assert source_of_interest(service=query[0], target_sources=query[1]) is query[2]
 
 
 @pytest.mark.parametrize(
