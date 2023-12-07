@@ -1,8 +1,14 @@
 """
 Unit tests for pieces of the OneHopTests code
 """
+from typing import Optional, Dict, List, Tuple
+import pytest
 
-from one_hop_tests import _generate_test_asset_id, build_test_asset
+from one_hop_tests import generate_test_asset_id, build_test_asset
+from one_hop_tests.unit_test_templates import (
+    create_one_hop_message,
+    swap_qualifiers, by_subject, invert_association,
+)
 from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum, TestAsset
 
 
@@ -14,9 +20,9 @@ def test_expected_output_enum():
 
 
 def test_generate_test_asset_id():
-    assert _generate_test_asset_id() == "TestAsset:00001"
-    assert _generate_test_asset_id() == "TestAsset:00002"
-    assert _generate_test_asset_id() == "TestAsset:00003"
+    assert generate_test_asset_id() == "TestAsset:00001"
+    assert generate_test_asset_id() == "TestAsset:00002"
+    assert generate_test_asset_id() == "TestAsset:00003"
 
 
 def test_get_test_asset():
@@ -31,32 +37,182 @@ def test_get_test_asset():
     assert test_asset.output_id == output_curie
     assert test_asset.expected_output == expected_output
 
+
 #
-# TODO: perhaps each OneHop template should be unit tested?
+# create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]
+@pytest.mark.parametrize(
+    "edge,lookup_subject,expected_result",
+    [
+        (   # Query 0
+            {},
+            False,
+            (None, "")
+        ),
+        (   # Query 1
+            {},
+            False,
+            (None, "")
+        )
+    ]
+)
+def create_one_hop_message(edge: Dict, look_up_subject: bool, expected_result: Tuple[Optional[Dict], str]):
+    result = create_one_hop_message(edge, look_up_subject)
+
+
+# swap_qualifiers(qualifiers: List[Dict[str, str]]) -> List[Dict[str, str]]
 #
-# def test_by_subject_template():
-#     pass
-#
-#
-# def test_inverse_by_new_subject_template():
-#     pass
-#
-#
-# def test_by_object_template():
-#     pass
-#
-#
-# def test_raise_subject_entity_template():
-#     pass
-#
-#
-# def test_raise_object_entity_template():
-#     pass
-#
-#
-# def test_raise_object_by_subject_template():
-#     pass
-#
-#
-# def test_raise_predicate_by_subject_template():
-#     pass
+@pytest.mark.parametrize(
+    "qualifiers,expected_result",
+    [
+        (   # Query 0
+            [],
+            []
+        ),
+        (   # Query 1
+            [],
+            []
+        )
+    ]
+)
+def test_swap_qualifiers(qualifiers: List[Dict[str, str]], expected_result: List[Dict[str, str]]):
+    result = swap_qualifiers(qualifiers)
+
+
+@pytest.mark.parametrize(
+    "association,expected_result",
+    [
+        (   # Query 0
+            "",
+            ""
+        ),
+        (   # Query 1
+            "",
+            ""
+        )
+    ]
+)
+def test_invert_association(association: str, expected_result: str):
+    result = invert_association(association)
+
+
+# by_subject(request) -> Tuple[Optional[Dict], str, str]
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_by_subject_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    result = by_subject(input)
+
+
+# by_subject(request) -> Tuple[Optional[Dict], str, str]
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_inverse_by_new_subject_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
+
+
+# by_object(request) -> Tuple[Optional[Dict], str, str]
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_inverse_by_new_object_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
+
+
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_raise_subject_entity_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
+
+
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_raise_object_entity_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
+
+
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_raise_object_by_subject_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
+
+
+@pytest.mark.parametrize(
+    "input,expected_result",
+    [
+        (  # Query 0
+            None,
+            (None, "", "")
+        ),
+        (  # Query 1
+            None,
+            (None, "", "")
+        )
+    ]
+)
+def test_raise_predicate_by_subject_template(input, expected_result: Tuple[Optional[Dict], str, str]):
+    pass
