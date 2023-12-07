@@ -131,7 +131,7 @@ env_spec = {
 _id: int = 0
 
 
-def _generate_test_asset_id() -> str:
+def generate_test_asset_id() -> str:
     global _id
     _id += 1
     return f"TestAsset:{_id:0>5}"
@@ -199,7 +199,7 @@ def build_test_asset(input_curie, relationship, output_curie, expected_output) -
     #                     TestAsset membership in a \"Block List\" collection"""
     #      )
     return TestAsset.construct(
-        id=_generate_test_asset_id(),
+        id=generate_test_asset_id(),
         input_id=input_curie,
         predicate_name=relationship,
         output_id=output_curie,
