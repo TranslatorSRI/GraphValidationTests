@@ -165,7 +165,7 @@ class TestCode:
     unit_test_name="by_subject",
     description="Given a known triple, create a TRAPI message that looks up the object by the subject"
 )
-def by_subject(request):
+def by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -178,7 +178,7 @@ def by_subject(request):
         return None, f"by_subject|subject '{str(request['subject'])}'", errmsg
 
 
-def swap_qualifiers(qualifiers: List):
+def swap_qualifiers(qualifiers: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """
     This method attempts to swap subject and
     object qualifiers through rewriting their keys?
@@ -219,7 +219,7 @@ def invert_association(association: str):
     description="Given a known triple, create a TRAPI message that inverts the predicate, " +
                 "then looks up the new object by the new subject (original object)"
 )
-def inverse_by_new_subject(request):
+def inverse_by_new_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -269,7 +269,7 @@ def inverse_by_new_subject(request):
     unit_test_name="by_object",
     description="Given a known triple, create a TRAPI message that looks up the subject by the object"
 )
-def by_object(request):
+def by_object(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -301,7 +301,7 @@ def no_parent_error(
     return None, context, reason
 
 
-def raise_entity(request, target: str):
+def raise_entity(request, target: str) -> Tuple[Optional[Dict], str, str]:
     """
     Generic method - parameterized by association edge node target (either "subject" or "object") -
     that, given a known triple, creates a TRAPI message that uses a parent instance of the original entity
@@ -342,7 +342,7 @@ def raise_entity(request, target: str):
                 "to query for its object node. This only works if a given subject entity id namespace is listed " +
                 "in the 'id_prefix' list of the category and specifies some kind of hierarchical ontology of terms."
 )
-def raise_subject_entity(request):
+def raise_subject_entity(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -358,7 +358,7 @@ def raise_subject_entity(request):
                 "to query for its subject node. This only works if a given object entity id namespace is listed " +
                 "in the 'id_prefix' list of the category and specifies some kind of hierarchical ontology of terms."
 )
-def raise_object_entity(request):
+def raise_object_entity(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -373,7 +373,7 @@ def raise_object_entity(request):
     description="Given a known triple, create a TRAPI message that uses the parent " +
                 "of the original object category and looks up the object by the subject"
 )
-def raise_object_by_subject(request):
+def raise_object_by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
@@ -410,7 +410,7 @@ def raise_object_by_subject(request):
     description="Given a known triple, create a TRAPI message that uses the parent " +
                 "of the original predicate and looks up the object by the subject"
 )
-def raise_predicate_by_subject(request):
+def raise_predicate_by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
     :return: Tuple, (trapi_request, output_element, output_node_binding);
