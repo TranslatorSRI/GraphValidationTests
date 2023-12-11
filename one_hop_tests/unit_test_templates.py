@@ -4,44 +4,47 @@ from functools import wraps
 from typing import Set, Dict, List, Tuple, Optional
 
 from bmt import utils
-from reasoner_validator.versioning import SemVer
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
 from one_hop_tests.ontology_kp import get_parent_concept
 
 
 def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]:
-    """Given a complete edge, create a valid TRAPI message for "one hop" querying for the edge.
+    """
+    Given a complete edge, create a valid TRAPI message for "one hop" querying for the edge.
+
     If the look_up_subject is False (default) then the object id is not included, (lookup object
     by subject) and if the look_up_subject is True, then the subject id is not included (look up
-    subject by object)"""
+    subject by object)
+    """
 
-    trapi_version_tested = SemVer.from_string(edge['trapi_version'])
-    if trapi_version_tested <= SemVer.from_string("1.1.0"):
-        return None, f"Legacy TRAPI version '{str(edge['trapi_version'])}' unsupported by SRI Testing!"
+    if not edge:
+        return None, "Missing edge parameters!"
 
     q_edge: Dict = {
         "subject": "a",
         "object": "b",
-        "predicates": [edge['predicate']]
+        "predicates": [edge['predicate_id']]
     }
 
-    # Build Biolink 3 compliant QEdge qualifier_constraints, if specified
-    if 'qualifiers' in edge:
-        # We don't validate the edge['qualifiers'] here.. let the TRAPI query catch any faulty qualifiers
-        qualifier_set: List = list()
-        qualifier: Dict
-        for qualifier in edge['qualifiers']:
-            if 'qualifier_type_id' in qualifier and 'qualifier_value' in qualifier:
-                qualifier_set.append(qualifier.copy())
-            else:
-                return None, f"Malformed 'qualifiers' specification: '{str(edge['qualifiers'])}'!"
+    # December 2023 - TODO: The first iteration of the OneHopTests TestRunner will ignore qualifiers
 
-        if qualifier_set:
-            q_edge['qualifier_constraints'] = [{'qualifier_set': qualifier_set}]
-    if 'association' in edge:
-        # TODO: how do we leverage an 'association' here
-        #  to validate query (qualifiers)? Ask Sierra for advice?
-        pass
+    # # Build Biolink 3 compliant QEdge qualifier_constraints, if specified
+    # if 'qualifiers' in edge:
+    #     # We don't validate the edge['qualifiers'] here.. let the TRAPI query catch any faulty qualifiers
+    #     qualifier_set: List = list()
+    #     qualifier: Dict
+    #     for qualifier in edge['qualifiers']:
+    #         if 'qualifier_type_id' in qualifier and 'qualifier_value' in qualifier:
+    #             qualifier_set.append(qualifier.copy())
+    #         else:
+    #             return None, f"Malformed 'qualifiers' specification: '{str(edge['qualifiers'])}'!"
+    #
+    #     if qualifier_set:
+    #         q_edge['qualifier_constraints'] = [{'qualifier_set': qualifier_set}]
+    #
+    # if 'association' in edge:
+    #     # TODO: how do we leverage an 'association' here to validate query (qualifiers)? Check BMT methods...
+    #     pass
 
     query_graph: Dict = {
         "nodes": {
@@ -57,11 +60,9 @@ def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optiona
         }
     }
     if look_up_subject:
-        object_id = edge['object_id'] if 'object_id' in edge else edge['object']
-        query_graph['nodes']['b']['ids'] = [object_id]
+        query_graph['nodes']['b']['ids'] = [edge['object_id']]
     else:
-        subject_id = edge['subject_id'] if 'subject_id' in edge else edge['subject']
-        query_graph['nodes']['a']['ids'] = [subject_id]
+        query_graph['nodes']['a']['ids'] = [edge['subject_id']]
 
     message: Dict = {
         "message": {
@@ -168,7 +169,7 @@ class TestCode:
 def by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
     message, errmsg = create_one_hop_message(request)
@@ -222,11 +223,11 @@ def invert_association(association: str):
 def inverse_by_new_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
-    predicate = request['predicate']
-    context: str = f"inverse_by_new_subject|predicate '{str(request['predicate'])}'"
+    predicate = request['predicate_id']
+    context: str = f"inverse_by_new_subject|predicate '{str(request['predicate_id'])}'"
 
     validator: BMTWrapper = BMTWrapper(biolink_version=request['biolink_version'])
     inverse_predicate = validator.get_inverse_predicate(predicate)
@@ -243,10 +244,8 @@ def inverse_by_new_subject(request) -> Tuple[Optional[Dict], str, str]:
         "subject_category": request['object_category'],
         "object_category": request['subject_category'],
         "predicate": inverse_predicate,
-        "subject_id":
-            request["object_id"] if "object_id" in request else request["object"],
-        "object_id":
-            request["subject_id"] if "subject_id" in request else request["subject"]
+        "subject_id": request["object_id"],
+        "object_id": request["subject_id"]
     })
 
     if 'qualifiers' in request:
@@ -272,7 +271,7 @@ def inverse_by_new_subject(request) -> Tuple[Optional[Dict], str, str]:
 def by_object(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
     message, errmsg = create_one_hop_message(request, look_up_subject=True)
@@ -345,7 +344,7 @@ def raise_entity(request, target: str) -> Tuple[Optional[Dict], str, str]:
 def raise_subject_entity(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
     return raise_entity(request, "subject")
@@ -361,7 +360,7 @@ def raise_subject_entity(request) -> Tuple[Optional[Dict], str, str]:
 def raise_object_entity(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
     return raise_entity(request, "object")
@@ -376,7 +375,7 @@ def raise_object_entity(request) -> Tuple[Optional[Dict], str, str]:
 def raise_object_by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
     tk = get_biolink_model_toolkit(biolink_version=request['biolink_version'])
@@ -413,10 +412,10 @@ def raise_object_by_subject(request) -> Tuple[Optional[Dict], str, str]:
 def raise_predicate_by_subject(request) -> Tuple[Optional[Dict], str, str]:
     """
     :param request: test case with test edge data used to construct unit test TRAPI query.
-    :return: Tuple, (trapi_request, output_element, output_node_binding);
+    :return: Tuple, (trapi_request, object_element, object_node_binding);
              if trapi_request is None, then error details returned in two other tuple elements
     """
-    predicate = request['predicate']
+    predicate = request['predicate_id']
 
     tk = get_biolink_model_toolkit(biolink_version=request['biolink_version'])
     transformed_request = request.copy()  # there's no depth to request, so it's ok
@@ -436,10 +435,10 @@ def raise_predicate_by_subject(request) -> Tuple[Optional[Dict], str, str]:
                 "predicate",
                 original_predicate_element
             )
-        transformed_request['predicate'] = tk.get_parent(original_predicate_element['name'], formatted=True)
+        transformed_request['predicate_id'] = tk.get_parent(original_predicate_element['name'], formatted=True)
 
     message, errmsg = create_one_hop_message(transformed_request)
     if message:
         return message, 'object', 'b'
     else:
-        return None, f"raise_predicate_by_subject|predicate '{str(request['predicate'])}'", errmsg
+        return None, f"raise_predicate_by_subject|predicate '{str(request['predicate_id'])}'", errmsg
