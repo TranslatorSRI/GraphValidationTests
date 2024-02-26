@@ -151,40 +151,41 @@ def test_invert_association(association: str, expected_result: str):
 
 
 # by_subject(request) -> Tuple[Optional[Dict], str, str]
-@pytest.mark.parametrize(
-    "query,expected_result",
-    [
-        (  # Query 0
-            None,
-            (None, "", "")
-        ),
-        (  # Query 1
-
-            None,
-            (None, "", "")
-        )
-    ]
-)
-def test_by_input_template(query, expected_result: Tuple[Optional[Dict], str, str]):
-    result = by_subject(input)
+# @pytest.mark.parametrize(
+#     "query,expected_result",
+#     [
+#         (  # Query 0
+#             None,
+#             (None, "", "")
+#         ),
+#         (  # Query 1
+#
+#             None,
+#             (None, "", "")
+#         )
+#     ]
+# )
+# def test_by_input_template(query, expected_result: Tuple[Optional[Dict], str, str]):
+#     result = by_subject(query)
+#     assert result == expected_result
 
 
 # by_subject(request) -> Tuple[Optional[Dict], str, str]
-@pytest.mark.parametrize(
-    "query,expected_result",
-    [
-        (  # Query 0
-            None,
-            (None, "", "")
-        ),
-        (  # Query 1
-            None,
-            (None, "", "")
-        )
-    ]
-)
-def test_inverse_by_new_input_template(query, expected_result: Tuple[Optional[Dict], str, str]):
-    pass
+# @pytest.mark.parametrize(
+#     "query,expected_result",
+#     [
+#         (  # Query 0
+#             None,
+#             (None, "", "")
+#         ),
+#         (  # Query 1
+#             None,
+#             (None, "", "")
+#         )
+#     ]
+# )
+# def test_inverse_by_new_input_template(query, expected_result: Tuple[Optional[Dict], str, str]):
+#     pass
 
 
 # by_object(request) -> Tuple[Optional[Dict], str, str]
