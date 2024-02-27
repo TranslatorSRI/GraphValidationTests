@@ -6,10 +6,12 @@ from copy import deepcopy
 from deepdiff import DeepDiff
 import pytest
 
-from one_hop_tests import generate_test_asset_id, build_test_asset
+from one_hop_tests import OneHopTest
 from one_hop_tests.unit_test_templates import (
     create_one_hop_message,
-    swap_qualifiers, by_subject, invert_association,
+    swap_qualifiers,
+    # by_subject,
+    invert_association,
 )
 from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum, TestAsset
 
@@ -22,9 +24,10 @@ def test_expected_output_enum():
 
 
 def test_generate_test_asset_id():
-    assert generate_test_asset_id() == "TestAsset:00001"
-    assert generate_test_asset_id() == "TestAsset:00002"
-    assert generate_test_asset_id() == "TestAsset:00003"
+    oht = OneHopTest(endpoints=list())
+    assert oht.generate_test_asset_id() == "TestAsset:00001"
+    assert oht.generate_test_asset_id() == "TestAsset:00002"
+    assert oht.generate_test_asset_id() == "TestAsset:00003"
 
 
 def test_get_test_asset():
@@ -32,8 +35,9 @@ def test_get_test_asset():
     relationship = 'treats'
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
-    test_asset: TestAsset = build_test_asset(input_curie, relationship, output_curie, expected_output)
-    assert test_asset.id == "TestAsset:00004"
+    oht = OneHopTest(endpoints=list())
+    test_asset: TestAsset = oht.build_test_asset(input_curie, relationship, output_curie, expected_output)
+    assert test_asset.id == "TestAsset:00001"
     assert test_asset.input_id == input_curie
     assert test_asset.predicate_name == relationship
     assert test_asset.output_id == output_curie
@@ -43,7 +47,7 @@ def test_get_test_asset():
 TEST_ASSET_1 = {
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:treats",
+    "predicate": "biolink:treats",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease"
 }

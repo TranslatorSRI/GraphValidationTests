@@ -4,12 +4,14 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from one_hop_tests import build_test_asset
+from one_hop_tests import OneHopTest
 from one_hop_tests.translator.trapi import post_query, UnitTestReport, execute_trapi_lookup
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 from one_hop_tests.unit_test_templates import by_subject
 
 pytest_plugins = ('pytest_asyncio',)
+
+TRAPI_TEST_ENDPOINT = "https://molepro-trapi.transltr.io/molepro/trapi/v1.4"
 
 
 @pytest.mark.parametrize(
@@ -80,12 +82,13 @@ async def test_post_query_to_node_normalization(curie: str, category: str):
 
 @pytest.mark.asyncio
 async def test_execute_trapi_lookup():
-    url: str = ""  # where do I send this test TRAPI query? The ARS?
+    url: str = TRAPI_TEST_ENDPOINT
     input_curie = 'MONDO:0005301'
     relationship = 'treats'
     output_curie = 'PUBCHEM.COMPOUND:107970'
     expected_output = 'Acceptable'
-    test_asset = build_test_asset(input_curie, relationship, output_curie, expected_output)
+    oht: OneHopTest = OneHopTest(endpoints=[url])
+    test_asset = oht.build_test_asset(input_curie, relationship, output_curie, expected_output)
     report: UnitTestReport = await execute_trapi_lookup(
         url=url,
         test_asset=test_asset,

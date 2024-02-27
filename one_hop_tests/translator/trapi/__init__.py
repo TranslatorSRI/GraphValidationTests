@@ -82,18 +82,17 @@ class UnitTestReport(ValidationReporter):
             prefix=test_name  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
         )
         self.test_asset = test_asset
-        self.messages: Dict[str, Set[str]] = {
-            "skipped": set(),
-            "critical": set(),
-            "failed": set(),
-            "warning": set(),
-            "info": set()
-        }
+        # self.messages: Dict[str, Set[str]] = {
+        #     "skipped": set(),
+        #     "critical": set(),
+        #     "failed": set(),
+        #     "warning": set(),
+        #     "info": set()
+        # }
+        # adding the "skipped" category to messages
+        self.messages["skipped"] = dict()
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
-
-    def get_messages(self) -> Dict[str, List[str]]:
-        return {test_name: list(message_set) for test_name, message_set in self.messages.items()}
 
     def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
         """
@@ -107,7 +106,7 @@ class UnitTestReport(ValidationReporter):
         if messages:
             self.add_messages(messages)
         report_string: str = self.dump_messages(flat=True)
-        self.messages["skipped"].add(report_string)
+        self.report("skipped", identifier=report_string)
 
     def assert_test_outcome(self):
         """
@@ -116,24 +115,20 @@ class UnitTestReport(ValidationReporter):
         if self.has_critical():
             critical_msg = self.dump_critical(flat=True)
             logger.critical(critical_msg)
-            self.messages["critical"].add(critical_msg)
 
         elif self.has_errors():
             # we now treat 'soft' errors similar to critical errors (above) but
             # the validation messages will be differentiated on the user interface
             err_msg = self.dump_errors(flat=True)
             logger.error(err_msg)
-            self.messages["failed"].add(err_msg)
 
         elif self.has_warnings():
             wrn_msg = self.dump_warnings(flat=True)
             logger.warning(wrn_msg)
-            self.messages["warning"].add(wrn_msg)
 
         elif self.has_information():
             info_msg = self.dump_info(flat=True)
             logger.info(info_msg)
-            self.messages["info"].add(info_msg)
 
         else:
             pass  # do nothing... just silent pass through...
@@ -197,8 +192,8 @@ def translate_test_asset(test_asset: TestAsset, biolink_version: str) -> Dict[st
     test_edge["predicate"] = test_asset.predicate_id \
         if test_asset.predicate_id else get_predicate_id(predicate_name=test_asset.predicate_name)
     test_edge["object_id"] = test_asset.output_id
-    test_edge["subject_category"] = test_asset.output_id
-    test_edge["object_category"] = test_asset.output_id
+    test_edge["subject_category"] = test_asset.input_category
+    test_edge["object_category"] = test_asset.output_category
     test_edge["biolink_version"] = biolink_version
 
     return test_edge

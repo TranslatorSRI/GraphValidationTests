@@ -1,7 +1,9 @@
+from sys import stderr
+from typing import Set, Dict, List, Tuple, Optional
 from copy import deepcopy
 from dataclasses import asdict
 from functools import wraps
-from typing import Set, Dict, List, Tuple, Optional
+from json import dumps
 
 from bmt import utils
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
@@ -20,10 +22,12 @@ def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optiona
     if not edge:
         return None, "Missing edge parameters!"
 
+    # print("edge:\t", dumps(edge, indent=4), file=stderr)
+
     q_edge: Dict = {
         "subject": "a",
         "object": "b",
-        "predicates": [edge['predicate_id']]
+        "predicates": [edge['predicate']]  # see trapi\__init__.py in translate_test_asset() method
     }
 
     # December 2023 - TODO: The first iteration of the OneHopTests TestRunner will ignore qualifiers

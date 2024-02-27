@@ -18,5 +18,5 @@ Steps to properly issue a new project release:
 6. Add the equivalent Git **tag** to **master**. This should be the Semantic Version string from step 4 with an added 'v' prefix, i.e. "v3.9.5".
 7. Push **master** to remote (if not already done with by a pull request in step 5).
 8.  Check if Git Actions for testing and documentation complete successfully.
-9. Create the release using the same release tag, i.e. "v3.9.5".
-10. Check if Git Action for package deployment is successful and check if the new version (i.e. "0.0.2") is now visible on **[pypy.org](https://pypi.org/search/?q=OneHopTests)**
+9. Create the release using the same release tag, i.e. "v0.0.2".
+10. Check if Git Action for package deployment is successful and check if the new version (i.e. "v0.0.2") is now visible on **[pypy.org](https://pypi.org/search/?q=OneHopTests)**

@@ -65,6 +65,7 @@ def get_nested_tag_value(data: Dict, path: List[str], pos: int) -> Optional[str]
     else:
         return get_nested_tag_value(data[tag], path, pos)
 
+
 def tag_value(json_data, tag_path) -> Optional[str]:
     """
 
