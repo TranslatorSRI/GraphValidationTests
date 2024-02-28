@@ -1,0 +1,45 @@
+{
+    "ars": {
+        "fetch": {
+            "url": "https://ars.ci.transltr.io/ars/api"
+        }
+    },
+    "aragorn": {
+        "fetch": {
+            "url": "https://aragorn.renci.org/1.4/query",
+            "workflow": [
+                {"id": "lookup"},
+                {"id": "overlay_connect_knodes"},
+                {"id": "score"}
+            ]
+        },
+        "fetch_unscored": {
+            "url": "https://aragorn.renci.org/1.4/query",
+            "workflow": [
+                {"id": "lookup"},
+                {"id": "overlay_connect_knodes"}
+            ]
+        },
+        "score": {
+            "url": "https://aragorn.renci.org/1.4/query",
+            "workflow": [
+                {"id": "score"}
+            ]
+        }
+    },
+    "arax": {
+        "fetch": {
+            "url": "https://arax.ncats.io/api/arax/v1.4/query"
+        }
+    },
+    "bte": {
+        "fetch": {
+            "url": "https://bte.transltr.io/v1/query"
+        }
+    },
+    "improving": {
+        "fetch": {
+            "url": "https://ia.healthdatascience.cloud/api/v1.4/query"
+        }
+    }
+}

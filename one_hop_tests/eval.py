@@ -14,7 +14,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
-from benchmarks_runner.utils.benchmark import benchmark_ground_truth
+from one_hop_tests.utils.benchmark import benchmark_ground_truth
 
 
 def evaluate_results(
