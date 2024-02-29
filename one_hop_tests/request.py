@@ -12,7 +12,7 @@ from tqdm import tqdm
 from reasoner_pydantic import Response
 
 from .utils.asyncio import gather
-from .utils.benchmark import benchmark_messages
+from .utils.testsuite import test_suite_messages
 from .utils.constants import CONFIG_DIR
 
 # double the ARS timeout, just in case. The ARS should set all queries to error after 5 mins
@@ -20,7 +20,7 @@ MAX_QUERY_TIME = os.getenv("MAX_QUERY_TIME", 600)
 
 
 async def fetch_results(
-        benchmark: str,
+        test_suite: str,
         target: str,
         results_dir: str,
         overwrite: bool = False,
@@ -29,12 +29,11 @@ async def fetch_results(
         progress: bool = True
 ):
     """
-    Fetches results to all the queries of a benchmark from a known target and
+    Fetches results to all the queries of a test suite from a known target and
     stores them in the specified directory.
 
     Args:
-        benchmark (str): Name of the benchmark to run; see benchmarks.json for a
-            complete list of benchmarks.
+        test_suite (str): Name of the test suite to run (as registered in the Tests repository).
         target (str): Name of the target to run the queries against; see
             targets.json for a complete list of known targets.
         results_dir (str): Path to the directory to store query results.
@@ -48,7 +47,7 @@ async def fetch_results(
             used to fetch queries from the target.
         progress (bool, default True): Whether or not to show a progress bar.
     """
-    uids, messages = benchmark_messages(benchmark)
+    uids, messages = test_suite_messages(test_suite)
 
     with open(CONFIG_DIR / 'targets.json') as file:
         targets_json = json.load(file)
@@ -69,7 +68,7 @@ async def fetch_results(
             if path.exists():
                 with open(path, 'r') as file:
                     msg_json = json.load(file)
-                if 'benchmarks' not in msg_json:
+                if 'test suites' not in msg_json:
                     continue
 
             u.append(uid)
@@ -79,7 +78,7 @@ async def fetch_results(
         messages = m
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    output_dir = os.path.join(results_dir, benchmark, target, timestamp)
+    output_dir = os.path.join(results_dir, test_suite, target, timestamp)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     if target == "ars":
@@ -114,7 +113,7 @@ async def send_requests_to_ars(
         num_concurrent_requests: int,
         progress: bool
 ):
-    pbar = None if progress == False else tqdm(total=len(uids))
+    pbar = None if progress is False else tqdm(total=len(uids))
     coroutines = [
         send_request_to_ars(uid, msg, url, output_dir, pbar)
         for uid, msg in zip(uids, messages)
@@ -144,7 +143,7 @@ async def send_request(uid: str, url: str, msg: dict, request_type: str = "post"
                 attempts += 1
                 if attempts >= 3:
                     response_json = deepcopy(msg)
-                    response_json['benchmarks'] = f'Fetch request failed {attempts} times.'
+                    response_json['test suites'] = f'Fetch request failed {attempts} times.'
                     break
 
                 print(f'Retrying in 5 seconds...')
@@ -220,7 +219,7 @@ async def score_results(
     targets.json for this function to work.
 
     Args:
-        benchmark (str): Path to the directory containing unscored results.
+        test suite (str): Path to the directory containing unscored results.
         target (str): Name of the target to score the queries against; see
             targets.json for a complete list of known targets.
         results_dir (str): Path to the directory to store scored results.
@@ -301,7 +300,7 @@ async def send_request_store_result(
                 attempts += 1
                 if attempts >= 3:
                     response_json = deepcopy(msg)
-                    response_json['benchmarks'] = f'Fetch request failed {attempts} times.'
+                    response_json['test suites'] = f'Fetch request failed {attempts} times.'
                     break
 
                 print(f'Retrying in 5 seconds...')

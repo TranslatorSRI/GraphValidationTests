@@ -23,7 +23,7 @@ metrics = {
 
 
 def evaluate_ara_results(
-        benchmark,
+        test_suite,
         results_dir,
         target: str,
         k: int = 20,
@@ -31,7 +31,7 @@ def evaluate_ara_results(
         save_json: bool = False,
 ):
     results = evaluate_results(
-        benchmark,
+        test_suite,
         results_dir,
         target,
         k=k,
@@ -80,7 +80,7 @@ def evaluate_ara_results(
 
     output = [
         '',
-        "Benchmark: {}".format(benchmark),
+        "Benchmark: {}".format(test_suite),
         "Results Directory: {}\n".format(results_dir),
         "\t\t\t{}".format('\t'.join(['k={}'.format(k) for k in ks]))
     ]

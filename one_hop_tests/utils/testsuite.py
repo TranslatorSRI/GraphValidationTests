@@ -1,12 +1,12 @@
 """
-Copied over from Benchmarks/menchmarks_runner/utils/benchmark.py,
-retrieves benchmark test assets and other useful utilities.
+Copied over from Benchmarks/menchmarks_runner/utils/test_suite.py,
+retrieves test_suite test assets and other useful utilities.
 """
 import csv
 import json
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Tuple
 
 from one_hop_tests.utils.constants import BENCHMARKS, CONFIG_DIR
 
@@ -52,19 +52,19 @@ def get_uid(source: str, template: str, datum: Dict[str, str], message: dict):
     return f'{source}.{template}.{".".join(curies)}'
 
 
-def benchmark_uids(benchmark: str) -> List[str]:
+def test_suite_uids(test_suite: str) -> List[str]:
     """
-    For each query in the specified benchmark, compute its UID.
+    For each query in the specified test_suite, compute its UID.
 
     Args:
-        benchmark: (str) Name of the benchmark. Benchmark names are listed in
-            `benchmark.json`.
+        test_suite: (str) Name of the test_suite. Benchmark names are listed in
+            `test_suite.json`.
 
     Returns:
-        UIDs of each query in the benchmark.
+        UIDs of each query in the test_suite.
     """
     uids = set()
-    for source_dict in BENCHMARKS[benchmark]:
+    for source_dict in BENCHMARKS[test_suite]:
         source_dir = CONFIG_DIR / source_dict['source']
 
         # Load data
@@ -92,22 +92,22 @@ def benchmark_uids(benchmark: str) -> List[str]:
     return sorted(uids)
 
 
-def benchmark_messages(benchmark: str) -> Tuple[List[str], List[dict]]:
+def test_suite_messages(test_suite: str) -> Tuple[List[str], List[dict]]:
     """
-    For each query in the specified benchmark, compute its UID and message
+    For each query in the specified test_suite, compute its UID and message
     (containing the query graph).
 
     Args:
-        benchmark: (str) Name of the benchmark. Benchmark names are listed in
-            `benchmark.json`.
+        test_suite: (str) Name of the test_suite. Benchmark names are listed in
+            `test_suite.json`.
 
     Returns:
         (uids, messages)
-            uids: UIDs of each query in the benchmark.
-            messages: messages (as a dict) of each query in the benchmark.
+            uids: UIDs of each query in the test_suite.
+            messages: messages (as a dict) of each query in the test_suite.
     """
     messages = {}
-    for source_dict in BENCHMARKS[benchmark]:
+    for source_dict in BENCHMARKS[test_suite]:
         source_dir = CONFIG_DIR / source_dict['source']
 
         # Load data
@@ -146,19 +146,19 @@ def benchmark_messages(benchmark: str) -> Tuple[List[str], List[dict]]:
     return list(messages.keys()), list(messages.values())
 
 
-def benchmark_ground_truth(benchmark: str) -> Tuple[List[str], List[dict], Dict[str, str]]:
+def test_suite_ground_truth(test_suite: str) -> Tuple[List[str], List[dict], Dict[str, str]]:
     """
-    For each query in the specified benchmark, compute its UID and the set of
+    For each query in the specified test_suite, compute its UID and the set of
     (qnode_id, CURIE) pairs for each unpinned qnode, which is need to discern
     whether a result is relevant or not.
 
     Args:
-        benchmark: (str) Name of the benchmark. Benchmark names are listed in
-            `benchmark.json`.
+        test_suite: (str) Name of the test_suite. Benchmark names are listed in
+            `test_suite.json`.
 
     Returns
         (uids, gts, normalizer)
-            uids: UIDs of each query in the benchmark.
+            uids: UIDs of each query in the test_suite.
             ground_truths: set of a list of tuple pairs (qnode_id, CURIE) that represent
                 the set of relevant results.
             normalizer: Map from CURIEs to the equivalent, preferred CURIE
@@ -166,7 +166,7 @@ def benchmark_ground_truth(benchmark: str) -> Tuple[List[str], List[dict], Dict[
     """
     uid_ground_truths = defaultdict(list)
     curies = []
-    for source in BENCHMARKS[benchmark]:
+    for source in BENCHMARKS[test_suite]:
         source_dir = CONFIG_DIR / source['source']
 
         # Load data
