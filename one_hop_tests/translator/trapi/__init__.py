@@ -199,7 +199,7 @@ def translate_test_asset(test_asset: TestAsset, biolink_version: str) -> Dict[st
     return test_edge
 
 
-async def execute_trapi_lookup(
+async def run_one_hop_unit_test(
         url: str,
         test_asset: TestAsset,
         creator,
@@ -284,14 +284,14 @@ async def execute_trapi_lookup(
                         test_report.report(code="warning.trapi.response.schema_version.missing")
                     else:
                         trapi_version: str = response['schema_version'] if not trapi_version else trapi_version
-                        print(f"execute_trapi_lookup() using TRAPI version: '{trapi_version}'", file=stderr)
+                        print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
 
                     if 'biolink_version' not in response:
                         test_report.report(code="warning.trapi.response.biolink_version.missing")
                     else:
                         biolink_version = response['biolink_version'] \
                             if not biolink_version else biolink_version
-                        logger.info(f"execute_trapi_lookup() using Biolink Model version: '{biolink_version}'")
+                        logger.info(f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'")
 
                     # If nothing badly wrong with the TRAPI Response to this point, then we also check
                     # whether the test input edge was returned in the Response Message knowledge graph

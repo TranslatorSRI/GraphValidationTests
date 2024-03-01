@@ -5,7 +5,7 @@ from typing import Optional
 import pytest
 
 from one_hop_tests import OneHopTest
-from one_hop_tests.translator.trapi import post_query, UnitTestReport, execute_trapi_lookup
+from one_hop_tests.translator.trapi import post_query, UnitTestReport, run_one_hop_unit_test
 from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 from one_hop_tests.unit_test_templates import by_subject
 
@@ -89,7 +89,7 @@ async def test_execute_trapi_lookup():
     expected_output = 'Acceptable'
     oht: OneHopTest = OneHopTest(endpoints=[url])
     test_asset = oht.build_test_asset(input_curie, relationship, output_curie, expected_output)
-    report: UnitTestReport = await execute_trapi_lookup(
+    report: UnitTestReport = await run_one_hop_unit_test(
         url=url,
         test_asset=test_asset,
         creator=by_subject,

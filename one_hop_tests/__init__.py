@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from bmt.toolkit import Toolkit
 from bmt import utils
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, ExpectedOutputEnum
-from one_hop_tests.translator.trapi import execute_trapi_lookup, UnitTestReport
+from one_hop_tests.translator.trapi import run_one_hop_unit_test, UnitTestReport
 from one_hop_tests.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -148,7 +148,7 @@ class OneHopTest:
         async def test_case(test_type) -> UnitTestReport:
             # TODO: eventually need to process multiple self.endpoints(?)
             target_url: str = self.endpoints[0]
-            return await execute_trapi_lookup(
+            return await run_one_hop_unit_test(
                 target_url, test_asset, test_type, self.trapi_version, self.biolink_version
             )
         return test_case
@@ -162,6 +162,8 @@ class OneHopTest:
         :return: None - use 'get_results()' method below
         """
         test_case = self.test_case_wrapper(test_asset=test_asset)
+        # TODO: do these tests need to be run sequentially or
+        #       could they be run concurrently then "gathered" together?
         self.results["by_subject"] = await test_case(by_subject)
         self.results["inverse_by_new_subject"] = await test_case(inverse_by_new_subject)
         self.results["by_object"] = await test_case(by_object)
