@@ -23,6 +23,8 @@ from one_hop_tests.translator.registry import (
     extract_component_test_metadata_from_registry
 )
 
+# from .utils.asyncio import gather
+
 
 env_spec = {
     'dev': 'ars-dev',
@@ -162,8 +164,24 @@ class OneHopTest:
         :return: None - use 'get_results()' method below
         """
         test_case = self.test_case_wrapper(test_asset=test_asset)
+        #
         # TODO: do these tests need to be run sequentially or
         #       could they be run concurrently then "gathered" together?
+        #     coroutines = [
+        #         test_case(test_type)
+        #         for test_type in [
+        #           by_subject,
+        #           inverse_by_new_subject,
+        #           by_object,
+        #           raise_subject_entity,
+        #           raise_object_by_subject,
+        #           raise_predicate_by_subject
+        #         ]
+        #     ]
+        #     await gather(*coroutines, limit=num_concurrent_requests)
+        #
+        #     TODO: How are the results retrieved and indexed?
+
         self.results["by_subject"] = await test_case(by_subject)
         self.results["inverse_by_new_subject"] = await test_case(inverse_by_new_subject)
         self.results["by_object"] = await test_case(by_object)
