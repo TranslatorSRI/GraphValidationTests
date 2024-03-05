@@ -41,6 +41,7 @@ class OneHopTest:
             endpoints: List[str],
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
+            runner_settings: Optional[List[str]] = None,
             log_level: Optional[str] = None
     ):
         """
@@ -49,11 +50,13 @@ class OneHopTest:
         :param endpoints: List[str], target environment endpoint(s) being targeted for testing
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
-        :param log_level: Optional[str], logging level for diagnostics
+        :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
+        :param log_level: Optional[str], Python logger logging level, for diagnostics
         """
         self.endpoints: List[str] = endpoints
         self.trapi_version = trapi_version
         self.biolink_version = biolink_version
+        self.runner_settings = runner_settings
         # TODO: need to use retrieve Toolkit for specified biolink_version...
         self.bmt = Toolkit()
         self.log_level: Optional[str] = log_level
@@ -71,18 +74,25 @@ class OneHopTest:
                 return utils.format_element(predicate)
         return None
 
-    def build_test_asset(self, input_curie, relationship, output_curie, expected_output) -> TestAsset:
+    def build_test_asset(
+            self,
+            subject_id,
+            subject_category,
+            predicate_id,
+            object_id,
+            object_category
+    ) -> TestAsset:
         """
         Construct a Python TestAsset object.
 
-        :param input_curie: test asset input 'subject' CURIE identifier
-        :param relationship: human-readable name of a predicate
-        :param output_curie:  test asset output 'object' CURIE identifier
-        :param expected_output: from ExpectedOutputEnum, values like
-                                Top_Answer, Acceptable, BadButForgivable, NeverShow, etc.
+        :param subject_id: str, CURIE identifying the identifier of the subject concept
+        :param subject_category: str, CURIE identifying the category of the subject concept
+        :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
+        :param object_id: str, CURIE identifying the identifier of the object concept
+        :param subject_category: str, CURIE identifying the category of the subject concept
         :return: TestAsset object
         """
-        # query_type, expected_output, input_curie, output_curie
+        # query_type, expected_output, subject_id, output_curie
         #
         #    mapped onto
         #
@@ -137,7 +147,7 @@ class OneHopTest:
         predicate_id: str = self.generate_predicate_id(relationship)
         return TestAsset.construct(
             id=self.generate_test_asset_id(),
-            input_id=input_curie,
+            input_id=subject_id,
             input_category="biolink:NamedThing",
             predicate_id=predicate_id,
             predicate_name=relationship,
@@ -290,46 +300,54 @@ def target_component_urls(env: str, components: Optional[str] = None) -> List[st
 
 
 def run_onehop_tests(
-        env: str,
-        input_curie: str,
-        relationship: str,
-        output_curie: str,
-        expected_output: str,
+        subject_id: str,
+        subject_category: str,
+        predicate_id: str,
+        object_id: str,
+        object_category: str,
         components: Optional[str] = None,
+        environment: Optional[str] = None,
         trapi_version: Optional[str] = None,
         biolink_version: Optional[str] = None,
+        runner_settings: Optional[List[str]] = None,
         log_level: Optional[str] = None
 ) -> Dict:
     """
     Run a battery of "One Hop" knowledge graph test cases using specified test asset information.
 
-    :param env: str, Target Translator execution environment for the test, one of 'dev', 'ci', 'test' or 'prod'.
-    :param input_curie: str, CURIE identifying the input ('subject') concept
-    :param relationship: str, name of Biolink Model predicate defining the statement relationship being tested.
-    :param output_curie: str, CURIE identifying the output ('object') concept
-    :param expected_output: category of expected output (values from ExpectedOutputEnum in TranslatorTestingModel)
+    :param subject_id: str, CURIE identifying the identifier of the subject concept
+    :param subject_category: str, CURIE identifying the category of the subject concept
+    :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
+    :param object_id: str, CURIE identifying the identifier of the object concept
+    :param subject_category: str, CURIE identifying the category of the subject concept
     :param components: Optional[str], components to be tested
                                      (values from ComponentEnum in TranslatorTestingModel; default 'ars')
+    :param environment: Optional[str], Target Translator execution environment for the test,
+                                       one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
     :param trapi_version: Optional[str], target TRAPI version (default: current release)
     :param biolink_version: Optional[str], target Biolink Model version (default: current release)
-    :param log_level:
-    :return:
+    :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
+    :param log_level: Optional[str] = None
+    :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
     """
-    endpoints: List[str] = target_component_urls(env=env_spec[env], components=components)
+    endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
 
     oht: OneHopTest = OneHopTest(
         endpoints=endpoints,
         trapi_version=trapi_version,
         biolink_version=biolink_version,
+        runner_settings=runner_settings,
         log_level=log_level
     )
 
-    assert expected_output in ExpectedOutputEnum.__members__
-
-    # TODO: if output_curie is allowed to be multivalued here, how should the code be run?
-
     # OneHop tests directly use Test Assets to internally configure and run its Test Cases
-    test_asset: TestAsset = oht.build_test_asset(input_curie, relationship, output_curie, expected_output)
+    test_asset: TestAsset = oht.build_test_asset(
+        subject_id,
+        subject_category,
+        predicate_id,
+        object_id,
+        object_category
+    )
 
     oht.run(test_asset=test_asset)
 
@@ -340,16 +358,15 @@ def get_parameters():
     """Parse CLI args."""
 
     # Sample command line interface parameters:
-    #     --env 'ci'
-    #     --input_curie 'MONDO:0005301'
-    #     --relationship 'treats'
-    #     --output_curie  'PUBCHEM.COMPOUND:107970,UNII:3JB47N2Q2P'
-    #     --expected_output 'Acceptable'
+    #     --environment 'ci'
+    #     --subject_id 'MONDO:0005301'
+    #     --predicate_id 'treats'
+    #     --object_id  'PUBCHEM.COMPOUND:107970'
 
     parser = ArgumentParser(description="Translator SRI Automated Test Harness")
 
     parser.add_argument(
-        "--env",
+        "--environment",
         type=str,
         required=True,
         choices=['dev', 'ci', 'test', 'prod'],
@@ -365,33 +382,25 @@ def get_parameters():
     )
 
     parser.add_argument(
-        "--input_curie",
+        "--subject_id",
         type=str,
         required=True,
-        help="Input CURIE",
+        help="Statement object concept CURIE",
     )
 
     parser.add_argument(
-        "--relationship",
+        "--predicate_id",
         type=str,
         required=True,
-        help="Relationship ('Biolink Predicate') name",
+        help="Statement Biolink Predicate identifier",
     )
 
     # TODO: should this be multi-valued or not?
     parser.add_argument(
-        "--output_curie",
+        "--object_id",
         type=str,
         required=True,
-        help="Output CURIE (may be a comma separated string of CURIEs)",
-    )
-
-    # Not sure if this needs to be a parameter... could potentially be hard coded internally?
-    parser.add_argument(
-        "--expected_output",
-        type=str,
-        required=True,
-        help="Expected output value drawn from the ExpectedOutputEnum of the Translator Testing Model",
+        help="Statement object concept CURIE ",
     )
 
     parser.add_argument(
