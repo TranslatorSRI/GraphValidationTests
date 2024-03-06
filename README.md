@@ -20,10 +20,23 @@ To run One Hop Tests:
 ```python
 import asyncio
 from one_hop_tests import run_onehop_tests
-
-output = asyncio.run(run_onehop_tests(<test_suite>, <target>))
+input_data = {
+        # subject_id: str,
+        # subject_category: str,
+        # predicate_id: str,
+        # object_id: str,
+        # object_category: str,
+        # components: Optional[str] = None,
+        # environment: Optional[str] = None,
+        # trapi_version: Optional[str] = None,
+        # biolink_version: Optional[str] = None,
+        # runner_settings: Optional[Dict[str, str]] = None,
+        # log_level: Optional[str] = None
+}
+output = asyncio.run(run_onehop_tests(**input_data))
 ```
-where test_suite is the name of a Test Suite declared in the [NCATS Translator Tests](https://github.com/NCATSTranslator/Tests) repository, and a target that is specified in config/targets.json
+where test_suite is the name of a Test Suite declared in the [NCATS Translator Tests](https://github.com/NCATSTranslator/Tests) repository, 
+and a target that is specified in config/targets.json
 
 ### Sample Output
 

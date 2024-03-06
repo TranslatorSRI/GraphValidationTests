@@ -41,7 +41,7 @@ class OneHopTest:
             endpoints: List[str],
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
-            runner_settings: Optional[List[str]] = None,
+            runner_settings: Optional[Dict[str, str]] = None,
             log_level: Optional[str] = None
     ):
         """
@@ -50,7 +50,7 @@ class OneHopTest:
         :param endpoints: List[str], target environment endpoint(s) being targeted for testing
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
-        :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
+        :param runner_settings: Optional[Dict[str, str]], extra string directives to the Test Runner (default: None)
         :param log_level: Optional[str], Python logger logging level, for diagnostics
         """
         self.endpoints: List[str] = endpoints
@@ -309,7 +309,7 @@ def run_onehop_tests(
         environment: Optional[str] = None,
         trapi_version: Optional[str] = None,
         biolink_version: Optional[str] = None,
-        runner_settings: Optional[List[str]] = None,
+        runner_settings: Optional[Dict[str, str]] = None,
         log_level: Optional[str] = None
 ) -> Dict:
     """
@@ -326,7 +326,7 @@ def run_onehop_tests(
                                        one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
     :param trapi_version: Optional[str], target TRAPI version (default: current release)
     :param biolink_version: Optional[str], target Biolink Model version (default: current release)
-    :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
+    :param runner_settings: Optional[Dict[str, str]], extra string parameters to the Test Runner (default: None)
     :param log_level: Optional[str] = None
     :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
     """
