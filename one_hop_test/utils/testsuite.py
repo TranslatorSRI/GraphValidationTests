@@ -8,7 +8,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, List, Tuple
 
-from one_hop_tests.utils.constants import BENCHMARKS, CONFIG_DIR
+from one_hop_test.utils.constants import BENCHMARKS, CONFIG_DIR
 
 from .normalize import get_normalizer
 

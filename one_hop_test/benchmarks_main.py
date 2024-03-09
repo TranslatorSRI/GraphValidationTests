@@ -3,8 +3,8 @@ import asyncio
 import os
 import tempfile
 
-from one_hop_tests.request import fetch_results
-from one_hop_tests.cli.eval import evaluate_ara_results
+from one_hop_test.request import fetch_results
+from one_hop_test.cli.eval import evaluate_ara_results
 
 
 async def run_benchmarks(

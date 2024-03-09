@@ -4,10 +4,10 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from one_hop_tests import OneHopTest
-from one_hop_tests.translator.trapi import post_query, UnitTestReport, run_one_hop_unit_test
-from one_hop_tests.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
-from one_hop_tests.unit_test_templates import by_subject
+from one_hop_test import OneHopTest
+from one_hop_test.translator.trapi import post_query, UnitTestReport, run_one_hop_unit_test
+from one_hop_test.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
+from one_hop_test.unit_test_templates import by_subject
 
 pytest_plugins = ('pytest_asyncio',)
 

@@ -4,12 +4,14 @@ from the legacy SRI_Testing project)
 """
 from typing import Dict, List, Optional
 from functools import lru_cache
+import logging
 from argparse import ArgumentParser
-from bmt.toolkit import Toolkit
+
 from bmt import utils
-from translator_testing_model.datamodel.pydanticmodel import TestAsset, ExpectedOutputEnum
-from one_hop_tests.translator.trapi import run_one_hop_unit_test, UnitTestReport
-from one_hop_tests.unit_test_templates import (
+from reasoner_validator.biolink import get_biolink_model_toolkit
+from translator_testing_model.datamodel.pydanticmodel import TestAsset
+from one_hop_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
+from one_hop_test.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,
@@ -18,7 +20,7 @@ from one_hop_tests.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
-from one_hop_tests.translator.registry import (
+from one_hop_test.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
 )
@@ -42,7 +44,7 @@ class OneHopTest:
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[Dict[str, str]] = None,
-            log_level: Optional[str] = None
+            logger: Optional[logging.Logger] = None
     ):
         """
         OneHopTest constructor.
@@ -51,15 +53,17 @@ class OneHopTest:
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[Dict[str, str]], extra string directives to the Test Runner (default: None)
-        :param log_level: Optional[str], Python logger logging level, for diagnostics
+        :param logger: Optional[logging.Logger], Python logger, for diagnostics
         """
         self.endpoints: List[str] = endpoints
         self.trapi_version = trapi_version
+
         self.biolink_version = biolink_version
+        self.bmt = get_biolink_model_toolkit(biolink_version=biolink_version)
+
         self.runner_settings = runner_settings
-        # TODO: need to use retrieve Toolkit for specified biolink_version...
-        self.bmt = Toolkit()
-        self.log_level: Optional[str] = log_level
+
+        self.logger: Optional[logging.Logger] = logger
         self._id = 0
         self.results: Dict = dict()
 
@@ -89,71 +93,16 @@ class OneHopTest:
         :param subject_category: str, CURIE identifying the category of the subject concept
         :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
         :param object_id: str, CURIE identifying the identifier of the object concept
-        :param subject_category: str, CURIE identifying the category of the subject concept
+        :param object_category: str, CURIE identifying the category of the subject concept
         :return: TestAsset object
         """
-        # query_type, expected_output, subject_id, output_curie
-        #
-        #    mapped onto
-        #
-        # class TestAsset(TestEntity):
-        #     """
-        #     Represents a Test Asset, which is a single specific instance of
-        #     TestCase-agnostic semantic parameters representing the specification
-        #     of a Translator test target with inputs and (expected) outputs.
-        #     """
-        #     input_id: str = Field(...)
-        #     input_name: Optional[str] = Field(None)
-        #     input_category: Optional[str] = Field(None)
-        #     predicate_id: Optional[str] = Field(None)
-        #     predicate_name: str = Field(...)
-        #     output_id: str = Field(...)
-        #     output_name: Optional[str] = Field(None)
-        #     output_category: Optional[str] = Field(None)
-        #     association: Optional[str] = Field(
-        #                 None,
-        #                 description="""Specific Biolink Model association 'category'
-        #                 which applies to the test asset defined knowledge statement"""
-        #     )
-        #     qualifiers: Optional[List[Qualifier]] = Field(
-        #                 default_factory=list,
-        #                 description="""
-        #                 Optional qualifiers which constrain to the test asset defined knowledge statement.
-        #                 Note that this field records such qualifier slots and values as tag=value pairs, where
-        #                 the tag is the Biolink Model qualifier slot named and the value is an acceptable
-        #                 (Biolink Model enum?) value of the said qualifier slot."""
-        #     )
-        #     expected_output: ExpectedOutputEnum = Field(...)
-        #     test_issue: Optional[TestIssueEnum] = Field(None)
-        #     semantic_severity: Optional[SemanticSeverityEnum] = Field(None)
-        #     in_v1: Optional[bool] = Field(None)
-        #     well_known: Optional[bool] = Field(None)
-        #     test_reference: Optional[str] = Field(
-        #                     None,
-        #                     description="""Document URL where original test source
-        #                                    particulars are registered (e.g. Github repo)"""
-        #     )
-        #     runner_settings: List[str] = Field(
-        #                      default_factory=list, description="""Settings for the test harness, e.g. \"inferred\""""
-        #     )
-        #     id: str = Field(..., description="""A unique identifier for a Test Entity""")
-        #     name: Optional[str] = Field(None, description="""A human-readable name for a Test Entity""")
-        #     description: Optional[str] = Field(None, description="""A human-readable description for a Test Entity""")
-        #     tags: Optional[List[str]] = Field(
-        #                     default_factory=list, description="""One or more 'tags' slot values
-        #                     (inherited from TestEntity) should generally be defined to specify
-        #                     TestAsset membership in a \"Block List\" collection"""
-        #      )
-        predicate_id: str = self.generate_predicate_id(relationship)
         return TestAsset.construct(
             id=self.generate_test_asset_id(),
             input_id=subject_id,
-            input_category="biolink:NamedThing",
+            input_category=subject_category,
             predicate_id=predicate_id,
-            predicate_name=relationship,
-            output_id=output_curie,
-            output_category="biolink:NamedThing",
-            expected_output=expected_output
+            output_id=object_id,
+            output_category=object_category
         )
 
     def test_case_wrapper(self, test_asset: TestAsset):
@@ -190,7 +139,7 @@ class OneHopTest:
         #     ]
         #     await gather(*coroutines, limit=num_concurrent_requests)
         #
-        #     TODO: How are the results retrieved and indexed?
+        #     TODO: How are the results to be retrieved and indexed?
 
         self.results["by_subject"] = await test_case(by_subject)
         self.results["inverse_by_new_subject"] = await test_case(inverse_by_new_subject)
@@ -310,7 +259,7 @@ def run_onehop_tests(
         trapi_version: Optional[str] = None,
         biolink_version: Optional[str] = None,
         runner_settings: Optional[Dict[str, str]] = None,
-        log_level: Optional[str] = None
+        logger: Optional[logging.Logger] = None
 ) -> Dict:
     """
     Run a battery of "One Hop" knowledge graph test cases using specified test asset information.
@@ -327,7 +276,7 @@ def run_onehop_tests(
     :param trapi_version: Optional[str], target TRAPI version (default: current release)
     :param biolink_version: Optional[str], target Biolink Model version (default: current release)
     :param runner_settings: Optional[Dict[str, str]], extra string parameters to the Test Runner (default: None)
-    :param log_level: Optional[str] = None
+    :param logger: Optional[logging.Logger], Python logging handle (Default: None)
     :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
     """
     endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
@@ -337,7 +286,7 @@ def run_onehop_tests(
         trapi_version=trapi_version,
         biolink_version=biolink_version,
         runner_settings=runner_settings,
-        log_level=log_level
+        logger=logger
     )
 
     # OneHop tests directly use Test Assets to internally configure and run its Test Cases

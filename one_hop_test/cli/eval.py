@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 import os
 
-from one_hop_tests.eval import evaluate_results
+from one_hop_test.eval import evaluate_results
 
 metrics_at_k = {
     'Precision @ k\t\t': 'precision_at_k',

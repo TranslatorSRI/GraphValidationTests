@@ -19,19 +19,20 @@ To run One Hop Tests:
 
 ```python
 import asyncio
-from one_hop_tests import run_onehop_tests
+from one_hop_test import run_onehop_tests
+
 input_data = {
-        # subject_id: str,
-        # subject_category: str,
-        # predicate_id: str,
-        # object_id: str,
-        # object_category: str,
-        # components: Optional[str] = None,
-        # environment: Optional[str] = None,
-        # trapi_version: Optional[str] = None,
-        # biolink_version: Optional[str] = None,
-        # runner_settings: Optional[Dict[str, str]] = None,
-        # log_level: Optional[str] = None
+    # subject_id: str,
+    # subject_category: str,
+    # predicate_id: str,
+    # object_id: str,
+    # object_category: str,
+    # components: Optional[str] = None,
+    # environment: Optional[str] = None,
+    # trapi_version: Optional[str] = None,
+    # biolink_version: Optional[str] = None,
+    # runner_settings: Optional[Dict[str, str]] = None,
+    # logger: Optional[logging.Logger] = None
 }
 output = asyncio.run(run_onehop_tests(**input_data))
 ```

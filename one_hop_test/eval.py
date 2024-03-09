@@ -1,5 +1,5 @@
 """
-Evaluation module for one_hop_tests, copied from Benchmarks/benchmarks_runner/eval.py.
+Evaluation module for one_hop_test, copied from Benchmarks/benchmarks_runner/eval.py.
 """
 
 import collections.abc
@@ -14,7 +14,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
-from one_hop_tests.utils.benchmark import benchmark_ground_truth
+from one_hop_test.utils.benchmark import benchmark_ground_truth
 
 
 def evaluate_results(

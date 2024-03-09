@@ -3,7 +3,7 @@ Ontology KP interface
 """
 from typing import Optional
 from reasoner_validator.biolink import get_biolink_model_toolkit
-from one_hop_tests.translator.trapi import post_query
+from one_hop_test.translator.trapi import post_query
 
 ONTOLOGY_KP_TRAPI_SERVER = "https://automat.renci.org/ubergraph/1.4/query"
 NODE_NORMALIZER_SERVER = "https://nodenormalization-sri.renci.org/get_normalized_nodes"
