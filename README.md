@@ -27,20 +27,19 @@ import asyncio
 from standards_validation_test import run_validation_test
 
 test_data = {
-    # # from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
-    # "environment": environment, # TestEnvEnum
-    # "components": components,  # List[str], len>0
-    # "trapi_version": trapi_version,  # str
-    # "biolink_version": biolink_version,  # str
-    # "runner_settings": asset.test_runner_settings,  # Optional[List[str]]
-    # "logger": logger,  # Python logging.Logger
-    # 
-    # # One test edge (asset)
-    # "subject_id": asset.input_id,  # str
-    # "subject_category": asset.input_category,  # str
-    # "predicate_id": asset.predicate_id,  # str
-    # "object_id": asset.output_id,  # str
-    # "object_category": asset.output_category  # str
+#     # One test edge (asset)
+#     "subject_id": asset.input_id,  # str
+#     "subject_category": asset.input_category,  # str
+#     "predicate_id": asset.predicate_id,  # str
+#     "object_id": asset.output_id,  # str
+#     "object_category": asset.output_category  # str
+#
+#     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
+#     "components": components,  # Optional[str] = None; default: 'ars' if not given
+#     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
+#     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
+#     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
+#     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 output = asyncio.run(run_validation_test(**test_data))
 ```
@@ -54,20 +53,19 @@ import asyncio
 from one_hop_test import run_one_hop_test
 
 test_data = {
-    # # from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
-    # "environment": environment, # TestEnvEnum
-    # "components": components,  # List[str], len>0
-    # "trapi_version": trapi_version,  # str
-    # "biolink_version": biolink_version,  # str
-    # "runner_settings": asset.test_runner_settings,  # Optional[List[str]]
-    # "logger": logger,  # Python logging.Logger
-    # 
-    # # One test edge (asset)
-    # "subject_id": asset.input_id,  # str
-    # "subject_category": asset.input_category,  # str
-    # "predicate_id": asset.predicate_id,  # str
-    # "object_id": asset.output_id,  # str
-    # "object_category": asset.output_category  # str
+#     # One test edge (asset)
+#     "subject_id": asset.input_id,  # str
+#     "subject_category": asset.input_category,  # str
+#     "predicate_id": asset.predicate_id,  # str
+#     "object_id": asset.output_id,  # str
+#     "object_category": asset.output_category  # str
+#
+#     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
+#     "components": components,  # Optional[str] = None; default: 'ars' if not given
+#     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
+#     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
+#     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
+#     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 output = asyncio.run(run_one_hop_test(**test_data))
 ```

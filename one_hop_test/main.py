@@ -33,19 +33,20 @@ async def run_one_hop_test(
 
 if __name__ == "__main__":
     asyncio.run(run_one_hop_test(
-        #             test_inputs = {
-        #                 # from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
-        #                 "environment": environment, # TestEnvEnum
-        #                 "components": components,  # List[str], len>0
-        #                 "trapi_version": trapi_version,  # str
-        #                 "biolink_version": biolink_version,  # str
-        #                 "runner_settings": asset.test_runner_settings,  # Optional[List[str]]
-        #                 "logger": logger,  # Python logging.Logger
+        # test_inputs = {
+        #     # One test edge (asset)
+        #     "subject_id": asset.input_id,  # str
+        #     "subject_category": asset.input_category,  # str
+        #     "predicate_id": asset.predicate_id,  # str
+        #     "object_id": asset.output_id,  # str
+        #     "object_category": asset.output_category  # str
         #
-        #                 # One test edge (asset)
-        #                 "subject_id": asset.input_id,  # str
-        #                 "subject_category": asset.input_category,  # str
-        #                 "predicate_id": asset.predicate_id,  # str
-        #                 "object_id": asset.output_id,  # str
-        #                 "object_category": asset.output_category  # str
+        #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
+        #     "components": components,  # Optional[str] = None; default: 'ars' if not given
+        #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
+        #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
+        #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
+        #     "logger": logger,  # Python Optional[logging.Logger] = None
+        #
+        # }
     ))
