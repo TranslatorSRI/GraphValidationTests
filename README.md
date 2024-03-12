@@ -43,7 +43,7 @@ test_data = {
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 results: Dict = asyncio.run(StandardsValidationTest.run_test(**vars(test_data)))
-
+print(results)
 ```
 
 ## OneHopTest
@@ -71,6 +71,7 @@ test_data = {
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 results: Dict = asyncio.run(OneHopTest.run_test(**vars(test_data)))
+print(results)
 ```
 
 ### Sample Output
