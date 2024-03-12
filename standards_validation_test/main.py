@@ -1,5 +1,5 @@
 """
-Main OneHopTest Test Runner entry.
+Main TrapiTest Test Runner entry.
 (Inspired partially by the design of Benchmarks/benchmarks_runner/main.py)
 """
 import asyncio
@@ -10,11 +10,11 @@ from one_hop_test.request import fetch_results
 from one_hop_test.cli.eval import evaluate_ara_results
 
 
-async def run_one_hop_test(
+async def run_validation_tests(
     test_suite: str,
     target: str,
 ):
-    """Run OneHopTest."""
+    """Run Standards Validation Test."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = await fetch_results(test_suite, target, tmpdir)
         output_results = []
@@ -32,7 +32,7 @@ async def run_one_hop_test(
 
 
 if __name__ == "__main__":
-    asyncio.run(run_one_hop_test(
+    asyncio.run(run_validation_tests(
         #             test_inputs = {
         #                 # from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
         #                 "environment": environment, # TestEnvEnum
@@ -48,4 +48,5 @@ if __name__ == "__main__":
         #                 "predicate_id": asset.predicate_id,  # str
         #                 "object_id": asset.output_id,  # str
         #                 "object_category": asset.output_category  # str
+        #             }
     ))
