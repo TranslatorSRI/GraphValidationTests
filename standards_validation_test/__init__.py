@@ -3,6 +3,7 @@ One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
 from typing import Dict, List, Optional
+import asyncio
 import logging
 
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
@@ -41,7 +42,7 @@ class StandardsValidationTest(GraphValidationTest):
         raise NotImplementedError("Implement this")
 
 
-def run_validation_test(
+async def run_validation_test(
         subject_id: str,
         subject_category: str,
         predicate_id: str,
@@ -87,7 +88,7 @@ def run_validation_test(
     """
     endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
 
-    oht: StandardsValidationTest = StandardsValidationTest(
+    svt: StandardsValidationTest = StandardsValidationTest(
         endpoints=endpoints,
         trapi_version=trapi_version,
         biolink_version=biolink_version,
@@ -95,8 +96,7 @@ def run_validation_test(
         logger=logger
     )
 
-    # OneHop tests directly use Test Assets to internally configure and run its Test Cases
-    test_asset: TestAsset = oht.build_test_asset(
+    test_asset: TestAsset = svt.build_test_asset(
         subject_id,
         subject_category,
         predicate_id,
@@ -104,12 +104,12 @@ def run_validation_test(
         object_category
     )
 
-    oht.run(test_asset=test_asset)
+    await svt.run(test_asset=test_asset)
 
-    return oht.get_results()
+    return svt.get_results()
 
 
 if __name__ == '__main__':
     args = get_parameters()
-    results: Dict = run_validation_test(**vars(args))
+    results: Dict = asyncio.run(run_validation_test(**vars(args)))
     print(results)

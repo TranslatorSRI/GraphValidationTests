@@ -3,6 +3,7 @@ One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
 from typing import Dict, List, Optional
+import asyncio
 import logging
 
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
@@ -91,7 +92,7 @@ class OneHopTest(GraphValidationTest):
         self.results["raise_predicate_by_subject"] = await test_case(raise_predicate_by_subject)
 
 
-def run_one_hop_test(
+async def run_one_hop_test(
         subject_id: str,
         subject_category: str,
         predicate_id: str,
@@ -154,12 +155,12 @@ def run_one_hop_test(
         object_category
     )
 
-    oht.run(test_asset=test_asset)
+    await oht.run(test_asset=test_asset)
 
     return oht.get_results()
 
 
 if __name__ == '__main__':
     args = get_parameters()
-    results: Dict = run_one_hop_test(**vars(args))
+    results: Dict = asyncio.run(run_one_hop_test(**vars(args)))
     print(results)
