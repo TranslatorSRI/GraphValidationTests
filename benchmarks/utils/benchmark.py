@@ -3,11 +3,11 @@ import csv
 import json
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Tuple
 
-from benchmarks_runner.utils.constants import BENCHMARKS, CONFIG_DIR
+from benchmarks.utils.constants import BENCHMARKS, CONFIG_DIR
 
-from .normalize import get_normalizer
+from benchmarks.normalize import get_normalizer
 
 
 def get_uid(source: str, template: str, datum: Dict[str, str], message: dict):

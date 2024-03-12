@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple
 
 from graph_validation_test.utils.constants import BENCHMARKS, CONFIG_DIR
 
-from .normalize import get_normalizer
+from benchmarks.normalize import get_normalizer
 
 
 def get_uid(source: str, template: str, datum: Dict[str, str], message: dict):
