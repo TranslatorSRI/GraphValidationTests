@@ -11,9 +11,9 @@ import httpx
 from tqdm import tqdm
 from reasoner_pydantic import Response
 
-from .utils.asyncio import gather
-from .utils.testsuite import test_suite_messages
-from .utils.constants import CONFIG_DIR
+from graph_validation_test.utils.asyncio import gather
+from graph_validation_test.utils.testsuite import test_suite_messages
+from graph_validation_test.utils.constants import CONFIG_DIR
 
 # double the ARS timeout, just in case. The ARS should set all queries to error after 5 mins
 MAX_QUERY_TIME = os.getenv("MAX_QUERY_TIME", 600)

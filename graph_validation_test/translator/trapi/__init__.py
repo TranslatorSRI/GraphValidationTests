@@ -2,7 +2,7 @@
 Code to submit OneHop tests to TRAPI
 """
 from sys import stderr
-from typing import Optional, Dict, Set, List
+from typing import Optional, Dict
 import requests
 
 from reasoner_validator.validator import TRAPIResponseValidator

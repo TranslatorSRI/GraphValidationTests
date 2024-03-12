@@ -7,7 +7,7 @@ import asyncio
 
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import GraphValidationTest, get_parameters
-from one_hop_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
+from graph_validation_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
 from one_hop_test.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -18,10 +18,6 @@ from one_hop_test.unit_test_templates import (
     raise_predicate_by_subject
 )
 
-from one_hop_test.translator.registry import (
-    get_the_registry_data,
-    extract_component_test_metadata_from_registry
-)
 
 # from .utils.asyncio import gather
 

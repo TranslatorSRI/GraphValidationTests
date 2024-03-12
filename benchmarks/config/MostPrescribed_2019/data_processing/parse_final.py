@@ -3,7 +3,7 @@ from collections import defaultdict
 cond2drug = defaultdict(list)
 
 
-with open('DrugCondition.txt','r') as inf:
+with open('DrugCondition.txt', 'r') as inf:
     h = inf.readline()
     for line in inf:
         x = line.strip().split('\t')

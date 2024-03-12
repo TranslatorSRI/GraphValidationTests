@@ -9,8 +9,8 @@ from argparse import ArgumentParser
 from bmt import utils
 from reasoner_validator.biolink import get_biolink_model_toolkit
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
-from one_hop_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
-from one_hop_test.translator.registry import (
+from graph_validation_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
+from graph_validation_test.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
 )

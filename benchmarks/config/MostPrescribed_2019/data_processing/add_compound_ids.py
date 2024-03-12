@@ -9,7 +9,7 @@ def lookup(name):
     return ''
 
 def add_ids_from_label():
-    with open('source_data.txt','r') as inf, open('drugs_with_ids','w') as outf:
+    with open('source_data.txt', 'r') as inf, open('drugs_with_ids', 'w') as outf:
         _ = inf.readline()
         outf.write(f'drugname\tdrug_id\n')
         for line in inf:
@@ -20,7 +20,7 @@ def add_ids_from_label():
 
 def add_round_trip():
     ids = []
-    with open('drugs_with_ids','r') as inf:
+    with open('drugs_with_ids', 'r') as inf:
         _ = inf.readline()
         for line in inf:
             x = line.strip().split('\t')
@@ -30,7 +30,7 @@ def add_round_trip():
                 ids.append(x[1])
     url = 'https://nodenormalization-sri.renci.org/get_normalized_nodes'
     results = requests.post(url,json={"curies":ids}).json()
-    with open('drugs_with_ids','r') as inf, open('drugs.txt','w') as outf:
+    with open('drugs_with_ids', 'r') as inf, open('drugs.txt', 'w') as outf:
         _ = inf.readline()
         outf.write('OriginalName\tID\tRoundtripName\tMatch\n')
         for line in  inf:

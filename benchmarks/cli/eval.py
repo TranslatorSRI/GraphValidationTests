@@ -2,13 +2,12 @@
 Evaluation module for OneHopTest, adapted from Benchmarks/benchmarks_runner/cli/eval.py
 """
 from argparse import ArgumentParser
-import base64
 import io
 from matplotlib import pyplot as plt
 from pathlib import Path
 import os
 
-from one_hop_test.eval import evaluate_results
+from benchmarks.eval import evaluate_results
 
 metrics_at_k = {
     'Precision @ k\t\t': 'precision_at_k',

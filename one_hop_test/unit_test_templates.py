@@ -1,9 +1,7 @@
-from sys import stderr
 from typing import Set, Dict, List, Tuple, Optional
 from copy import deepcopy
 from dataclasses import asdict
 from functools import wraps
-from json import dumps
 
 from bmt import utils
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
