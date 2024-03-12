@@ -23,8 +23,9 @@ The **GraphValidationTests** module can be installed from pypi and used as part 
 To run TRAPI and Biolink Model validation tests of a knowledge graph component:
 
 ```python
+from typing import Dict
 import asyncio
-from standards_validation_test import run_validation_test
+from standards_validation_test import StandardsValidationTest
 
 test_data = {
 #     # One test edge (asset)
@@ -41,7 +42,8 @@ test_data = {
 #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
-output = asyncio.run(run_validation_test(**test_data))
+results: Dict = asyncio.run(StandardsValidationTest.run_test(**vars(test_data)))
+
 ```
 
 ## OneHopTest
@@ -49,8 +51,9 @@ output = asyncio.run(run_validation_test(**test_data))
 To run "One Hop" knowledge graph navigation tests:
 
 ```python
+from typing import Dict
 import asyncio
-from one_hop_test import run_one_hop_test
+from one_hop_test import OneHopTest
 
 test_data = {
 #     # One test edge (asset)
@@ -67,7 +70,7 @@ test_data = {
 #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
-output = asyncio.run(run_one_hop_test(**test_data))
+results: Dict = asyncio.run(OneHopTest.run_test(**vars(test_data)))
 ```
 
 ### Sample Output
