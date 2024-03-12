@@ -249,7 +249,7 @@ def target_component_urls(env: str, components: Optional[str] = None) -> List[st
     return endpoints
 
 
-def run_onehop_tests(
+def run_one_hop_test(
         subject_id: str,
         subject_category: str,
         predicate_id: str,
@@ -380,5 +380,5 @@ def get_parameters():
 
 if __name__ == '__main__':
     args = get_parameters()
-    results: Dict = run_onehop_tests(**vars(args))
+    results: Dict = run_one_hop_test(**vars(args))
     print(results)

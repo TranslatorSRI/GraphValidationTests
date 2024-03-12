@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "OneHopTests"
+name = "GraphValidationTests"
 version = "0.0.1"
-description = "One Hop TRAPI mediated semantics-driven tests for testing Translator TRAPI Components (KPs and ARAs)"
+description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
     "Chris Bizon <bizon.renci.org>",
@@ -12,8 +12,8 @@ license = "MIT"
 readme = "README.md"
 
 homepage = "https://github.com/TranslatorSRI"
-repository = "https://github.com/TranslatorSRI/OneHopTests"
-documentation = "https://github.com/TranslatorSRI/OneHopTests/blob/main/README.md"
+repository = "https://github.com/TranslatorSRI/GraphValidationTests"
+documentation = "https://github.com/TranslatorSRI/GraphValidationTests/blob/main/README.md"
 keywords = [
     "NCATS",
     "Biomedical Data Translator",
@@ -30,11 +30,15 @@ classifiers = [
     "Intended Audience :: Healthcare Industry",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Programming Language :: Python :: 3.9"
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
 ]
 
 packages = [
-    {include = "one_hop_tests"}
+    {include = "one_hop_test"},
+    {include = "standards_validation_test"}
 ]
 
 include = [
@@ -45,8 +49,10 @@ include = [
 python = ">=3.9,<3.13"
 deepdiff = "^6.7.1"
 reasoner-validator = "^3.9.4"
+
 translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "main" }
-#translator-testing-model = '0.2.2'
+#translator-testing-model = "^0.2.3"
+
 pytest-asyncio = "^0.21.1"
 fastapi = "^0.110.0"
 httpx = "^0.27.0"
@@ -58,8 +64,8 @@ matplotlib = "^3.8.3"
 # [tool.poetry.group.dev.dependencies]
 
 [tool.poetry.urls]
-"Change Log" = "https://github.com/TranslatorSRI/OneHopTests/blob/master/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/TranslatorSRI/OneHopTests/issues"
+"Change Log" = "https://github.com/TranslatorSRI/GraphValidationTests/blob/master/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/TranslatorSRI/GraphValidationTests/issues"
 
 [tool.poetry.extras]
 
