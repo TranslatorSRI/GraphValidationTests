@@ -31,17 +31,28 @@ def test_generate_test_asset_id():
 
 
 def test_get_test_asset():
-    input_curie = 'MONDO:0005301'
-    relationship = 'treats'
-    output_curie = 'PUBCHEM.COMPOUND:107970'
-    expected_output = 'Acceptable'
+    subject_id = 'MONDO:0005301'
+    subject_category = "biolink:Disease"
+    predicate_name = "treats"
+    predicate_id = f"biolink:{predicate_name}"
+    object_id = 'PUBCHEM.COMPOUND:107970'
+    object_category = "biolink:SmallMolecule"
     oht = OneHopTest(endpoints=list())
-    test_asset: TestAsset = oht.build_test_asset(input_curie, relationship, output_curie, expected_output)
+    test_asset: TestAsset = oht.build_test_asset(
+        subject_id=subject_id,
+        subject_category=subject_category,
+        predicate_id=predicate_id,
+        object_id=object_id,
+        object_category=object_category
+    )
     assert test_asset.id == "TestAsset:00001"
-    assert test_asset.input_id == input_curie
-    assert test_asset.predicate_name == relationship
-    assert test_asset.output_id == output_curie
-    assert test_asset.expected_output == expected_output
+    assert test_asset.input_id == subject_id
+    assert test_asset.input_category == subject_category
+    assert test_asset.predicate_id == predicate_id
+    assert test_asset.predicate_name == predicate_name
+    assert test_asset.output_id == object_id
+    assert test_asset.output_category == object_category
+    assert test_asset.expected_output is None  # not set?
 
 
 TEST_ASSET_1 = {

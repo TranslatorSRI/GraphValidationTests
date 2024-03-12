@@ -80,11 +80,11 @@ class OneHopTest:
 
     def build_test_asset(
             self,
-            subject_id,
-            subject_category,
-            predicate_id,
-            object_id,
-            object_category
+            subject_id: str,
+            subject_category: str,
+            predicate_id: str,
+            object_id: str,
+            object_category: str
     ) -> TestAsset:
         """
         Construct a Python TestAsset object.
@@ -101,6 +101,7 @@ class OneHopTest:
             input_id=subject_id,
             input_category=subject_category,
             predicate_id=predicate_id,
+            predicate_name=predicate_id.replace("biolink:", ""),
             output_id=object_id,
             output_category=object_category
         )
