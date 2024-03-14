@@ -60,7 +60,7 @@ class UnitTestReport(BiolinkValidator):
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
 
-    # TODO: defining this method does not suffice to support the 'skipped' message use case
+    # TODO: defining these 'skipped' methods do not suffice to support the 'skipped' message use case
     #       since the reasoner_validator needs a "skipped" codes in its codes.yaml?
     def get_skipped(self) -> MESSAGE_PARTITION:
         """
@@ -81,6 +81,9 @@ class UnitTestReport(BiolinkValidator):
         if messages:
             self.add_messages(messages)
         report_string: str = self.dump_messages(flat=True)
+
+        # TODO: this call will fail unless the 'skipped' code is
+        #       added to the codes.yaml file in reasoner_validator!
         self.report("skipped", identifier=report_string)
 
     def assert_test_outcome(self):
