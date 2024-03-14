@@ -2,6 +2,7 @@
 Unit tests to validate graph_validation_test::UnitTestReport class
 """
 from bmt import Toolkit
+
 from reasoner_validator.biolink import get_biolink_model_toolkit
 from reasoner_validator.trapi import get_latest_version
 
@@ -82,6 +83,10 @@ def test_unit_test_report_messages():
         biolink_version=DEFAULT_BMT
     )
     unit_test_report.report(code="info.compliant")
+
+    # TODO: "skipped" messages don't work with the current reasoner_validator package methods. See also below...
+    # unit_test_report.report(code="skipped.biolink.model.noncompliance")
+
     assert len(unit_test_report.get_critical()) == 0
     errors = unit_test_report.get_errors()
     assert len(errors) == 1
@@ -89,3 +94,8 @@ def test_unit_test_report_messages():
     info = unit_test_report.get_info()
     assert len(info) == 1
     assert "info.compliant" in info
+
+    # TODO: "skipped" messages not properly implemented
+    skipped = unit_test_report.get_skipped()
+    assert len(skipped) == 1
+    assert "skipped.biolink.model.noncompliance" in skipped

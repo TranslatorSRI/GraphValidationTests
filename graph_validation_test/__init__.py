@@ -3,10 +3,11 @@ Abstract base class for the GraphValidation TestRunners
 """
 from typing import Dict, List, Optional
 from functools import lru_cache
-import logging
+import copy
 from argparse import ArgumentParser
 
 from bmt import utils
+from reasoner_validator.message import MESSAGE_PARTITION
 from reasoner_validator.biolink import BiolinkValidator
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
 
@@ -15,6 +16,8 @@ from graph_validation_test.translator.registry import (
     extract_component_test_metadata_from_registry
 )
 
+import logging
+logger = logging.getLogger(__name__)
 
 env_spec = {
     'dev': 'ars-dev',
@@ -56,6 +59,15 @@ class UnitTestReport(BiolinkValidator):
         self.messages["skipped"] = dict()
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
+
+    # TODO: defining this method does not suffice to support the 'skipped' message use case
+    #       since the reasoner_validator needs a "skipped" codes in its codes.yaml?
+    def get_skipped(self) -> MESSAGE_PARTITION:
+        """
+        Get copy of all recorded 'skipped' error messages.
+        :return: List, copy of all critical error messages.
+        """
+        return copy.deepcopy(self.messages["skipped"])
 
     def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
         """
@@ -212,7 +224,7 @@ class GraphValidationTest(UnitTestReport):
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
-            logger: Optional[logging.Logger] = None
+            test_logger: Optional[logging.Logger] = None
     ) -> Dict:
         #     # One test edge (asset)
         #     "subject_id": asset.input_id,  # str
@@ -226,7 +238,7 @@ class GraphValidationTest(UnitTestReport):
         #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
         #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
         #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
-        #     "logger": logger,  # Python Optional[logging.Logger] = None
+        #     "test_logger": Optional[logging.Logger],  # Python Optional[logging.Logger] = None
         """
         Run a knowledge graph test of the specified kind using specified test asset information.
 
@@ -243,7 +255,7 @@ class GraphValidationTest(UnitTestReport):
         :param trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
         :param runner_settings: Optional[Dict[str, str]] = None, extra string parameters to the Test Runner
-        :param logger: Optional[logging.Logger] = None, Python logging handle
+        :param test_logger: Optional[logging.Logger] = None, Python logging handle
         :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
         """
         endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
@@ -264,7 +276,7 @@ class GraphValidationTest(UnitTestReport):
             trapi_version=trapi_version,
             biolink_version=biolink_version,
             runner_settings=runner_settings,
-            test_logger=logger
+            test_logger=test_logger
         )
         await test_obj.run(test_asset=test_asset)
         return test_obj.get_results()
