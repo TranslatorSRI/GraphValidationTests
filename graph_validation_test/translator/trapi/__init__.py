@@ -1,5 +1,6 @@
 """
-Code to submit OneHop tests to TRAPI
+Code to submit GraphValidation test queries to
+Translator components - ARS, ARA, KP - via TRAPI
 """
 from sys import stderr
 from typing import Optional, Dict

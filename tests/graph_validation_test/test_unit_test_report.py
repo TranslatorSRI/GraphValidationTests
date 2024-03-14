@@ -1,19 +1,15 @@
 """
 Unit tests to validate graph_validation_test::UnitTestReport class
 """
-from bmt import Toolkit
-
-from reasoner_validator.biolink import get_biolink_model_toolkit
-from reasoner_validator.trapi import get_latest_version
 
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import UnitTestReport, GraphValidationTest
 
 import logging
-logger = logging.getLogger(__name__)
 
-DEFAULT_TRAPI_VERSION = get_latest_version("1")
-DEFAULT_BMT: Toolkit = get_biolink_model_toolkit()
+from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
+
+logger = logging.getLogger(__name__)
 
 TEST_ASSET_1 = {
     "subject_id": "DRUGBANK:DB01592",
@@ -65,7 +61,6 @@ def test_explicit_releases_unit_test_report_construction():
         trapi_version="1.4.2",
         biolink_version="3.5.0"
     )
-    assert unit_test_report
     assert unit_test_report.get_trapi_version() == "v1.4.2"
     assert unit_test_report.get_biolink_version() == "3.5.0"
 

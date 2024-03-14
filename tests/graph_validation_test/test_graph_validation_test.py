@@ -3,6 +3,7 @@ Unit tests for pieces of the GraphValidationTests code
 """
 from graph_validation_test import GraphValidationTest
 from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum, TestAsset
+from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
 
 
 def test_expected_output_enum():
@@ -18,25 +19,40 @@ def test_generate_test_asset_id():
     assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00003"
 
 
+TEST_SUBJECT_ID = "MONDO:0005301"
+TEST_SUBJECT_CATEGORY = "biolink:Disease"
+TEST_PREDICATE_NAME = "treats"
+TEST_PREDICATE_ID = f"biolink:{TEST_PREDICATE_NAME}"
+TEST_OBJECT_ID = "PUBCHEM.COMPOUND:107970"
+TEST_OBJECT_CATEGORY = "biolink:SmallMolecule"
+SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
+        subject_id=TEST_SUBJECT_ID,
+        subject_category=TEST_SUBJECT_CATEGORY,
+        predicate_id=TEST_PREDICATE_ID,
+        object_id=TEST_OBJECT_ID,
+        object_category=TEST_OBJECT_CATEGORY
+)
+
+
 def test_get_test_asset():
-    subject_id = 'MONDO:0005301'
-    subject_category = "biolink:Disease"
-    predicate_name = "treats"
-    predicate_id = f"biolink:{predicate_name}"
-    object_id = 'PUBCHEM.COMPOUND:107970'
-    object_category = "biolink:SmallMolecule"
-    test_asset: TestAsset = GraphValidationTest.build_test_asset(
-        subject_id=subject_id,
-        subject_category=subject_category,
-        predicate_id=predicate_id,
-        object_id=object_id,
-        object_category=object_category
+    assert SAMPLE_TEST_ASSET.id == "TestAsset:00004"
+    assert SAMPLE_TEST_ASSET.input_id == TEST_SUBJECT_ID
+    assert SAMPLE_TEST_ASSET.input_category == TEST_OBJECT_CATEGORY
+    assert SAMPLE_TEST_ASSET.predicate_id == TEST_PREDICATE_ID
+    assert SAMPLE_TEST_ASSET.predicate_name == TEST_PREDICATE_NAME
+    assert SAMPLE_TEST_ASSET.output_id == TEST_OBJECT_ID
+    assert SAMPLE_TEST_ASSET.output_category == TEST_OBJECT_CATEGORY
+    assert SAMPLE_TEST_ASSET.expected_output is None  # not set?
+
+
+def test_default_graph_validation_test_construction():
+    gvt: GraphValidationTest = GraphValidationTest(
+        endpoints=list(),
+        test_name="test_default_graph_validation_test_construction",
+        test_asset=SAMPLE_TEST_ASSET,
+        runner_settings=["Inferred"]
     )
-    assert test_asset.id == "TestAsset:00004"
-    assert test_asset.input_id == subject_id
-    assert test_asset.input_category == subject_category
-    assert test_asset.predicate_id == predicate_id
-    assert test_asset.predicate_name == predicate_name
-    assert test_asset.output_id == object_id
-    assert test_asset.output_category == object_category
-    assert test_asset.expected_output is None  # not set?
+    assert gvt.get_trapi_version() == DEFAULT_TRAPI_VERSION
+    assert gvt.get_biolink_version() == DEFAULT_BMT.get_model_version()
+    assert gvt.get_runner_settings()
+

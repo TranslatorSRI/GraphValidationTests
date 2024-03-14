@@ -128,7 +128,7 @@ class GraphValidationTest(UnitTestReport):
             test_asset: TestAsset,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
-            runner_settings: Optional[Dict[str, str]] = None,
+            runner_settings: Optional[List[str]] = None,
             test_logger: Optional[logging.Logger] = None
     ):
         """
@@ -139,7 +139,7 @@ class GraphValidationTest(UnitTestReport):
         :param test_asset: TestAsset, target test asset(s) being processed
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
-        :param runner_settings: Optional[Dict[str, str]], extra string directives to the Test Runner (default: None)
+        :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
         :param test_logger: Optional[logging.Logger], Python logger, for diagnostics
         """
         self.endpoints: List[str] = endpoints
@@ -211,8 +211,16 @@ class GraphValidationTest(UnitTestReport):
         predicate = predicate_name.lower().replace(" ", "_")
         return f"biolink:{predicate}"
 
-    async def run(self, test_asset: TestAsset):
-        raise NotImplementedError("Abstract method")
+    async def run(self):
+        """
+        Abstract definition of the wrapper method used to invoke a
+        co-routine run to process a given subclass of test, on the
+        currently bound TestAsset, in a given test environment.
+
+        :return: None - use get_results() below, or its
+        subclass implementation, to access the test results.
+        """
+        raise NotImplementedError("Implement me in a subclass!")
 
     @classmethod
     async def run_test(
@@ -257,7 +265,7 @@ class GraphValidationTest(UnitTestReport):
                                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
         :param trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
-        :param runner_settings: Optional[Dict[str, str]] = None, extra string parameters to the Test Runner
+        :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
         :param test_logger: Optional[logging.Logger] = None, Python logging handle
         :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
         """
@@ -281,7 +289,7 @@ class GraphValidationTest(UnitTestReport):
             runner_settings=runner_settings,
             test_logger=test_logger
         )
-        await test_obj.run(test_asset=test_asset)
+        await test_obj.run()
         return test_obj.get_results()
 
     def get_results(self) -> Dict[str, Dict[str, List[str]]]:
@@ -332,6 +340,9 @@ class GraphValidationTest(UnitTestReport):
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
         report: UnitTestReport
         return {test_name: report.get_messages() for test_name, report in self.results.items()}
+
+    def get_runner_settings(self) -> List[str]:
+        return self.runner_settings.copy()
 
 
 def get_component_infores(component: str):

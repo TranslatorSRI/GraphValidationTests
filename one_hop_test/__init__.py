@@ -172,13 +172,14 @@ class OneHopTest(GraphValidationTest):
             await self.run_one_hop_unit_test(target_url, test_type)
         return test_case
 
-    async def run(self, test_asset: TestAsset):
+    async def run(self):
         """
-        Wrapper to invoke a OneHopTest on a single TestAsset
-        in a given test environment for a given query type.
+        Wrapper to invoke a OneHopTest co-routine run, on the
+        currently bound TestAsset, in a given test environment,
+        for a given query type.
 
-        :param test_asset: TestAsset, test to be processed for target TestCases.
-        :return: None - use 'get_results()' method below
+        :return: None - use 'GraphValidationTest.get_results()'
+        or its subclass implementation, to access the test results.
         """
         test_case = self.test_case_wrapper()
         #
