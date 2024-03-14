@@ -7,12 +7,9 @@ import logging
 from argparse import ArgumentParser
 
 from bmt import utils
-from reasoner_validator.report import ValidationReporter
-from reasoner_validator.versioning import get_latest_version
-from reasoner_validator.biolink import get_biolink_model_toolkit, BiolinkValidator
+from reasoner_validator.biolink import BiolinkValidator
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
 
-from graph_validation_test.translator.trapi import run_one_hop_unit_test, logger
 from graph_validation_test.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
@@ -37,7 +34,8 @@ class UnitTestReport(BiolinkValidator):
             test_name: str,
             test_asset: TestAsset,
             trapi_version: Optional[str] = None,
-            biolink_version: Optional[str] = None
+            biolink_version: Optional[str] = None,
+            test_logger: Optional[logging.Logger] = None
     ):
         BiolinkValidator.__init__(
             self,
@@ -46,6 +44,7 @@ class UnitTestReport(BiolinkValidator):
             biolink_version=biolink_version
         )
         self.test_asset = test_asset
+        self.logger = test_logger
         # self.messages: Dict[str, Set[str]] = {
         #     "skipped": set(),
         #     "critical": set(),
@@ -78,21 +77,25 @@ class UnitTestReport(BiolinkValidator):
         """
         if self.has_critical():
             critical_msg = self.dump_critical(flat=True)
-            logger.critical(critical_msg)
+            if self.logger:
+                self.logger.critical(critical_msg)
 
         elif self.has_errors():
             # we now treat 'soft' errors similar to critical errors (above) but
             # the validation messages will be differentiated on the user interface
             err_msg = self.dump_errors(flat=True)
-            logger.error(err_msg)
+            if self.logger:
+                self.logger.error(err_msg)
 
         elif self.has_warnings():
             wrn_msg = self.dump_warnings(flat=True)
-            logger.warning(wrn_msg)
+            if self.logger:
+                self.logger.warning(wrn_msg)
 
         elif self.has_information():
             info_msg = self.dump_info(flat=True)
-            logger.info(info_msg)
+            if self.logger:
+                self.logger.info(info_msg)
 
         else:
             pass  # do nothing... just silent pass through...
@@ -131,10 +134,10 @@ class GraphValidationTest(UnitTestReport):
             test_name=test_name,
             test_asset=test_asset,
             trapi_version=trapi_version,
-            biolink_version=biolink_version
+            biolink_version=biolink_version,
+            test_logger=test_logger
         )
         self.runner_settings = runner_settings
-        self.logger: Optional[logging.Logger] = test_logger
         self.results: Dict = dict()
 
     def set_test_name(self, name: str):
@@ -314,6 +317,7 @@ class GraphValidationTest(UnitTestReport):
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
         report: UnitTestReport
         return {test_name: report.get_messages() for test_name, report in self.results.items()}
+
 
 def get_component_infores(component: str):
     infores_map = {

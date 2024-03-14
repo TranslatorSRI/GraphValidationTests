@@ -19,8 +19,6 @@ from one_hop_test.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
-
-
 # from .utils.asyncio import gather
 
 

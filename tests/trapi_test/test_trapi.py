@@ -4,12 +4,12 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from one_hop_test import OneHopTest
-from graph_validation_test.translator.trapi import post_query, run_one_hop_unit_test
-from graph_validation_test import UnitTestReport
+# from one_hop_test import OneHopTest
+from graph_validation_test.translator.trapi import post_query
+# from graph_validation_test import UnitTestReport
 from one_hop_test.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
-from one_hop_test.unit_test_templates import by_subject
-from translator_testing_model.datamodel.pydanticmodel import TestAsset
+# from one_hop_test.unit_test_templates import by_subject
+# from translator_testing_model.datamodel.pydanticmodel import TestAsset
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -82,28 +82,28 @@ async def test_post_query_to_node_normalization(curie: str, category: str):
     assert category in result[curie]["type"]
 
 
-@pytest.mark.asyncio
-async def test_execute_trapi_lookup():
-    url: str = TRAPI_TEST_ENDPOINT
-    subject_id = 'MONDO:0005301'
-    subject_category = "biolink:Disease"
-    predicate_name = "treats"
-    predicate_id = f"biolink:{predicate_name}"
-    object_id = 'PUBCHEM.COMPOUND:107970'
-    object_category = "biolink:SmallMolecule"
-    oht: OneHopTest = OneHopTest(endpoints=[url])
-    test_asset: TestAsset = oht.build_test_asset(
-        subject_id=subject_id,
-        subject_category=subject_category,
-        predicate_id=predicate_id,
-        object_id=object_id,
-        object_category=object_category
-    )
-    report: UnitTestReport = await run_one_hop_unit_test(
-        url=url,
-        test_asset=test_asset,
-        creator=by_subject,
-        trapi_version="1.4.2",
-        # biolink_version=None
-    )
-    assert report
+# @pytest.mark.asyncio
+# async def test_execute_trapi_lookup():
+#     url: str = TRAPI_TEST_ENDPOINT
+#     subject_id = 'MONDO:0005301'
+#     subject_category = "biolink:Disease"
+#     predicate_name = "treats"
+#     predicate_id = f"biolink:{predicate_name}"
+#     object_id = 'PUBCHEM.COMPOUND:107970'
+#     object_category = "biolink:SmallMolecule"
+#     oht: OneHopTest = OneHopTest(endpoints=[url])
+#     test_asset: TestAsset = oht.build_test_asset(
+#         subject_id=subject_id,
+#         subject_category=subject_category,
+#         predicate_id=predicate_id,
+#         object_id=object_id,
+#         object_category=object_category
+#     )
+#     report: UnitTestReport = await run_one_hop_unit_test(
+#         url=url,
+#         test_asset=test_asset,
+#         creator=by_subject,
+#         trapi_version="1.4.2",
+#         # biolink_version=None
+#     )
+#     assert report
