@@ -6,19 +6,6 @@ from translator_testing_model.datamodel.pydanticmodel import ExpectedOutputEnum,
 from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
 
 
-def test_expected_output_enum():
-    expected_output = 'Acceptable'
-    assert expected_output in ExpectedOutputEnum.__members__
-    not_an_expected_output = 'UnforeseenEvent'
-    assert not_an_expected_output not in ExpectedOutputEnum.__members__
-
-
-def test_generate_test_asset_id():
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00001"
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00002"
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00003"
-
-
 TEST_SUBJECT_ID = "MONDO:0005301"
 TEST_SUBJECT_CATEGORY = "biolink:Disease"
 TEST_PREDICATE_NAME = "treats"
@@ -34,10 +21,23 @@ SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
 )
 
 
+def test_expected_output_enum():
+    expected_output = 'Acceptable'
+    assert expected_output in ExpectedOutputEnum.__members__
+    not_an_expected_output = 'UnforeseenEvent'
+    assert not_an_expected_output not in ExpectedOutputEnum.__members__
+
+
+def test_generate_test_asset_id():
+    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00002"
+    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00003"
+    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00004"
+
+
 def test_get_test_asset():
-    assert SAMPLE_TEST_ASSET.id == "TestAsset:00004"
+    assert SAMPLE_TEST_ASSET.id == "TestAsset:00001"
     assert SAMPLE_TEST_ASSET.input_id == TEST_SUBJECT_ID
-    assert SAMPLE_TEST_ASSET.input_category == TEST_OBJECT_CATEGORY
+    assert SAMPLE_TEST_ASSET.input_category == TEST_SUBJECT_CATEGORY
     assert SAMPLE_TEST_ASSET.predicate_id == TEST_PREDICATE_ID
     assert SAMPLE_TEST_ASSET.predicate_name == TEST_PREDICATE_NAME
     assert SAMPLE_TEST_ASSET.output_id == TEST_OBJECT_ID
