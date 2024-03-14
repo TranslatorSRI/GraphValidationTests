@@ -25,7 +25,7 @@ def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optiona
     q_edge: Dict = {
         "subject": "a",
         "object": "b",
-        "predicates": [edge['predicate']]  # see trapi\__init__.py in translate_test_asset() method
+        "predicates": [edge['predicate']]  # see translator\__init__.py in translate_test_asset() method
     }
 
     # December 2023 - TODO: The first iteration of the OneHopTests TestRunner will ignore qualifiers

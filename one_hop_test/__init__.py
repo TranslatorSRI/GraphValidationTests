@@ -69,7 +69,7 @@ class OneHopTest(GraphValidationTest):
             # expropriated by the 'creator' to return error information
             context = output_element.split("|")
             self.report(
-                code="critical.trapi.request.invalid",
+                code="critical.translator.request.invalid",
                 identifier=context[1],
                 context=context[0],
                 reason=output_node_binding
@@ -108,7 +108,7 @@ class OneHopTest(GraphValidationTest):
                 # Second sanity check: was the web service (HTTP) call itself successful?
                 status_code: int = trapi_response['status_code']
                 if status_code != 200:
-                    self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
+                    self.report("critical.translator.response.unexpected_http_code", identifier=status_code)
                 else:
                     #########################################################
                     # Looks good so far, so now validate the TRAPI response #
@@ -119,14 +119,14 @@ class OneHopTest(GraphValidationTest):
                         # Report 'trapi_version' and 'biolink_version' recorded
                         # in the 'response_json' (if the tags are provided)
                         if 'schema_version' not in response:
-                            self.report(code="warning.trapi.response.schema_version.missing")
+                            self.report(code="warning.translator.response.schema_version.missing")
                         else:
                             trapi_version: str = response['schema_version'] \
                                 if not self.trapi_version else self.trapi_version
                             print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
 
                         if 'biolink_version' not in response:
-                            self.report(code="warning.trapi.response.biolink_version.missing")
+                            self.report(code="warning.translator.response.biolink_version.missing")
                         else:
                             biolink_version = response['biolink_version'] \
                                 if not self.biolink_version else self.biolink_version
@@ -159,11 +159,11 @@ class OneHopTest(GraphValidationTest):
                                                 f"-[{_test_asset['predicate']}]->" + \
                                                 f"({_test_asset['object_id']}#{_test_asset['object_category']})"
                             self.report(
-                                code="error.trapi.response.knowledge_graph.missing_expected_edge",
+                                code="error.translator.response.knowledge_graph.missing_expected_edge",
                                 identifier=test_edge_id
                             )
                     else:
-                        self.report(code="error.trapi.response.empty")
+                        self.report(code="error.translator.response.empty")
 
     def test_case_wrapper(self):
         async def test_case(test_type):

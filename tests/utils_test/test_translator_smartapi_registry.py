@@ -66,18 +66,18 @@ def test_query_smart_api():
             logger.debug(f"\tMissing 'component' tag in 'hit.info.x-translator'? Ignoring entry...")
             continue
         component = x_translator["component"]
-        if "x-trapi" not in info:
-            logger.debug(f"\tMissing 'x-trapi' tag in 'hit.info'? Ignoring entry...")
+        if "x-translator" not in info:
+            logger.debug(f"\tMissing 'x-translator' tag in 'hit.info'? Ignoring entry...")
             continue
-        x_trapi = info["x-trapi"]
+        x_trapi = info["x-translator"]
 
         if component == "KP":
             if "test_data_location" not in x_trapi:
-                logger.debug(f"\tMissing 'test_data_location' tag in 'hit.info.x-trapi'? Ignoring entry...")
+                logger.debug(f"\tMissing 'test_data_location' tag in 'hit.info.x-translator'? Ignoring entry...")
                 continue
             else:
                 test_data_location = x_trapi["test_data_location"]
-                logger.debug(f"\t'hit.info.x-trapi.test_data_location': '{test_data_location}'")
+                logger.debug(f"\t'hit.info.x-translator.test_data_location': '{test_data_location}'")
         else:
             logger.debug(f"\tIs an ARA?")
 

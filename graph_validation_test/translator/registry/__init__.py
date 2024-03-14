@@ -190,7 +190,7 @@ _ignored_resources: Set[str] = {
     # "sri-reference-kg",
     # "automat-icees-kg",
     # "cohd",
-    # "service-provider-trapi",
+    # "service-provider-translator",
 }
 
 
@@ -422,9 +422,9 @@ def validate_testable_resource(
         return None
 
     #
-    # November 2023: The new testing framework doesn't care about the Registry info.x-trapi.test_data_location?
+    # November 2023: The new testing framework doesn't care about the Registry info.x-translator.test_data_location?
     #
-    # raw_test_data_location: Optional[Union[str, Dict]] = tag_value(service, "info.x-trapi.test_data_location")
+    # raw_test_data_location: Optional[Union[str, Dict]] = tag_value(service, "info.x-translator.test_data_location")
     # # ... and only interested in resources with a non-empty, valid, accessible test_data_location specified
     # test_data_location: Optional[Union[str, List, Dict]] = validate_test_data_locations(raw_test_data_location)
     # if test_data_location:
@@ -433,7 +433,7 @@ def validate_testable_resource(
     #     resource_metadata['test_data_location'] = test_data_location
     # else:
     #     logger.warning(
-    #         f"Empty, invalid or inaccessible 'info.x-trapi.test_data_location' specification "
+    #         f"Empty, invalid or inaccessible 'info.x-translator.test_data_location' specification "
     #         f"'{str(raw_test_data_location)}' for Registry entry '{infores}'! Service entry skipped?")
     #     return None
 
@@ -553,7 +553,7 @@ def extract_component_test_metadata_from_registry(
             continue
 
         # Filter early for TRAPI version
-        service_trapi_version = tag_value(service, "info.x-trapi.version")
+        service_trapi_version = tag_value(service, "info.x-translator.version")
         assess_trapi_version(infores, service_trapi_version, target_trapi_version, selected_service_trapi_version)
 
         # Current service doesn't have appropriate trapi_version, so skip the service
