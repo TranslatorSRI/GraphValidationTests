@@ -1,7 +1,7 @@
 """
 Unit tests to validate graph_validation_test::UnitTestReport class
 """
-
+import pytest
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import UnitTestReport, GraphValidationTest
 
@@ -65,7 +65,7 @@ def test_explicit_releases_unit_test_report_construction():
     assert unit_test_report.get_biolink_version() == "3.5.0"
 
 
-def test_unit_test_report_messages():
+def test_unit_test_report_regular_messages():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
     unit_test_report = UnitTestReport(
         test_name="test_unit_test_report_messages",
@@ -78,10 +78,6 @@ def test_unit_test_report_messages():
         biolink_version=DEFAULT_BMT
     )
     unit_test_report.report(code="info.compliant")
-
-    # TODO: "skipped" messages don't work with the current reasoner_validator package methods. See also below...
-    # unit_test_report.report(code="skipped.biolink.model.noncompliance")
-
     assert len(unit_test_report.get_critical()) == 0
     errors = unit_test_report.get_errors()
     assert len(errors) == 1
@@ -90,7 +86,18 @@ def test_unit_test_report_messages():
     assert len(info) == 1
     assert "info.compliant" in info
 
-    # TODO: "skipped" messages not properly implemented
+
+@pytest.mark.skip("reasoner_validator doesn't (yet) have 'skipped' coded messages!")
+def test_unit_test_report_skip_messages():
+    test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
+    unit_test_report = UnitTestReport(
+        test_name="test_unit_test_report_messages",
+        test_asset=test_asset,
+        test_logger=logger
+    )
+    # TODO: "skipped" messages don't work with the current
+    #       reasoner_validator package methods. See also below...
+    unit_test_report.report(code="skipped.biolink.model.noncompliance")
     skipped = unit_test_report.get_skipped()
     assert len(skipped) == 1
     assert "skipped.biolink.model.noncompliance" in skipped
