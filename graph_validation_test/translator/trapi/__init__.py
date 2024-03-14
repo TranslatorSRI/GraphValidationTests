@@ -4,14 +4,7 @@ Code to submit OneHop tests to TRAPI
 from sys import stderr
 from typing import Optional, Dict
 import requests
-
-from reasoner_validator.validator import TRAPIResponseValidator
-from reasoner_validator.report import ValidationReporter
-from reasoner_validator.trapi import call_trapi, TRAPISchemaValidator
-
 from logging import getLogger
-
-from translator_testing_model.datamodel.pydanticmodel import TestAsset
 
 logger = getLogger()
 
@@ -26,6 +19,7 @@ ARS_HOSTS = [
 
 def post_query(url: str, query: Dict, params=None, server: str = ""):
     """
+
     :param url, str URL target for HTTP POST
     :param query, JSON query for posting
     :param params
@@ -70,70 +64,6 @@ def generate_edge_id(resource_id: str, edge_i: int) -> str:
     return f"{resource_id}#{str(edge_i)}"
 
 
-class UnitTestReport(ValidationReporter):
-    """
-    UnitTestReport is a wrapper for ValidationReporter used to aggregate SRI Test actionable validation messages.
-    Not to be confused with the translator.sri.testing.report_db.TestReport, which is the comprehensive set
-    of all JSON reports from a single SRI Testing harness test run.
-    """
-    def __init__(self, test_asset: TestAsset, test_name: str):
-        ValidationReporter.__init__(
-            self,
-            prefix=test_name  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
-        )
-        self.test_asset = test_asset
-        # self.messages: Dict[str, Set[str]] = {
-        #     "skipped": set(),
-        #     "critical": set(),
-        #     "failed": set(),
-        #     "warning": set(),
-        #     "info": set()
-        # }
-        # adding the "skipped" category to messages
-        self.messages["skipped"] = dict()
-        self.trapi_request: Optional[Dict] = None
-        self.trapi_response: Optional[Dict[str, int]] = None
-
-    def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
-        """
-        Edge test Pytest skipping wrapper.
-        :param code: str, validation message code (indexed in the codes.yaml of the Reasoner Validator)
-        :param edge_id: str, S-P-O identifier of the edge being skipped
-        :param messages: (optional) additional validation messages available to explain why the test is being skipped
-        :return:
-        """
-        self.report(code=code, edge_id=edge_id)
-        if messages:
-            self.add_messages(messages)
-        report_string: str = self.dump_messages(flat=True)
-        self.report("skipped", identifier=report_string)
-
-    def assert_test_outcome(self):
-        """
-        Test outcomes
-        """
-        if self.has_critical():
-            critical_msg = self.dump_critical(flat=True)
-            logger.critical(critical_msg)
-
-        elif self.has_errors():
-            # we now treat 'soft' errors similar to critical errors (above) but
-            # the validation messages will be differentiated on the user interface
-            err_msg = self.dump_errors(flat=True)
-            logger.error(err_msg)
-
-        elif self.has_warnings():
-            wrn_msg = self.dump_warnings(flat=True)
-            logger.warning(wrn_msg)
-
-        elif self.has_information():
-            info_msg = self.dump_info(flat=True)
-            logger.info(info_msg)
-
-        else:
-            pass  # do nothing... just silent pass through...
-
-
 def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     """
     Method to annotate KP constraint on an ARA call
@@ -164,169 +94,6 @@ def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
     return trapi_request
 
 
-def get_predicate_id(predicate_name: str) -> str:
-    """
-    SME's (like Jenn) like plain English (possibly capitalized) names
-    for their predicates, whereas, we need regular Biolink CURIES here.
-    :param predicate_name:
-    :return: str, predicate CURIE (presumed to be from the Biolink Model?)
-    """
-    # TODO: maybe validate the predicate name here against the Biolink Model?
-    predicate = predicate_name.lower().replace(" ", "_")
-    return f"biolink:{predicate}"
-
-
-def translate_test_asset(test_asset: TestAsset, biolink_version: str) -> Dict[str, str]:
-    """
-    Need to access the TestAsset fields as a dictionary with some
-    edge attributes relabelled to reasoner-validator expectations.
-
-    :param test_asset: TestAsset received from TestHarness
-    :param biolink_version: Biolink Model release assumed for graphs assessed by One Hop testing.
-    :return: Dict[str,str], reasoner-validator indexed test edge data.
-    """
-    test_edge: Dict[str, str] = dict()
-
-    test_edge["idx"] = test_asset.id
-    test_edge["subject_id"] = test_asset.input_id
-    test_edge["predicate"] = test_asset.predicate_id \
-        if test_asset.predicate_id else get_predicate_id(predicate_name=test_asset.predicate_name)
-    test_edge["object_id"] = test_asset.output_id
-    test_edge["subject_category"] = test_asset.input_category
-    test_edge["object_category"] = test_asset.output_category
-    test_edge["biolink_version"] = biolink_version
-
-    return test_edge
-
-
-async def run_one_hop_unit_test(
-        url: str,
-        test_asset: TestAsset,
-        creator,
-        trapi_version: Optional[str] = None,
-        biolink_version: Optional[str] = None,
-) -> UnitTestReport:
-    """
-    Method to execute a TRAPI lookup, using the 'creator' test template.
-
-    :param url: str, target TRAPI url endpoint to be tested
-    :param test_asset: TestCase, input data test case
-    :param creator: unit test-specific TRAPI query message creator
-    :param trapi_version: Optional[str], target TRAPI version
-    :param biolink_version: Optional[str], target Biolink Model version
-    :return: results: Dict of results
-    """
-    test_report: UnitTestReport = UnitTestReport(test_asset=test_asset, test_name=creator.__name__)
-
-    trapi_request: Optional[Dict]
-    output_element: Optional[str]
-    output_node_binding: Optional[str]
-
-    _test_asset = translate_test_asset(test_asset=test_asset, biolink_version=biolink_version)
-
-    trapi_request, output_element, output_node_binding = creator(_test_asset)
-
-    if not trapi_request:
-        # output_element and output_node_binding were
-        # expropriated by the 'creator' to return error information
-        context = output_element.split("|")
-        test_report.report(
-            code="critical.trapi.request.invalid",
-            identifier=context[1],
-            context=context[0],
-            reason=output_node_binding
-        )
-    else:
-
-        # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
-        validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=trapi_version)
-        validator.validate(trapi_request, component="Query")
-        test_report.merge(validator)
-        if not test_report.has_messages():
-
-            # if no messages are reported, then continue with the validation
-
-            # TODO: this is SRI_Testing harness functionality which we don't yet support here?
-            #
-            # if 'ara_source' in _test_asset and _test_asset['ara_source']:
-            #     # sanity check!
-            #     assert 'kp_source' in _test_asset and _test_asset['kp_source']
-            #
-            #     # Here, we need annotate the TRAPI request query graph to
-            #     # constrain an ARA query to the test case specified 'kp_source'
-            #     trapi_request = constrain_trapi_request_to_kp(
-            #         trapi_request=trapi_request, kp_source=_test_asset['kp_source']
-            #     )
-
-            # Make the TRAPI call to the TestCase targeted ARS, KP or
-            # ARA resource, using the case-documented input test edge
-            trapi_response = await call_trapi(url, trapi_request)
-
-            # Capture the raw TRAPI query input and output
-            # for possibly later test harness access
-            test_report.trapi_request = trapi_request
-            test_report.trapi_response = trapi_response
-
-            # Second sanity check: was the web service (HTTP) call itself successful?
-            status_code: int = trapi_response['status_code']
-            if status_code != 200:
-                test_report.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
-            else:
-                #########################################################
-                # Looks good so far, so now validate the TRAPI response #
-                #########################################################
-                response: Optional[Dict] = trapi_response['response_json']
-
-                if response:
-                    # Report 'trapi_version' and 'biolink_version' recorded
-                    # in the 'response_json' (if the tags are provided)
-                    if 'schema_version' not in response:
-                        test_report.report(code="warning.trapi.response.schema_version.missing")
-                    else:
-                        trapi_version: str = response['schema_version'] if not trapi_version else trapi_version
-                        print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
-
-                    if 'biolink_version' not in response:
-                        test_report.report(code="warning.trapi.response.biolink_version.missing")
-                    else:
-                        biolink_version = response['biolink_version'] \
-                            if not biolink_version else biolink_version
-                        logger.info(f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'")
-
-                    # If nothing badly wrong with the TRAPI Response to this point, then we also check
-                    # whether the test input edge was returned in the Response Message knowledge graph
-                    #
-                    # case: Dict contains something like:
-                    #
-                    #     idx: 0,
-                    #     subject_category: 'biolink:SmallMolecule',
-                    #     object_category: 'biolink:Disease',
-                    #     predicate: 'biolink:treats',
-                    #     subject_id: 'CHEBI:3002',  # may have the deprecated key 'subject' here
-                    #     object_id: 'MESH:D001249', # may have the deprecated key 'object' here
-                    #
-                    # the contents for which ought to be returned in
-                    # the TRAPI Knowledge Graph, as a Result mapping?
-                    #
-                    validator: TRAPIResponseValidator = TRAPIResponseValidator(
-                        trapi_version=trapi_version,
-                        biolink_version=biolink_version
-                    )
-                    if not validator.case_input_found_in_response(_test_asset, response, trapi_version):
-                        test_edge_id: str = f"{_test_asset['idx']}|" \
-                                            f"({_test_asset['subject_id']}#{_test_asset['subject_category']})" + \
-                                            f"-[{_test_asset['predicate']}]->" + \
-                                            f"({_test_asset['object_id']}#{_test_asset['object_category']})"
-                        test_report.report(
-                            code="error.trapi.response.knowledge_graph.missing_expected_edge",
-                            identifier=test_edge_id
-                        )
-                else:
-                    test_report.report(code="error.trapi.response.empty")
-
-    return test_report
-
-
 def retrieve_trapi_response(host_url: str, response_id: str):
     try:
         response_content = requests.get(
@@ -349,6 +116,8 @@ def retrieve_trapi_response(host_url: str, response_id: str):
 
 
 def retrieve_ars_result(response_id: str, verbose: bool):
+    # TODO: this is coded here as a (missing) singleton...
+    #       how is this to be made thread safe?
     global trapi_response
 
     if verbose:

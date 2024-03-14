@@ -7,9 +7,12 @@ import logging
 from argparse import ArgumentParser
 
 from bmt import utils
-from reasoner_validator.biolink import get_biolink_model_toolkit
+from reasoner_validator.report import ValidationReporter
+from reasoner_validator.versioning import get_latest_version
+from reasoner_validator.biolink import get_biolink_model_toolkit, BiolinkValidator
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
-from graph_validation_test.translator.trapi import run_one_hop_unit_test, UnitTestReport
+
+from graph_validation_test.translator.trapi import run_one_hop_unit_test, logger
 from graph_validation_test.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
@@ -24,40 +27,123 @@ env_spec = {
 }
 
 
-class GraphValidationTest:
+class UnitTestReport(BiolinkValidator):
+    """
+    UnitTestReport is a wrapper for BiolinkValidator used to aggregate
+    actionable test validation messages from processing of a given TestAsset.
+    """
+    def __init__(
+            self,
+            test_name: str,
+            test_asset: TestAsset,
+            trapi_version: Optional[str] = None,
+            biolink_version: Optional[str] = None
+    ):
+        BiolinkValidator.__init__(
+            self,
+            prefix=test_name,  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
+            trapi_version=trapi_version,
+            biolink_version=biolink_version
+        )
+        self.test_asset = test_asset
+        # self.messages: Dict[str, Set[str]] = {
+        #     "skipped": set(),
+        #     "critical": set(),
+        #     "failed": set(),
+        #     "warning": set(),
+        #     "info": set()
+        # }
+        # adding the "skipped" category to messages
+        self.messages["skipped"] = dict()
+        self.trapi_request: Optional[Dict] = None
+        self.trapi_response: Optional[Dict[str, int]] = None
+
+    def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
+        """
+        Edge test Pytest skipping wrapper.
+        :param code: str, validation message code (indexed in the codes.yaml of the Reasoner Validator)
+        :param edge_id: str, S-P-O identifier of the edge being skipped
+        :param messages: (optional) additional validation messages available to explain why the test is being skipped
+        :return:
+        """
+        self.report(code=code, edge_id=edge_id)
+        if messages:
+            self.add_messages(messages)
+        report_string: str = self.dump_messages(flat=True)
+        self.report("skipped", identifier=report_string)
+
+    def assert_test_outcome(self):
+        """
+        Test outcomes
+        """
+        if self.has_critical():
+            critical_msg = self.dump_critical(flat=True)
+            logger.critical(critical_msg)
+
+        elif self.has_errors():
+            # we now treat 'soft' errors similar to critical errors (above) but
+            # the validation messages will be differentiated on the user interface
+            err_msg = self.dump_errors(flat=True)
+            logger.error(err_msg)
+
+        elif self.has_warnings():
+            wrn_msg = self.dump_warnings(flat=True)
+            logger.warning(wrn_msg)
+
+        elif self.has_information():
+            info_msg = self.dump_info(flat=True)
+            logger.info(info_msg)
+
+        else:
+            pass  # do nothing... just silent pass through...
+
+
+class GraphValidationTest(UnitTestReport):
+
+    # Simple singleton sequencer for generating unique test identifiers
+    _id: int = 0
 
     def __init__(
             self,
             endpoints: List[str],
+            test_name: str,
+            test_asset: TestAsset,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[Dict[str, str]] = None,
-            logger: Optional[logging.Logger] = None
+            test_logger: Optional[logging.Logger] = None
     ):
         """
         GraphValidationTest constructor.
 
         :param endpoints: List[str], target environment endpoint(s) being targeted for testing
+        :param test_name: str, name of the test being run
+        :param test_asset: TestAsset, target test asset(s) being processed
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[Dict[str, str]], extra string directives to the Test Runner (default: None)
-        :param logger: Optional[logging.Logger], Python logger, for diagnostics
+        :param test_logger: Optional[logging.Logger], Python logger, for diagnostics
         """
         self.endpoints: List[str] = endpoints
-        self.trapi_version = trapi_version
 
-        self.biolink_version = biolink_version
-        self.bmt = get_biolink_model_toolkit(biolink_version=biolink_version)
-
+        UnitTestReport.__init__(
+            self,
+            test_name=test_name,
+            test_asset=test_asset,
+            trapi_version=trapi_version,
+            biolink_version=biolink_version
+        )
         self.runner_settings = runner_settings
-
-        self.logger: Optional[logging.Logger] = logger
-        self._id = 0
+        self.logger: Optional[logging.Logger] = test_logger
         self.results: Dict = dict()
 
-    def generate_test_asset_id(self) -> str:
-        self._id += 1
-        return f"TestAsset:{self._id:0>5}"
+    def set_test_name(self, name: str):
+        self.test_name = name
+
+    @classmethod
+    def generate_test_asset_id(cls) -> str:
+        cls._id += 1
+        return f"TestAsset:{cls._id:0>5}"
 
     def generate_predicate_id(self, relationship: str) -> Optional[str]:
         if self.bmt.is_predicate(relationship):
@@ -66,8 +152,9 @@ class GraphValidationTest:
                 return utils.format_element(predicate)
         return None
 
+    @classmethod
     def build_test_asset(
-            self,
+            cls,
             subject_id: str,
             subject_category: str,
             predicate_id: str,
@@ -85,7 +172,7 @@ class GraphValidationTest:
         :return: TestAsset object
         """
         return TestAsset.construct(
-            id=self.generate_test_asset_id(),
+            id=cls.generate_test_asset_id(),
             input_id=subject_id,
             input_category=subject_category,
             predicate_id=predicate_id,
@@ -94,14 +181,17 @@ class GraphValidationTest:
             output_category=object_category
         )
 
-    def test_case_wrapper(self, test_asset: TestAsset):
-        async def test_case(test_type) -> UnitTestReport:
-            # TODO: eventually need to process multiple self.endpoints(?)
-            target_url: str = self.endpoints[0]
-            return await run_one_hop_unit_test(
-                target_url, test_asset, test_type, self.trapi_version, self.biolink_version
-            )
-        return test_case
+    @staticmethod
+    def get_predicate_id(predicate_name: str) -> str:
+        """
+        SME's (like Jenn) like plain English (possibly capitalized) names
+        for their predicates, whereas, we need regular Biolink CURIES here.
+        :param predicate_name: predicate name string
+        :return: str, predicate CURIE (presumed to be from the Biolink Model?)
+        """
+        # TODO: maybe validate the predicate name here against the Biolink Model?
+        predicate = predicate_name.lower().replace(" ", "_")
+        return f"biolink:{predicate}"
 
     async def run(self, test_asset: TestAsset):
         raise NotImplementedError("Abstract method")
@@ -155,15 +245,7 @@ class GraphValidationTest:
         """
         endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
 
-        test_obj = cls.__init__(
-            endpoints=endpoints,
-            trapi_version=trapi_version,
-            biolink_version=biolink_version,
-            runner_settings=runner_settings,
-            logger=logger
-        )
-
-        test_asset: TestAsset = test_obj.build_test_asset(
+        test_asset: TestAsset = GraphValidationTest.build_test_asset(
             subject_id,
             subject_category,
             predicate_id,
@@ -171,8 +253,17 @@ class GraphValidationTest:
             object_category
         )
 
+        test_obj = cls(
+            endpoints=endpoints,
+            # TODO: initialize the class name as the test name, can be reset later
+            test_name=cls.__name__,
+            test_asset=test_asset,
+            trapi_version=trapi_version,
+            biolink_version=biolink_version,
+            runner_settings=runner_settings,
+            test_logger=logger
+        )
         await test_obj.run(test_asset=test_asset)
-
         return test_obj.get_results()
 
     def get_results(self) -> Dict[str, Dict[str, List[str]]]:
@@ -223,7 +314,6 @@ class GraphValidationTest:
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
         report: UnitTestReport
         return {test_name: report.get_messages() for test_name, report in self.results.items()}
-
 
 def get_component_infores(component: str):
     infores_map = {
