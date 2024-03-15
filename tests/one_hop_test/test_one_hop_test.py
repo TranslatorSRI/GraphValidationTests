@@ -9,7 +9,7 @@ from one_hop_test import OneHopTest
 
 
 SAMPLE_TEST_INPUT = {
-    #     # One test edge (asset)
+    # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
     "predicate_id": "biolink:treats",
