@@ -47,12 +47,13 @@ def test_get_test_asset():
 
 def test_default_graph_validation_test_construction():
     gvt: GraphValidationTest = GraphValidationTest(
-        endpoints=list(),
+        endpoints=["https://example.com", "https://example2.com"],
         test_name="test_default_graph_validation_test_construction",
         test_asset=SAMPLE_TEST_ASSET,
         runner_settings=["Inferred"]
     )
+    assert "https://example.com" in gvt.get_endpoints()
+    assert "test_default_graph_validation_test_construction" in gvt.get_test_name()
     assert gvt.get_trapi_version() == DEFAULT_TRAPI_VERSION
     assert gvt.get_biolink_version() == DEFAULT_BMT.get_model_version()
-    assert gvt.get_runner_settings()
-
+    assert "Inferred" in gvt.get_runner_settings()

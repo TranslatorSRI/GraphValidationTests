@@ -87,7 +87,6 @@ def test_unit_test_report_regular_messages():
     assert "info.compliant" in info
 
 
-@pytest.mark.skip("reasoner_validator doesn't (yet) have 'skipped' coded messages!")
 def test_unit_test_report_skip_messages():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
     unit_test_report = UnitTestReport(
@@ -95,9 +94,7 @@ def test_unit_test_report_skip_messages():
         test_asset=test_asset,
         test_logger=logger
     )
-    # TODO: "skipped" messages don't work with the current
-    #       reasoner_validator package methods. See also below...
-    unit_test_report.report(code="skipped.biolink.model.noncompliance")
+    unit_test_report.report(code="skipped.test")
     skipped = unit_test_report.get_skipped()
     assert len(skipped) == 1
-    assert "skipped.biolink.model.noncompliance" in skipped
+    assert "skipped.test" in skipped

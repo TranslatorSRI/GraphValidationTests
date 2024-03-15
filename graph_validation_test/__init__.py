@@ -1,7 +1,7 @@
 """
 Abstract base class for the GraphValidation TestRunners
 """
-from typing import Dict, List, Optional
+from typing import Dict, Tuple, List, Optional
 from functools import lru_cache
 import copy
 from argparse import ArgumentParser
@@ -48,26 +48,23 @@ class UnitTestReport(BiolinkValidator):
         )
         self.test_asset = test_asset
         self.logger = test_logger
-        # self.messages: Dict[str, Set[str]] = {
-        #     "skipped": set(),
-        #     "critical": set(),
-        #     "failed": set(),
-        #     "warning": set(),
-        #     "info": set()
-        # }
-        # adding the "skipped" category to messages
-        self.messages["skipped"] = dict()
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
 
-    # TODO: defining these 'skipped' methods do not suffice to support the 'skipped' message use case
-    #       since the reasoner_validator needs a "skipped" codes in its codes.yaml?
-    def get_skipped(self) -> MESSAGE_PARTITION:
+    def set_test_name(self, name: str):
         """
-        Get copy of all recorded 'skipped' error messages.
-        :return: List, copy of all critical error messages.
+        Resets the test name to a new string.
+        :param name: str, new test name
+        :return: None
         """
-        return copy.deepcopy(self.messages["skipped"])
+        self.reset_prefix(name)
+
+    def get_test_name(self) -> str:
+        """
+        Returns the current prefix of the ValidationReporter.
+        :return: str, current test name
+        """
+        return self.get_prefix()
 
     def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
         """
@@ -81,10 +78,7 @@ class UnitTestReport(BiolinkValidator):
         if messages:
             self.add_messages(messages)
         report_string: str = self.dump_messages(flat=True)
-
-        # TODO: this call will fail unless the 'skipped' code is
-        #       added to the codes.yaml file in reasoner_validator!
-        self.report("skipped", identifier=report_string)
+        self.report("skipped.test", identifier=report_string)
 
     def assert_test_outcome(self):
         """
@@ -155,8 +149,11 @@ class GraphValidationTest(UnitTestReport):
         self.runner_settings = runner_settings
         self.results: Dict = dict()
 
-    def set_test_name(self, name: str):
-        self.test_name = name
+    def get_endpoints(self) -> Tuple:
+        return tuple(self.endpoints)
+
+    def get_runner_settings(self) -> List[str]:
+        return self.runner_settings.copy()
 
     @classmethod
     def generate_test_asset_id(cls) -> str:
@@ -340,9 +337,6 @@ class GraphValidationTest(UnitTestReport):
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
         report: UnitTestReport
         return {test_name: report.get_messages() for test_name, report in self.results.items()}
-
-    def get_runner_settings(self) -> List[str]:
-        return self.runner_settings.copy()
 
 
 def get_component_infores(component: str):
