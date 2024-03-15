@@ -42,7 +42,7 @@ test_data = {
 #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
-results: Dict = asyncio.run(StandardsValidationTest.run_test(**vars(test_data)))
+results: Dict = asyncio.run(StandardsValidationTest.run_test(**test_data))
 print(results)
 ```
 
@@ -70,7 +70,7 @@ test_data = {
 #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
-results: Dict = asyncio.run(OneHopTest.run_test(**vars(test_data)))
+results: Dict = asyncio.run(OneHopTest.run_test(**test_data))
 print(results)
 ```
 

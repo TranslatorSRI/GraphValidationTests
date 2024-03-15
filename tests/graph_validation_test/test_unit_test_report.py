@@ -1,7 +1,6 @@
 """
 Unit tests to validate graph_validation_test::UnitTestReport class
 """
-import pytest
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import UnitTestReport, GraphValidationTest
 

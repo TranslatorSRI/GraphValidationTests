@@ -3,11 +3,9 @@ Abstract base class for the GraphValidation TestRunners
 """
 from typing import Dict, Tuple, List, Optional
 from functools import lru_cache
-import copy
 from argparse import ArgumentParser
 
 from bmt import utils
-from reasoner_validator.message import MESSAGE_PARTITION
 from reasoner_validator.biolink import BiolinkValidator
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
 
@@ -227,7 +225,7 @@ class GraphValidationTest(UnitTestReport):
             predicate_id: str,
             object_id: str,
             object_category: str,
-            environment: Optional[TestEnvEnum] = None,
+            environment: Optional[TestEnvEnum] = TestEnvEnum.ci,
             components: Optional[str] = None,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
@@ -335,7 +333,6 @@ class GraphValidationTest(UnitTestReport):
         #     ]
         # }
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
-        report: UnitTestReport
         return {test_name: report.get_messages() for test_name, report in self.results.items()}
 
 
