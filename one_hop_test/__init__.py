@@ -51,7 +51,10 @@ class OneHopTest(GraphValidationTest):
         :param creator: unit test-specific TRAPI query message creator
         :return: results: Dict of results
         """
-        # TODO: how can this be made thread safe(?) if co-routines are concurrently executed?
+        # TODO: how can this be made thread safe if co-routines are concurrently executed?
+        #       Maybe not completely but adequately by assuming that the messages data for
+        #       each distinct co-routine (test) is  uniquely indexed by its (test_run,) url
+        #       and test (creator) name, and that the 'message' data is accessed thus.
         self.set_test_name(creator.__name__)
 
         trapi_request: Optional[Dict]
