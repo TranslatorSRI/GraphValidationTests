@@ -2,7 +2,7 @@
 Unit tests to validate graph_validation_test::UnitTestReport class
 """
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
-from graph_validation_test import UnitTestReport, GraphValidationTest
+from graph_validation_test import TestSuiteRun, GraphValidationTest
 
 import logging
 
@@ -41,7 +41,7 @@ TEST_ASSET_1 = {
 
 def test_default_unit_test_report_construction():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
-    unit_test_report = UnitTestReport(
+    unit_test_report = TestSuiteRun(
         test_name="test_default_unit_test_report_construction",
         test_asset=test_asset,
         test_logger=logger
@@ -53,7 +53,7 @@ def test_default_unit_test_report_construction():
 
 def test_explicit_releases_unit_test_report_construction():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
-    unit_test_report = UnitTestReport(
+    unit_test_report = TestSuiteRun(
         test_name="test_explicit_releases_unit_test_report_construction",
         test_asset=test_asset,
         test_logger=logger,
@@ -66,7 +66,7 @@ def test_explicit_releases_unit_test_report_construction():
 
 def test_unit_test_report_regular_messages():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
-    unit_test_report = UnitTestReport(
+    unit_test_report = TestSuiteRun(
         test_name="test_unit_test_report_messages",
         test_asset=test_asset,
         test_logger=logger
@@ -88,7 +88,7 @@ def test_unit_test_report_regular_messages():
 
 def test_unit_test_report_skip_messages():
     test_asset: TestAsset = GraphValidationTest.build_test_asset(**TEST_ASSET_1)
-    unit_test_report = UnitTestReport(
+    unit_test_report = TestSuiteRun(
         test_name="test_unit_test_report_messages",
         test_asset=test_asset,
         test_logger=logger

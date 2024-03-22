@@ -26,21 +26,28 @@ env_spec = {
 }
 
 
-class UnitTestReport(BiolinkValidator):
+class TestCaseRun(BiolinkValidator):
     """
-    UnitTestReport is a wrapper for BiolinkValidator, used to aggregate
-    validation messages from test processing of a given TestAsset.
+    TestCaseRun is a wrapper for BiolinkValidator, used to aggregate
+    validation messages from the GraphValidationTest processing of a
+    TestCase derived from a given TestAsset, and used to make a TRAPI
+    query against one specified Translator component 'target' endpoint.
+    TestCase run results are stored in parent BiolinkValidator context.
     """
     def __init__(
             self,
             target: str,
+            test: str,
             test_asset: TestAsset,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             test_logger: Optional[logging.Logger] = None
     ):
         """
+        Constructor for a TestCaseRun.
+
         :param target: target: str, target endpoint running in a specified environment of component to be tested
+        :param test: str, descriptive identifier of the TestCase being run
         :param test_asset: The test asset being processed in (Biolink Model compliant TRAPI) testing queries.
         :param trapi_version: The TRAPI version whose compliance must be met
                               by the component responding to the test.
@@ -50,6 +57,7 @@ class UnitTestReport(BiolinkValidator):
         """
         BiolinkValidator.__init__(
             self,
+            default_test=test,
             default_target=target,
             trapi_version=trapi_version,
             biolink_version=biolink_version
@@ -103,8 +111,16 @@ class UnitTestReport(BiolinkValidator):
             pass  # do nothing... just silent pass through...
 
 
-class GraphValidationTest(UnitTestReport):
-
+class GraphValidationTest(BiolinkValidator):
+    """
+    GraphValidationTest is a wrapper used to aggregate instances
+    of TestCaseRun derived from a given TestAsset processed
+    against a given 'target' component endpoint in compliance
+    with explicit or default TRAPI and Biolink Model versions.
+    This wrapper is derived from BiolinkValidator for convenience.
+    Most of the actual test result messages are captured within
+    the separate "TestCaseRun" wrapper class defined above.
+    """
     # Simple singleton class sequencer, for
     # generating unique test identifiers
     _id: int = 0
@@ -116,7 +132,8 @@ class GraphValidationTest(UnitTestReport):
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
-            test_logger: Optional[logging.Logger] = None
+            test_logger: Optional[logging.Logger] = None,
+            **kwargs
     ):
         """
         GraphValidationTest constructor.
@@ -127,18 +144,20 @@ class GraphValidationTest(UnitTestReport):
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
         :param test_logger: Optional[logging.Logger], Python logger, for diagnostics
+        :param kwargs: named arguments to pass on to BiolinkValidator parent class (if useful)
         """
         self.target: str = target
 
-        UnitTestReport.__init__(
+        BiolinkValidator.__init__(
             self,
-            target=target,
-            test_asset=test_asset,
+            default_target=target,
             trapi_version=trapi_version,
             biolink_version=biolink_version,
-            test_logger=test_logger
+            **kwargs
         )
+        self.test_asset: TestAsset = test_asset
         self.runner_settings = runner_settings
+        self.logger: Optional[logging.Logger] = test_logger
         self.results: Dict = dict()
 
     def get_runner_settings(self) -> List[str]:
@@ -155,6 +174,25 @@ class GraphValidationTest(UnitTestReport):
             if predicate:
                 return utils.format_element(predicate)
         return None
+
+    def translate_test_asset(self) -> Dict[str, str]:
+        """
+        Need to access the TestAsset fields as a dictionary with some
+        edge attributes relabelled to reasoner-validator expectations.
+        :return: Dict[str,str], reasoner-validator indexed test edge data.
+        """
+        test_edge: Dict[str, str] = dict()
+
+        test_edge["idx"] = self.test_asset.id
+        test_edge["subject_id"] = self.test_asset.input_id
+        test_edge["subject_category"] = self.test_asset.input_category
+        test_edge["predicate_id"] = self.test_asset.predicate_id \
+            if self.test_asset.predicate_id else self.get_predicate_id(self.test_asset.predicate_name)
+        test_edge["object_id"] = self.test_asset.output_id
+        test_edge["object_category"] = self.test_asset.output_category
+        test_edge["biolink_version"] = self.biolink_version
+
+        return test_edge
 
     @classmethod
     def build_test_asset(
@@ -201,7 +239,7 @@ class GraphValidationTest(UnitTestReport):
         """
         Abstract definition of the wrapper method used to invoke a
         co-routine run to process a given subclass of test, on the
-        currently bound TestAsset, in a given test environment.
+        currently bound TestAsset, querying a given component endpoint.
 
         :return: None - use get_results() below, or its
         subclass implementation, to access the test results.
@@ -280,8 +318,8 @@ class GraphValidationTest(UnitTestReport):
             object_category
         )
 
-        # One test object - each running and reporting independently -
-        # is configured for each resolved component endpoint.
+        # One test suite run - each running and reporting independently -
+        # is configured to run tests against each resolved component endpoint.
         test_objects: List[cls] = list()
         for endpoint in endpoints:
             test_objects.append(
@@ -347,7 +385,7 @@ class GraphValidationTest(UnitTestReport):
         #     ]
         # }
         # TODO: need to sync and iterate with TestHarness conception of TestRunner results
-        return {test_name: report.get_messages() for test_name, report in self.results.items()}
+        return {test_name: report.get_all_messages() for test_name, report in self.results.items()}
 
 
 def get_component_infores(component: str):

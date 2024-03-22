@@ -23,25 +23,6 @@ from one_hop_test.unit_test_templates import (
 
 class OneHopTest(GraphValidationTest):
 
-    def translate_test_asset(self) -> Dict[str, str]:
-        """
-        Need to access the TestAsset fields as a dictionary with some
-        edge attributes relabelled to reasoner-validator expectations.
-        :return: Dict[str,str], reasoner-validator indexed test edge data.
-        """
-        test_edge: Dict[str, str] = dict()
-
-        test_edge["idx"] = self.test_asset.id
-        test_edge["subject_id"] = self.test_asset.input_id
-        test_edge["subject_category"] = self.test_asset.input_category
-        test_edge["predicate_id"] = self.test_asset.predicate_id \
-            if self.test_asset.predicate_id else self.get_predicate_id(self.test_asset.predicate_name)
-        test_edge["object_id"] = self.test_asset.output_id
-        test_edge["object_category"] = self.test_asset.output_category
-        test_edge["biolink_version"] = self.biolink_version
-
-        return test_edge
-
     async def run_one_hop_unit_test(self, url: str, creator):
         """
         Method to execute a TRAPI lookup, using the 'creator' test template.
@@ -167,51 +148,38 @@ class OneHopTest(GraphValidationTest):
                     else:
                         self.report(code="error.trapi.response.empty")
 
-    def test_case_wrapper(self):
-        async def test_case(test_type):
-            await self.run_one_hop_unit_test(self.default_target, test_type)
-        return test_case
-
     async def run(self):
         """
-        Wrapper to invoke a OneHopTest co-routine run, on the
-        currently bound TestAsset, in a given test environment,
-        for a given query type.
+        Implementation of abstract GraphValidationTest.run() operation
+        to invoke a OneHopTest co-routine test runs, on the
+        currently bound TestAsset, in a given component endpoint,
+        for each given type of "one hop" unit test query.
 
         :return: None - use 'GraphValidationTest.get_results()'
-        or its subclass implementation, to access the test results.
+                 or its subclass implementation, to access test results.
         """
-        test_case = self.test_case_wrapper()
         #
-        # TODO: do these tests need to be run sequentially or
-        #       could they be run concurrently then "gathered" together?
-        #     test_case_runs = [
-        #         test_case(test_type)
-        #         for test_type in [
-        #           by_subject,
-        #           inverse_by_new_subject,
-        #           by_object,
-        #           raise_subject_entity,
-        #           raise_object_by_subject,
-        #           raise_predicate_by_subject
-        #         ]
-        #     ]
-        #     await gather(*test_case_runs, limit=num_concurrent_requests)
-        #
-        #     TODO: How are the results to be retrieved and indexed? Will the validation message be jumbled?
-        #           Are semaphores and locks also now needed for thread safety for the reporting of validation messages?
+        #     TODO: How are the results to be retrieved and indexed?
+        #           Are semaphores and locks also now needed for
+        #           thread safety for the reporting of validation messages?
         #
         # Partial answer is that the 'test_name' is reset each time in the
         # report, thus serving as a kind of indexing (nothing now returned
         # by the co-routine... perhaps a more clever internal indexing
         # of validation messages is now necessary?)
-
-        await test_case(by_subject)
-        await test_case(inverse_by_new_subject)
-        await test_case(by_object)
-        await test_case(raise_subject_entity)
-        await test_case(raise_object_by_subject)
-        await test_case(raise_predicate_by_subject)
+        #
+        test_case_runs = [
+            await self.run_one_hop_unit_test(self.default_target, test_type)
+            for test_type in [
+                by_subject,
+                inverse_by_new_subject,
+                by_object,
+                raise_subject_entity,
+                raise_object_by_subject,
+                raise_predicate_by_subject
+            ]
+        ]
+        await asyncio.gather(*test_case_runs)  # , limit=num_concurrent_requests)
 
 
 if __name__ == '__main__':
