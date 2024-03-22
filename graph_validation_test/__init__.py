@@ -1,7 +1,8 @@
 """
 Abstract base class for the GraphValidation TestRunners
 """
-from typing import Dict, Tuple, List, Optional
+import asyncio
+from typing import Dict, List, Optional
 from functools import lru_cache
 from argparse import ArgumentParser
 
@@ -27,20 +28,29 @@ env_spec = {
 
 class UnitTestReport(BiolinkValidator):
     """
-    UnitTestReport is a wrapper for BiolinkValidator used to aggregate
-    actionable test validation messages from processing of a given TestAsset.
+    UnitTestReport is a wrapper for BiolinkValidator, used to aggregate
+    validation messages from test processing of a given TestAsset.
     """
     def __init__(
             self,
-            test_name: str,
+            target: str,
             test_asset: TestAsset,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             test_logger: Optional[logging.Logger] = None
     ):
+        """
+        :param target: target: str, target endpoint running in a specified environment of component to be tested
+        :param test_asset: The test asset being processed in (Biolink Model compliant TRAPI) testing queries.
+        :param trapi_version: The TRAPI version whose compliance must be met
+                              by the component responding to the test.
+        :param biolink_version: The Biolink Model release version whose compliance
+                                must be met by the component responding to the test.
+        :param test_logger: The Python logger used to report internal log messages from the test run.
+        """
         BiolinkValidator.__init__(
             self,
-            prefix=test_name,  # TODO: generate_test_error_msg_prefix(test_case, test_name=test_name)
+            default_target=target,
             trapi_version=trapi_version,
             biolink_version=biolink_version
         )
@@ -48,21 +58,6 @@ class UnitTestReport(BiolinkValidator):
         self.logger = test_logger
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
-
-    def set_test_name(self, name: str):
-        """
-        Resets the test name to a new string.
-        :param name: str, new test name
-        :return: None
-        """
-        self.reset_prefix(name)
-
-    def get_test_name(self) -> str:
-        """
-        Returns the current prefix of the ValidationReporter.
-        :return: str, current test name
-        """
-        return self.get_prefix()
 
     def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
         """
@@ -75,7 +70,7 @@ class UnitTestReport(BiolinkValidator):
         self.report(code=code, edge_id=edge_id)
         if messages:
             self.add_messages(messages)
-        report_string: str = self.dump_messages(flat=True)
+        report_string: str = self.dump_skipped(flat=True)
         self.report("skipped.test", identifier=report_string)
 
     def assert_test_outcome(self):
@@ -110,13 +105,13 @@ class UnitTestReport(BiolinkValidator):
 
 class GraphValidationTest(UnitTestReport):
 
-    # Simple singleton sequencer for generating unique test identifiers
+    # Simple singleton class sequencer, for
+    # generating unique test identifiers
     _id: int = 0
 
     def __init__(
             self,
-            endpoints: List[str],
-            test_name: str,
+            target: str,
             test_asset: TestAsset,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
@@ -126,19 +121,18 @@ class GraphValidationTest(UnitTestReport):
         """
         GraphValidationTest constructor.
 
-        :param endpoints: List[str], target environment endpoint(s) being targeted for testing
-        :param test_name: str, name of the test being run
+        :param target: str, target endpoint running in a specified environment of component to be tested
         :param test_asset: TestAsset, target test asset(s) being processed
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
         :param test_logger: Optional[logging.Logger], Python logger, for diagnostics
         """
-        self.endpoints: List[str] = endpoints
+        self.target: str = target
 
         UnitTestReport.__init__(
             self,
-            test_name=test_name,
+            target=target,
             test_asset=test_asset,
             trapi_version=trapi_version,
             biolink_version=biolink_version,
@@ -146,9 +140,6 @@ class GraphValidationTest(UnitTestReport):
         )
         self.runner_settings = runner_settings
         self.results: Dict = dict()
-
-    def get_endpoints(self) -> Tuple:
-        return tuple(self.endpoints)
 
     def get_runner_settings(self) -> List[str]:
         return self.runner_settings.copy()
@@ -231,7 +222,7 @@ class GraphValidationTest(UnitTestReport):
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
             test_logger: Optional[logging.Logger] = None
-    ) -> Dict:
+    ) -> List[Dict]:
         #     # One test edge (asset)
         #     "subject_id": asset.input_id,  # str
         #     "subject_category": asset.input_category,  # str
@@ -246,26 +237,41 @@ class GraphValidationTest(UnitTestReport):
         #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
         #     "test_logger": Optional[logging.Logger],  # Python Optional[logging.Logger] = None
         """
-        Run a knowledge graph test of the specified kind using specified test asset information.
+        Run one or more knowledge graph tests, of specified kind, using a specified test asset.
 
+        Parameters provided to specify the test are:
+
+        - TestAsset to be used for test queries.
         :param cls: The target TestRunner subclass of GraphValidationTest of the test type to be run.
         :param subject_id: str, CURIE identifying the identifier of the subject concept
         :param subject_category: str, CURIE identifying the category of the subject concept
         :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
         :param object_id: str, CURIE identifying the identifier of the object concept
         :param object_category: str, CURIE identifying the category of the object concept
+
+        - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
         :param components: Optional[str] = None, components to be tested
                                          (values from ComponentEnum in TranslatorTestingModel; default 'ars')
         :param environment: Optional[str] = None, Target Translator execution environment for the test,
                                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
+
+        - Metadata globally configuring the test(s) to be run.
         :param trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
         :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
         :param test_logger: Optional[logging.Logger] = None, Python logging handle
+
         :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
         """
+        # List of endpoints for testing, based on components and environment
+        # requested. The specified test asset is used to query each endpoint
+        # independently, to generate a separate test report. Each test report
+        # may itself be composed of  one or more independent TestCases,
+        # depending on the objective and design of the TestRunner.
         endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
 
+        # Load the internal TestAsset being uniformly
+        # served to all (endpoint x testcase) test runs.
         test_asset: TestAsset = GraphValidationTest.build_test_asset(
             subject_id,
             subject_category,
@@ -274,20 +280,28 @@ class GraphValidationTest(UnitTestReport):
             object_category
         )
 
-        test_obj = cls(
-            endpoints=endpoints,
-            # TODO: initialize the class name as the test name, can be reset later
-            test_name=cls.__name__,
-            test_asset=test_asset,
-            trapi_version=trapi_version,
-            biolink_version=biolink_version,
-            runner_settings=runner_settings,
-            test_logger=test_logger
-        )
-        await test_obj.run()
-        return test_obj.get_results()
+        # One test object - each running and reporting independently -
+        # is configured for each resolved component endpoint.
+        test_objects: List[cls] = list()
+        for endpoint in endpoints:
+            test_objects.append(
+                cls(
+                    target=endpoint,
+                    test_asset=test_asset,
+                    trapi_version=trapi_version,
+                    biolink_version=biolink_version,
+                    runner_settings=runner_settings,
+                    test_logger=test_logger
+                )
+            )
 
-    def get_results(self) -> Dict[str, Dict[str, List[str]]]:
+        # Concurrently run the tests...
+        await asyncio.gather(*[await target.run() for target in test_objects])
+
+        # ... then, return the results
+        return [target.get_results() for target in test_objects]
+
+    def get_results(self) -> Dict:
         # The ARS_test_Runner with the following command:
         #
         #       ARS_Test_Runner
@@ -297,7 +311,7 @@ class GraphValidationTest(UnitTestReport):
         #           --input_curie 'MONDO:0005301'
         #           --output_curie  '["PUBCHEM.COMPOUND:107970","UNII:3JB47N2Q2P"]'
         #
-        # gives the json report below:
+        # gives a Python dictionary report (serialized to JSON) somewhat as follows:
         #
         # {
         #     "pks": {

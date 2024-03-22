@@ -3,12 +3,11 @@ One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
 from sys import stderr
-from typing import Optional, Dict
+from typing import Optional, List, Dict
 import asyncio
 
 from reasoner_validator.trapi import TRAPISchemaValidator, call_trapi
 from reasoner_validator.validator import TRAPIResponseValidator
-from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import GraphValidationTest, get_parameters
 from one_hop_test.unit_test_templates import (
     by_subject,
@@ -55,7 +54,7 @@ class OneHopTest(GraphValidationTest):
         #       Maybe not completely but adequately by assuming that the messages data for
         #       each distinct co-routine (test) is  uniquely indexed by its (test_run,) url
         #       and test (creator) name, and that the 'message' data is accessed thus.
-        self.set_test_name(creator.__name__)
+        self.reset_default_test(creator.__name__)
 
         trapi_request: Optional[Dict]
         output_element: Optional[str]
@@ -170,9 +169,7 @@ class OneHopTest(GraphValidationTest):
 
     def test_case_wrapper(self):
         async def test_case(test_type):
-            # TODO: eventually need to process multiple self.endpoints(?)
-            target_url: str = self.endpoints[0]
-            await self.run_one_hop_unit_test(target_url, test_type)
+            await self.run_one_hop_unit_test(self.default_target, test_type)
         return test_case
 
     async def run(self):
@@ -188,7 +185,7 @@ class OneHopTest(GraphValidationTest):
         #
         # TODO: do these tests need to be run sequentially or
         #       could they be run concurrently then "gathered" together?
-        #     coroutines = [
+        #     test_case_runs = [
         #         test_case(test_type)
         #         for test_type in [
         #           by_subject,
@@ -199,7 +196,7 @@ class OneHopTest(GraphValidationTest):
         #           raise_predicate_by_subject
         #         ]
         #     ]
-        #     await gather(*coroutines, limit=num_concurrent_requests)
+        #     await gather(*test_case_runs, limit=num_concurrent_requests)
         #
         #     TODO: How are the results to be retrieved and indexed? Will the validation message be jumbled?
         #           Are semaphores and locks also now needed for thread safety for the reporting of validation messages?
@@ -219,5 +216,5 @@ class OneHopTest(GraphValidationTest):
 
 if __name__ == '__main__':
     args = get_parameters()
-    results: Dict = asyncio.run(OneHopTest.run_test(**vars(args)))
+    results: List[Dict] = asyncio.run(OneHopTest.run_test(**vars(args)))
     print(results)
