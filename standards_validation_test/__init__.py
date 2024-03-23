@@ -1,10 +1,10 @@
 """
 TRAPI and Biolink Model Standards Validation test (using reasoner-validator)
 """
-from typing import Dict
+from typing import List, Dict
 import asyncio
 
-from translator_testing_model.datamodel.pydanticmodel import TestAsset
+# from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import GraphValidationTest, get_parameters
 
 
@@ -24,5 +24,5 @@ class StandardsValidationTest(GraphValidationTest):
 
 if __name__ == '__main__':
     args = get_parameters()
-    results: Dict = asyncio.run(StandardsValidationTest.run_test(**vars(args)))
+    results: List[Dict] = asyncio.run(StandardsValidationTest.run_test(**vars(args)))
     print(results)
