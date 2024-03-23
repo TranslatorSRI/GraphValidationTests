@@ -8,7 +8,11 @@ import asyncio
 
 from reasoner_validator.trapi import TRAPISchemaValidator, call_trapi
 from reasoner_validator.validator import TRAPIResponseValidator
-from graph_validation_test import GraphValidationTest, get_parameters
+from graph_validation_test import (
+    GraphValidationTest,
+    TestCaseRun,
+    get_parameters
+)
 from one_hop_test.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -18,34 +22,26 @@ from one_hop_test.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
+
 # from .utils.asyncio import gather
 
 
-class OneHopTest(GraphValidationTest):
+class OneHopTestCaseRun(TestCaseRun):
 
-    async def run_one_hop_unit_test(self, url: str, creator):
+    async def run_one_hop_unit_test(self):
         """
-        Method to execute a TRAPI lookup, using the 'creator' test template.
-
-        :param url: str, target TRAPI url endpoint to be tested
-        :param creator: unit test-specific TRAPI query message creator
-        :return: results: Dict of results
+        Method to execute a TRAPI lookup, using a 'test' code template
+        that defines a single TestCase using the GraphValidationTest associated TestAsset.
+        :return: None, results are captured as validation messages within the TestCaseRun parent.
         """
-        # TODO: how can this be made thread safe if co-routines are concurrently executed?
-        #       Maybe not completely but adequately by assuming that the messages data for
-        #       each distinct co-routine (test) is  uniquely indexed by its (test_run,) url
-        #       and test (creator) name, and that the 'message' data is accessed thus.
-        self.reset_default_test(creator.__name__)
-
-        trapi_request: Optional[Dict]
         output_element: Optional[str]
         output_node_binding: Optional[str]
 
         # TODO: not sure if this is necessary - is the remapping
         #       of test asset fields already accomplished elsewhere?
-        _test_asset = self.translate_test_asset()
+        test_asset = self.translate_test_asset()
 
-        trapi_request, output_element, output_node_binding = creator(_test_asset)
+        trapi_request, output_element, output_node_binding = self.test(test_asset)
 
         if not trapi_request:
             # output_element and output_node_binding were
@@ -57,8 +53,8 @@ class OneHopTest(GraphValidationTest):
                 context=context[0],
                 reason=output_node_binding
             )
-        else:
 
+        else:
             # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
             validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=self.trapi_version)
             validator.validate(trapi_request, component="Query")
@@ -71,20 +67,19 @@ class OneHopTest(GraphValidationTest):
                 #
                 # if 'ara_source' in _test_asset and _test_asset['ara_source']:
                 #     # sanity check!
-                #     assert 'kp_source' in _test_asset and _test_asset['kp_source']
+                #     assert 'kp_source' in test_asset and test_asset['kp_source']
                 #
                 #     # Here, we need annotate the TRAPI request query graph to
                 #     # constrain an ARA query to the test case specified 'kp_source'
                 #     trapi_request = constrain_trapi_request_to_kp(
-                #         trapi_request=trapi_request, kp_source=_test_asset['kp_source']
+                #         trapi_request=trapi_request, kp_source=test_asset['kp_source']
                 #     )
 
                 # Make the TRAPI call to the TestCase targeted ARS, KP or
                 # ARA resource, using the case-documented input test edge
-                trapi_response = await call_trapi(url, trapi_request)
+                trapi_response = await call_trapi(self.default_target, trapi_request)
 
-                # Capture the raw TRAPI query input and output
-                # for possibly later test harness access
+                # Capture the raw TRAPI query request and response for reporting
                 self.trapi_request = trapi_request
                 self.trapi_response = trapi_response
 
@@ -113,7 +108,7 @@ class OneHopTest(GraphValidationTest):
                         else:
                             biolink_version = response['biolink_version'] \
                                 if not self.biolink_version else self.biolink_version
-                            self.logger.info(
+                            self.get_logger().info(
                                 f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
                             )
 
@@ -136,11 +131,11 @@ class OneHopTest(GraphValidationTest):
                             trapi_version=self.trapi_version,
                             biolink_version=self.biolink_version
                         )
-                        if not validator.case_input_found_in_response(_test_asset, response, self.trapi_version):
-                            test_edge_id: str = f"{_test_asset['idx']}|" \
-                                                f"({_test_asset['subject_id']}#{_test_asset['subject_category']})" + \
-                                                f"-[{_test_asset['predicate']}]->" + \
-                                                f"({_test_asset['object_id']}#{_test_asset['object_category']})"
+                        if not validator.case_input_found_in_response(test_asset, response, self.trapi_version):
+                            test_edge_id: str = f"{test_asset['idx']}|" \
+                                                f"({test_asset['subject_id']}#{test_asset['subject_category']})" + \
+                                                f"-[{test_asset['predicate']}]->" + \
+                                                f"({test_asset['object_id']}#{test_asset['object_category']})"
                             self.report(
                                 code="error.trapi.response.knowledge_graph.missing_expected_edge",
                                 identifier=test_edge_id
@@ -148,29 +143,28 @@ class OneHopTest(GraphValidationTest):
                     else:
                         self.report(code="error.trapi.response.empty")
 
-    async def run(self):
+
+class OneHopTest(GraphValidationTest):
+
+    async def run(self, **kwargs):
         """
-        Implementation of abstract GraphValidationTest.run() operation
-        to invoke a OneHopTest co-routine test runs, on the
-        currently bound TestAsset, in a given component endpoint,
-        for each given type of "one hop" unit test query.
+        Implementation of abstract GraphValidationTest.run()
+        operation to invoke a OneHopTest co-routine TestCase runs,
+        on the currently bound TestAsset, which query the endpoint
+        of a given component for each type of "one hop" unit test.
+
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
 
         :return: None - use 'GraphValidationTest.get_results()'
                  or its subclass implementation, to access test results.
         """
-        #
-        #     TODO: How are the results to be retrieved and indexed?
-        #           Are semaphores and locks also now needed for
-        #           thread safety for the reporting of validation messages?
-        #
-        # Partial answer is that the 'test_name' is reset each time in the
-        # report, thus serving as a kind of indexing (nothing now returned
-        # by the co-routine... perhaps a more clever internal indexing
-        # of validation messages is now necessary?)
-        #
-        test_case_runs = [
-            await self.run_one_hop_unit_test(self.default_target, test_type)
-            for test_type in [
+        test_cases = [
+            OneHopTestCaseRun(
+                self,
+                test,
+                **kwargs
+            )
+            for test in [
                 by_subject,
                 inverse_by_new_subject,
                 by_object,
@@ -179,7 +173,16 @@ class OneHopTest(GraphValidationTest):
                 raise_predicate_by_subject
             ]
         ]
-        await asyncio.gather(*test_case_runs)  # , limit=num_concurrent_requests)
+
+        # TODO: unsure if one needs to limit concurrent requests here... maybe rather at
+        #       theGraphValidationTest.run_test(), running across all component endpoints,
+        #       or at the test CLI level(?)
+        await asyncio.gather(
+            *[await test_case.run_one_hop_unit_test() for test_case in test_cases]
+        )  # , limit=num_concurrent_requests)
+
+        # ... then, return the results
+        return [tc.get_all_messages() for tc in test_cases]
 
 
 if __name__ == '__main__':

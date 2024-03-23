@@ -15,6 +15,8 @@ from graph_validation_test.translator.registry import (
     extract_component_test_metadata_from_registry
 )
 
+# from .utils.asyncio import gather
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -26,89 +28,55 @@ env_spec = {
 }
 
 
-class TestCaseRun(BiolinkValidator):
+def get_component_infores(component: str):
+    infores_map = {
+        "arax": "arax",
+        "aragorn": "aragorn",
+        "bte": "biothings-explorer",
+        "improving": "improving-agent",
+    }
+    # TODO: what if the component is not yet registered in the model?
+    return f"infores:{infores_map.setdefault(component, component)}"
+
+
+@lru_cache()
+def target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
     """
-    TestCaseRun is a wrapper for BiolinkValidator, used to aggregate
-    validation messages from the GraphValidationTest processing of a
-    TestCase derived from a given TestAsset, and used to make a TRAPI
-    query against one specified Translator component 'target' endpoint.
-    TestCase run results are stored in parent BiolinkValidator context.
+    Resolve target endpoints for running the test.
+
+    :param components: Optional[str], components to be tested
+                       (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
+    :param env: target Translator execution environment of component(s) to be tested.
+    :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
     """
-    def __init__(
-            self,
-            target: str,
-            test: str,
-            test_asset: TestAsset,
-            trapi_version: Optional[str] = None,
-            biolink_version: Optional[str] = None,
-            test_logger: Optional[logging.Logger] = None
-    ):
-        """
-        Constructor for a TestCaseRun.
-
-        :param target: target: str, target endpoint running in a specified environment of component to be tested
-        :param test: str, descriptive identifier of the TestCase being run
-        :param test_asset: The test asset being processed in (Biolink Model compliant TRAPI) testing queries.
-        :param trapi_version: The TRAPI version whose compliance must be met
-                              by the component responding to the test.
-        :param biolink_version: The Biolink Model release version whose compliance
-                                must be met by the component responding to the test.
-        :param test_logger: The Python logger used to report internal log messages from the test run.
-        """
-        BiolinkValidator.__init__(
-            self,
-            default_test=test,
-            default_target=target,
-            trapi_version=trapi_version,
-            biolink_version=biolink_version
-        )
-        self.test_asset = test_asset
-        self.logger = test_logger
-        self.trapi_request: Optional[Dict] = None
-        self.trapi_response: Optional[Dict[str, int]] = None
-
-    def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
-        """
-        Edge test Pytest skipping wrapper.
-        :param code: str, validation message code (indexed in the codes.yaml of the Reasoner Validator)
-        :param edge_id: str, S-P-O identifier of the edge being skipped
-        :param messages: (optional) additional validation messages available to explain why the test is being skipped
-        :return:
-        """
-        self.report(code=code, edge_id=edge_id)
-        if messages:
-            self.add_messages(messages)
-        report_string: str = self.dump_skipped(flat=True)
-        self.report("skipped.test", identifier=report_string)
-
-    def assert_test_outcome(self):
-        """
-        Test outcomes
-        """
-        if self.has_critical():
-            critical_msg = self.dump_critical(flat=True)
-            if self.logger:
-                self.logger.critical(critical_msg)
-
-        elif self.has_errors():
-            # we now treat 'soft' errors similar to critical errors (above) but
-            # the validation messages will be differentiated on the user interface
-            err_msg = self.dump_errors(flat=True)
-            if self.logger:
-                self.logger.error(err_msg)
-
-        elif self.has_warnings():
-            wrn_msg = self.dump_warnings(flat=True)
-            if self.logger:
-                self.logger.warning(wrn_msg)
-
-        elif self.has_information():
-            info_msg = self.dump_info(flat=True)
-            if self.logger:
-                self.logger.info(info_msg)
-
+    endpoints: List[str] = list()
+    component_list: List[str]
+    if components:
+        # TODO: need to validate/sanitize the list of components
+        component_list = components.split(",")
+    else:
+        component_list = ['ars']
+    for component in component_list:
+        if component == 'ars':
+            endpoints.append(f"https://{env}.transltr.io/ars/api/")
         else:
-            pass  # do nothing... just silent pass through...
+            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
+            registry_data: Dict = get_the_registry_data()
+            service_metadata = \
+                extract_component_test_metadata_from_registry(
+                    registry_data,
+                    "ARA",  # TODO: how can I also track KP's?
+                    target_source=get_component_infores(component),
+                    target_x_maturity=env
+                )
+            if not service_metadata:
+                raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
+
+            # TODO: fix this! the service_metadata is a complex
+            #       dictionary of entries.. how do we resolve it?
+            endpoints.append(service_metadata["url"])
+
+    return endpoints
 
 
 class GraphValidationTest(BiolinkValidator):
@@ -119,7 +87,7 @@ class GraphValidationTest(BiolinkValidator):
     with explicit or default TRAPI and Biolink Model versions.
     This wrapper is derived from BiolinkValidator for convenience.
     Most of the actual test result messages are captured within
-    the separate "TestCaseRun" wrapper class defined above.
+    the separate "TestCaseRun" wrapper class defined below.
     """
     # Simple singleton class sequencer, for
     # generating unique test identifiers
@@ -175,25 +143,6 @@ class GraphValidationTest(BiolinkValidator):
                 return utils.format_element(predicate)
         return None
 
-    def translate_test_asset(self) -> Dict[str, str]:
-        """
-        Need to access the TestAsset fields as a dictionary with some
-        edge attributes relabelled to reasoner-validator expectations.
-        :return: Dict[str,str], reasoner-validator indexed test edge data.
-        """
-        test_edge: Dict[str, str] = dict()
-
-        test_edge["idx"] = self.test_asset.id
-        test_edge["subject_id"] = self.test_asset.input_id
-        test_edge["subject_category"] = self.test_asset.input_category
-        test_edge["predicate_id"] = self.test_asset.predicate_id \
-            if self.test_asset.predicate_id else self.get_predicate_id(self.test_asset.predicate_name)
-        test_edge["object_id"] = self.test_asset.output_id
-        test_edge["object_category"] = self.test_asset.output_category
-        test_edge["biolink_version"] = self.biolink_version
-
-        return test_edge
-
     @classmethod
     def build_test_asset(
             cls,
@@ -223,32 +172,25 @@ class GraphValidationTest(BiolinkValidator):
             output_category=object_category
         )
 
-    @staticmethod
-    def get_predicate_id(predicate_name: str) -> str:
-        """
-        SME's (like Jenn) like plain English (possibly capitalized) names
-        for their predicates, whereas, we need regular Biolink CURIES here.
-        :param predicate_name: predicate name string
-        :return: str, predicate CURIE (presumed to be from the Biolink Model?)
-        """
-        # TODO: maybe validate the predicate name here against the Biolink Model?
-        predicate = predicate_name.lower().replace(" ", "_")
-        return f"biolink:{predicate}"
+    def new_test_case_run(self):
+        return
 
-    async def run(self):
+    async def run(self, **kwargs):
         """
         Abstract definition of the wrapper method used to invoke a
         co-routine run to process a given subclass of test, on the
         currently bound TestAsset, querying a given component endpoint.
 
-        :return: None - use get_results() below, or its
-        subclass implementation, to access the test results.
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+
+        :return: None - use 'GraphValidationTest.get_results()'
+                 or its subclass implementation, to access test results.
         """
         raise NotImplementedError("Implement me in a subclass!")
 
     @classmethod
     async def run_test(
-            cls,  # Python class assumed to be a subclass of GraphValidationTest
+            cls,
             subject_id: str,
             subject_category: str,
             predicate_id: str,
@@ -259,21 +201,9 @@ class GraphValidationTest(BiolinkValidator):
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
-            test_logger: Optional[logging.Logger] = None
+            test_logger: Optional[logging.Logger] = None,
+            **kwargs
     ) -> List[Dict]:
-        #     # One test edge (asset)
-        #     "subject_id": asset.input_id,  # str
-        #     "subject_category": asset.input_category,  # str
-        #     "predicate_id": asset.predicate_id,  # str
-        #     "object_id": asset.output_id,  # str
-        #     "object_category": asset.output_category  # str
-        #
-        #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
-        #     "components": components,  # Optional[str] = None; default: 'ars' if not given
-        #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
-        #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
-        #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
-        #     "test_logger": Optional[logging.Logger],  # Python Optional[logging.Logger] = None
         """
         Run one or more knowledge graph tests, of specified kind, using a specified test asset.
 
@@ -298,7 +228,7 @@ class GraphValidationTest(BiolinkValidator):
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
         :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
         :param test_logger: Optional[logging.Logger] = None, Python logging handle
-
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
         """
         # List of endpoints for testing, based on components and environment
@@ -318,26 +248,25 @@ class GraphValidationTest(BiolinkValidator):
             object_category
         )
 
-        # One test suite run - each running and reporting independently -
-        # is configured to run tests against each resolved component endpoint.
-        test_objects: List[cls] = list()
-        for endpoint in endpoints:
-            test_objects.append(
-                cls(
-                    target=endpoint,
-                    test_asset=test_asset,
-                    trapi_version=trapi_version,
-                    biolink_version=biolink_version,
-                    runner_settings=runner_settings,
-                    test_logger=test_logger
-                )
-            )
-
+        # One test run - each running and reporting independently - is configured
+        # to run test cases against every resolved component endpoint.
+        test_runs: List[cls] = [
+            cls(
+                target=endpoint,
+                test_asset=test_asset,
+                trapi_version=trapi_version,
+                biolink_version=biolink_version,
+                runner_settings=runner_settings,
+                test_logger=test_logger
+            ) for endpoint in endpoints
+        ]
+        # TODO: unsure if one needs to limit concurrent requests here...
+        #       maybe rather at the test CLI level(?)
         # Concurrently run the tests...
-        await asyncio.gather(*[await target.run() for target in test_objects])
+        await asyncio.gather(*[await target.run(**kwargs) for target in test_runs])  # , limit=num_concurrent_requests)
 
         # ... then, return the results
-        return [target.get_results() for target in test_objects]
+        return [target.get_results() for target in test_runs]
 
     def get_results(self) -> Dict:
         # The ARS_test_Runner with the following command:
@@ -388,54 +317,121 @@ class GraphValidationTest(BiolinkValidator):
         return {test_name: report.get_all_messages() for test_name, report in self.results.items()}
 
 
-def get_component_infores(component: str):
-    infores_map = {
-        "arax": "arax",
-        "aragorn": "aragorn",
-        "bte": "biothings-explorer",
-        "improving": "improving-agent",
-    }
-    # TODO: what if the component is not yet registered in the model?
-    return f"infores:{infores_map.setdefault(component, component)}"
-
-
-@lru_cache()
-def target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
+class TestCaseRun(BiolinkValidator):
     """
-    Resolve target endpoints for running the test.
-
-    :param components: Optional[str], components to be tested
-                       (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
-    :param env: target Translator execution environment of component(s) to be tested.
-    :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
+    TestCaseRun is a wrapper for BiolinkValidator, used to aggregate
+    validation messages from the GraphValidationTest processing of a specific
+    TestCase, derived from the TestAsset - bound to the 'test_run' - which is
+    based on a TRAPI query against the test_run bound 'target' endpoint. Results
+    of a TestCaseRun are stored within the parent BiolinkValidator class.
     """
-    endpoints: List[str] = list()
-    component_list: List[str]
-    if components:
-        # TODO: need to validate/sanitize the list of components
-        component_list = components.split(",")
-    else:
-        component_list = ['ars']
-    for component in component_list:
-        if component == 'ars':
-            endpoints.append(f"https://{env}.transltr.io/ars/api/")
+    def __init__(self, test_run: GraphValidationTest, test, **kwargs):
+        """
+        Constructor for a TestCaseRun.
+
+        :param test_run: GraphValidationTest: GraphValidationTest context within which this TestCase is being run
+        :param test, declared instance of TestCase query being processed (generally, an executable function)
+        :param kwargs: Dict, optional extra named BiolinkValidator parameters which may be specified for the test run.
+        """
+        self.test_run: GraphValidationTest = test_run
+        BiolinkValidator.__init__(
+            self,
+            default_test=test.__name__,
+            default_target=test_run.default_target,
+            trapi_version=test_run.trapi_version,
+            biolink_version=test_run.biolink_version,
+            **kwargs
+        )
+        # the 'test' itself may be an executable piece of code
+        # that defines the TestCase derived from the TestAsset
+        self.test = test
+
+        self.trapi_request: Optional[Dict] = None
+        self.trapi_response: Optional[Dict[str, int]] = None
+
+    def get_test_run(self) -> GraphValidationTest:
+        return self.test_run
+
+    def get_logger(self) -> Optional[logging.Logger]:
+        return self.test_run.logger
+
+    def get_test_asset(self) -> TestAsset:
+        return self.test_run.test_asset
+
+    @staticmethod
+    def get_predicate_id(predicate_name: str) -> str:
+        """
+        SME's (like Jenn) like plain English (possibly capitalized) names
+        for their predicates, whereas, we need regular Biolink CURIES here.
+        :param predicate_name: predicate name string
+        :return: str, predicate CURIE (presumed to be from the Biolink Model?)
+        """
+        # TODO: maybe validate the predicate name here against the Biolink Model?
+        predicate = predicate_name.lower().replace(" ", "_")
+        return f"biolink:{predicate}"
+
+    def translate_test_asset(self) -> Dict[str, str]:
+        """
+        Need to access the TestAsset fields as a dictionary with some
+        edge attributes relabelled to reasoner-validator expectations.
+        :return: Dict[str,str], reasoner-validator indexed test edge data.
+        """
+        test_edge: Dict[str, str] = dict()
+
+        test_edge["idx"] = self.get_test_asset().id
+        test_edge["subject_id"] = self.get_test_asset().input_id
+        test_edge["subject_category"] = self.get_test_asset().input_category
+        test_edge["predicate_id"] = self.get_test_asset().predicate_id \
+            if self.get_test_asset().predicate_id else self.get_predicate_id(self.get_test_asset().predicate_name)
+        test_edge["object_id"] = self.get_test_asset().output_id
+        test_edge["object_category"] = self.get_test_asset().output_category
+        test_edge["biolink_version"] = self.biolink_version
+
+        return test_edge
+
+    def skip(self, code: str, edge_id: str, messages: Optional[Dict] = None):
+        """
+        Edge test Pytest skipping wrapper.
+        :param code: str, validation message code (indexed in the codes.yaml of the Reasoner Validator)
+        :param edge_id: str, S-P-O identifier of the edge being skipped
+        :param messages: (optional) additional validation messages available
+                         to explain why the test is being skipped.
+        :return:
+        """
+        self.report(code=code, edge_id=edge_id)
+        if messages:
+            self.add_messages(messages)
+        report_string: str = self.dump_skipped(flat=True)
+        self.report("skipped.test", identifier=report_string)
+
+    def assert_test_outcome(self):
+        """
+        Test outcomes
+        """
+        if self.has_critical():
+            critical_msg = self.dump_critical(flat=True)
+            if self.test_run.logger:
+                self.test_run.logger.critical(critical_msg)
+
+        elif self.has_errors():
+            # we now treat 'soft' errors similar to critical errors (above) but
+            # the validation messages will be differentiated on the user interface
+            err_msg = self.dump_errors(flat=True)
+            if self.test_run.logger:
+                self.test_run.logger.error(err_msg)
+
+        elif self.has_warnings():
+            wrn_msg = self.dump_warnings(flat=True)
+            if self.test_run.logger:
+                self.test_run.logger.warning(wrn_msg)
+
+        elif self.has_information():
+            info_msg = self.dump_info(flat=True)
+            if self.test_run.logger:
+                self.test_run.logger.info(info_msg)
+
         else:
-            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
-            registry_data: Dict = get_the_registry_data()
-            service_metadata = \
-                extract_component_test_metadata_from_registry(
-                    registry_data,
-                    "ARA",  # TODO: how can I also track KP's?
-                    target_source=get_component_infores(component),
-                    target_x_maturity=env
-                )
-            if not service_metadata:
-                raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
-
-            # TODO: fix this! the service_metadata is a complex dictionary of entries.. how do we resolve it?
-            endpoints.append(service_metadata["url"])
-
-    return endpoints
+            pass  # do nothing... just silent pass through...
 
 
 def get_parameters():

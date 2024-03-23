@@ -4,7 +4,7 @@ from typing import Coroutine, Optional, Sequence
 
 async def gather(coroutines: Sequence[Coroutine], limit: Optional[int] = None):
     """
-    Extension of asyncio.gather with a limit
+    Extension of asyncio.gather, with a limit
     on the number of concurrent coroutines.
 
     Args:
