@@ -158,6 +158,10 @@ class OneHopTest(GraphValidationTest):
         :return: None - use 'GraphValidationTest.get_results()'
                  or its subclass implementation, to access test results.
         """
+        # The GraphValidationTest 'self' instance is
+        # given to the OneHopTestCaseRun constructor
+        # as a source of regular test run parameters,
+        # supplemented by any additional optional **kwargs
         test_cases: List[OneHopTestCaseRun] = [
             OneHopTestCaseRun(
                 self,
