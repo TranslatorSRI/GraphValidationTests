@@ -158,7 +158,7 @@ class OneHopTest(GraphValidationTest):
         :return: None - use 'GraphValidationTest.get_results()'
                  or its subclass implementation, to access test results.
         """
-        test_cases = [
+        test_cases: List[OneHopTestCaseRun] = [
             OneHopTestCaseRun(
                 self,
                 test,
