@@ -175,7 +175,7 @@ class GraphValidationTest(BiolinkValidator):
     def new_test_case_run(self):
         return
 
-    async def run(self, **kwargs):
+    async def run(self, **kwargs) -> List[Dict]:
         """
         Abstract definition of the wrapper method used to invoke a
         co-routine run to process a given subclass of test, on the

@@ -146,7 +146,7 @@ class OneHopTestCaseRun(TestCaseRun):
 
 class OneHopTest(GraphValidationTest):
 
-    async def run(self, **kwargs):
+    async def run(self, **kwargs) -> List[Dict]:
         """
         Implementation of abstract GraphValidationTest.run()
         operation to invoke a OneHopTest co-routine TestCase runs,
