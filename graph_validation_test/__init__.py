@@ -256,7 +256,7 @@ class GraphValidationTest(BiolinkValidator):
     def get_run_id(self):
         # First implementation of 'run identifier' is
         # is to return the default target endpoint?
-        # TODO: need a more unique run primary key
+        # TODO: need a more unique run identifier here, e.g. ARS PK-like
         return self.default_target
 
     def get_trapi_generators(self) -> List:
@@ -269,13 +269,6 @@ class GraphValidationTest(BiolinkValidator):
     def generate_test_asset_id(cls) -> str:
         cls._id += 1
         return f"TestAsset:{cls._id:0>5}"
-
-    def generate_predicate_id(self, relationship: str) -> Optional[str]:
-        if self.bmt.is_predicate(relationship):
-            predicate = self.bmt.get_element(relationship)
-            if predicate:
-                return utils.format_element(predicate)
-        return None
 
     @classmethod
     def build_test_asset(
@@ -296,6 +289,8 @@ class GraphValidationTest(BiolinkValidator):
         :param object_category: str, CURIE identifying the category of the subject concept
         :return: TestAsset object
         """
+        # TODO: is this absolutely necessary internally inside the test runner,
+        #       which directly uses Biolink fields, not the TestAsset fields?
         return TestAsset.construct(
             id=cls.generate_test_asset_id(),
             input_id=subject_id,
