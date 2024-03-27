@@ -86,7 +86,7 @@ class StandardsValidationTestCaseRun(TestCaseRun):
 
 class StandardsValidationTest(GraphValidationTest):
     def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
-        return StandardsValidationTestCaseRun(test=test, **kwargs)
+        return StandardsValidationTestCaseRun(test_run=self, test=test, **kwargs)
 
 
 if __name__ == '__main__':

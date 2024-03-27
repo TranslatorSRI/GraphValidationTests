@@ -143,7 +143,7 @@ class OneHopTestCaseRun(TestCaseRun):
 
 class OneHopTest(GraphValidationTest):
     async def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
-        return OneHopTestCaseRun(test=test, **kwargs)
+        return OneHopTestCaseRun(test_run=self, test=test, **kwargs)
 
 
 if __name__ == '__main__':

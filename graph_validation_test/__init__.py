@@ -88,26 +88,15 @@ class TestCaseRun(BiolinkValidator):
     based on a TRAPI query against the test_run bound 'target' endpoint. Results
     of a TestCaseRun are stored within the parent BiolinkValidator class.
     """
-    test_run: Optional[GraphValidationTest] = None
-
-    @classmethod
-    def set_test_type(cls, test_type: GraphValidationTest):
-        cls.test_run = test_type
-
-    @classmethod
-    def get_test_type(cls) -> GraphValidationTest:
-        return cls.test_run
-
-    def __init__(self, test, **kwargs):
+    def __init__(self, test_run, test, **kwargs):
         """
         Constructor for a TestCaseRun.
 
         :param test, declared instance of TestCase query being processed (generally, an executable function)
         :param kwargs: Dict, optional extra named BiolinkValidator parameters which may be specified for the test run.
         """
-        test_run = self.get_test_type()
-        assert test_run is not None, \
-            "test_type uninitialized: need to TestCaseRun.set_test_type(test_type: GraphValidationTest)."
+        assert test_run, "'test_run' is uninitialized!"
+        self.test_run = test_run
 
         BiolinkValidator.__init__(
             self,
@@ -117,8 +106,9 @@ class TestCaseRun(BiolinkValidator):
             biolink_version=test_run.biolink_version,
             **kwargs
         )
-        # the 'test' itself may be an executable piece of code
-        # that defines the TestCase derived from the TestAsset
+
+        # the 'test' itself should be an executable piece of code
+        # that defines how a TestCase is derived from the TestAsset
         self.test = test
 
         self.trapi_request: Optional[Dict] = None
@@ -211,13 +201,13 @@ class TestCaseRun(BiolinkValidator):
 
 class GraphValidationTest(BiolinkValidator):
     """
-    GraphValidationTest is a wrapper used to aggregate instances
-    of TestCaseRun derived from a given TestAsset processed
+    GraphValidationTest is a wrapper used to build instances
+    of TestCase derived from a given TestAsset processed
     against a given 'target' component endpoint in compliance
     with explicit or default TRAPI and Biolink Model versions.
     This wrapper is derived from BiolinkValidator for convenience.
     Most of the actual test result messages are captured within
-    the separate "TestCaseRun" wrapper class defined below.
+    the separately defined "TestCaseRun" wrapper class.
     """
     # Simple singleton class sequencer, for
     # generating unique test identifiers
