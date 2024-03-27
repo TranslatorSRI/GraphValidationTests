@@ -14,7 +14,7 @@ from graph_validation_test import (
 )
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
-from one_hop_test.unit_test_templates import by_subject
+from one_hop_test.unit_test_templates import by_subject, by_object
 
 
 class StandardsValidationTestCaseRun(TestCaseRun):
@@ -22,7 +22,7 @@ class StandardsValidationTestCaseRun(TestCaseRun):
     # default constructor is inherited
     # from BiolinkValidator via TestCaseRun
 
-    async def run_standards_validation_test(self):
+    async def process_test_case(self):
         """
         Method to execute a TRAPI lookup a single TestCase
         using the GraphValidationTest associated TestAsset.
@@ -86,30 +86,20 @@ class StandardsValidationTestCaseRun(TestCaseRun):
 
 
 class StandardsValidationTest(GraphValidationTest):
-
-    async def run(self, **kwargs) -> List[Dict]:
-        """
-        Wrapper to invoke a StandardsValidationTest co-routine run, on the
-        currently bound TestAsset, in a given test environment, to assess
-        compliance to the assumed TRAPI and Biolink Model releases.
-
-        :param kwargs: Dict, optional named parameters sent to the TestRunner
-
-        :return: List[Dict], the list of test results (usually just
-                             one Python dictionary of validation messages)
-        """
-        # The GraphValidationTest 'self' instance is given
-        # to the StandardsValidationTestCaseRun constructor
-        # as a source of regular test run parameters,
-        # supplemented by any additional optional **kwargs
-        test_case = StandardsValidationTestCaseRun(self, **kwargs)
-        await test_case.run_standards_validation_test()
-
-        # ... then, return the results
-        return [test_case.get_all_messages()]
+    pass
 
 
 if __name__ == '__main__':
+
     args = get_parameters()
-    results: List[Dict] = asyncio.run(StandardsValidationTest.run_test(**vars(args)))
+
+    # TRAPI test case query generators
+    # used for StandardsValidationTest
+    trapi_generators = [by_subject, by_object]
+    results: List[Dict] = asyncio.run(
+        StandardsValidationTest.run_tests(
+            trapi_generators=trapi_generators,
+            **vars(args)
+        )
+    )
     print(results)

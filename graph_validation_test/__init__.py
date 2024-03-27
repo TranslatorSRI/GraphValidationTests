@@ -97,6 +97,7 @@ class GraphValidationTest(BiolinkValidator):
             self,
             target: str,
             test_asset: TestAsset,
+            trapi_generators: List,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
@@ -108,6 +109,8 @@ class GraphValidationTest(BiolinkValidator):
 
         :param target: str, target endpoint running in a specified environment of component to be tested
         :param test_asset: TestAsset, target test asset(s) being processed
+        :param trapi_generators: List, pointers to code functions that configure an individual
+                                 TRAPI query request. e.g. see one_hop_test.unit_test_templates.
         :param trapi_version: Optional[str], target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
@@ -124,9 +127,16 @@ class GraphValidationTest(BiolinkValidator):
             **kwargs
         )
         self.test_asset: TestAsset = test_asset
+
+        # trapi_generators should probably not be empty but just in case...
+        self.trapi_generators: List = trapi_generators or []
+
         self.runner_settings = runner_settings
         self.logger: Optional[logging.Logger] = test_logger
         self.results: Dict = dict()
+
+    def get_trapi_generators(self) -> List:
+        return self.trapi_generators
 
     def get_runner_settings(self) -> List[str]:
         return self.runner_settings.copy()
@@ -172,30 +182,26 @@ class GraphValidationTest(BiolinkValidator):
             output_category=object_category
         )
 
-    def new_test_case_run(self):
-        return
-
-    async def run(self, **kwargs) -> List[Dict]:
+    async def process_test_run(self, **kwargs):
         """
-        Abstract definition of the wrapper method used to invoke a
-        co-routine run to process a given subclass of test, on the
-        currently bound TestAsset, querying a given component endpoint.
+        Process a single test run of the GraphValidation test across
+        every specified component in a given deployment environment.
 
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-
-        :return: None - use 'GraphValidationTest.get_results()'
-                 or its subclass implementation, to access test results.
         """
-        raise NotImplementedError("Implement me in a subclass!")
+        raise NotImplementedError(
+            "This abstract method should be implemented by a subclass of GraphValidationTest!"
+        )
 
     @classmethod
-    async def run_test(
+    async def run_tests(
             cls,
             subject_id: str,
             subject_category: str,
             predicate_id: str,
             object_id: str,
             object_category: str,
+            trapi_generators: List,
             environment: Optional[TestEnvEnum] = TestEnvEnum.ci,
             components: Optional[str] = None,
             trapi_version: Optional[str] = None,
@@ -205,7 +211,9 @@ class GraphValidationTest(BiolinkValidator):
             **kwargs
     ) -> List[Dict]:
         """
-        Run one or more knowledge graph tests, of specified kind, using a specified test asset.
+        Run one or more Graph Validation tests, of specified subclass of test,
+        against all specified components, running in a given environment,
+        and with test cases derived from a specified test asset.
 
         Parameters provided to specify the test are:
 
@@ -216,6 +224,11 @@ class GraphValidationTest(BiolinkValidator):
         :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
         :param object_id: str, CURIE identifying the identifier of the object concept
         :param object_category: str, CURIE identifying the category of the object concept
+
+        - TRAPI JSON query generators for the TestCases using the specified TestAsset
+        :param trapi_generators: List, pointers to code functions that
+                                 configure an individual TRAPI query request.
+                                 See one_hop_test.unit_test_templates.
 
         - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
         :param components: Optional[str] = None, components to be tested
@@ -254,6 +267,7 @@ class GraphValidationTest(BiolinkValidator):
             cls(
                 target=endpoint,
                 test_asset=test_asset,
+                trapi_generators=trapi_generators,
                 trapi_version=trapi_version,
                 biolink_version=biolink_version,
                 runner_settings=runner_settings,
@@ -263,7 +277,11 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: unsure if one needs to limit concurrent requests here...
         #       maybe rather at the test CLI level(?)
         # Concurrently run the tests...
-        await asyncio.gather(*[await target.run(**kwargs) for target in test_runs])  # , limit=num_concurrent_requests)
+        await asyncio.gather(
+            *[
+                await target.process_test_run(**kwargs) for target in test_runs
+            ]
+        )  # , limit=num_concurrent_requests)
 
         # ... then, return the results
         return [target.get_results() for target in test_runs]
@@ -325,15 +343,27 @@ class TestCaseRun(BiolinkValidator):
     based on a TRAPI query against the test_run bound 'target' endpoint. Results
     of a TestCaseRun are stored within the parent BiolinkValidator class.
     """
-    def __init__(self, test_run: GraphValidationTest, test, **kwargs):
+    test_run: Optional[GraphValidationTest] = None
+
+    @classmethod
+    def set_test_type(cls, test_type: GraphValidationTest):
+        cls.test_run = test_type
+
+    @classmethod
+    def get_test_type(cls) -> GraphValidationTest:
+        return cls.test_run
+
+    def __init__(self, test, **kwargs):
         """
         Constructor for a TestCaseRun.
 
-        :param test_run: GraphValidationTest: GraphValidationTest context within which this TestCase is being run
         :param test, declared instance of TestCase query being processed (generally, an executable function)
         :param kwargs: Dict, optional extra named BiolinkValidator parameters which may be specified for the test run.
         """
-        self.test_run: GraphValidationTest = test_run
+        test_run = self.get_test_type()
+        assert test_run is not None, \
+            "test_type uninitialized: need to TestCaseRun.set_test_type(test_type: GraphValidationTest)."
+
         BiolinkValidator.__init__(
             self,
             default_test=test.__name__,
@@ -349,14 +379,49 @@ class TestCaseRun(BiolinkValidator):
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
 
-    def get_test_run(self) -> GraphValidationTest:
-        return self.test_run
-
     def get_logger(self) -> Optional[logging.Logger]:
         return self.test_run.logger
 
     def get_test_asset(self) -> TestAsset:
         return self.test_run.test_asset
+
+    def run_test_case(self):
+        raise NotImplementedError("Implement this abstract method in a TestCaseRun subclass!")
+
+    @classmethod
+    async def process_test_run(cls, **kwargs) -> List[Dict]:
+        """
+        Templated definition of the wrapper method used to invoke a
+        co-routine run to process a given subclass of TestCaseRun, on the
+        currently bound TestAsset, querying a given component endpoint,
+        with queries from each of the specified TRAPI query generators.
+
+        :param trapi_generators: List, pointers to code functions that
+                                 configure an individual TRAPI query request.
+                                 See one_hop_test.unit_test_templates.
+        :param kwargs: Dict, optional named parameters passed to the TestRunner.
+
+        :return: None - use 'GraphValidationTest.get_results()'
+                 or its subclass implementation, to access test results.
+        """
+        test_cases: List = [
+            cls(
+                test,
+                **kwargs
+            )
+            for test in cls.get_test_type().get_trapi_generators()
+        ]
+
+        # TODO: unsure if one needs to limit concurrent requests here...
+        #       maybe rather in the GraphValidationTest.run_test(), running
+        #       across all component endpoints, or at the test CLI level(?)
+        #       If so, need to use the locally defined asyncio.gather method?
+        await asyncio.gather(
+            *[await test_case.run_test_case() for test_case in test_cases]
+        )  # , limit=num_concurrent_requests)
+
+        # ... then, return the results
+        return [tc.get_all_messages() for tc in test_cases]
 
     @staticmethod
     def get_predicate_id(predicate_name: str) -> str:

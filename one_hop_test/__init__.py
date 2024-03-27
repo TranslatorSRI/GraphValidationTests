@@ -28,7 +28,7 @@ from one_hop_test.unit_test_templates import (
 
 class OneHopTestCaseRun(TestCaseRun):
 
-    async def run_one_hop_unit_test(self):
+    async def process_test_case(self):
         """
         Method to execute a TRAPI lookup, using a 'test' code template
         that defines a single TestCase using the GraphValidationTest associated TestAsset.
@@ -145,51 +145,28 @@ class OneHopTestCaseRun(TestCaseRun):
 
 
 class OneHopTest(GraphValidationTest):
-
-    async def run(self, **kwargs) -> List[Dict]:
-        """
-        Implementation of abstract GraphValidationTest.run()
-        operation to invoke a OneHopTest co-routine TestCase runs,
-        on the currently bound TestAsset, which query the endpoint
-        of a given component for each type of "one hop" unit test.
-
-        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-
-        :return: None - use 'GraphValidationTest.get_results()'
-                 or its subclass implementation, to access test results.
-        """
-        # The GraphValidationTest 'self' instance is
-        # given to the OneHopTestCaseRun constructor
-        # as a source of regular test run parameters,
-        # supplemented by any additional optional **kwargs
-        test_cases: List[OneHopTestCaseRun] = [
-            OneHopTestCaseRun(
-                self,
-                test,
-                **kwargs
-            )
-            for test in [
-                by_subject,
-                inverse_by_new_subject,
-                by_object,
-                raise_subject_entity,
-                raise_object_by_subject,
-                raise_predicate_by_subject
-            ]
-        ]
-
-        # TODO: unsure if one needs to limit concurrent requests here... maybe rather at
-        #       theGraphValidationTest.run_test(), running across all component endpoints,
-        #       or at the test CLI level(?)
-        await asyncio.gather(
-            *[await test_case.run_one_hop_unit_test() for test_case in test_cases]
-        )  # , limit=num_concurrent_requests)
-
-        # ... then, return the results
-        return [tc.get_all_messages() for tc in test_cases]
+    pass
 
 
 if __name__ == '__main__':
+
     args = get_parameters()
-    results: List[Dict] = asyncio.run(OneHopTest.run_test(**vars(args)))
+
+    # TRAPI test case query generators
+    # used for OneHopTest runs
+    trapi_generators = [
+        by_subject,
+        inverse_by_new_subject,
+        by_object,
+        raise_subject_entity,
+        raise_object_entity,
+        raise_object_by_subject,
+        raise_predicate_by_subject
+    ]
+    results: List[Dict] = asyncio.run(
+        OneHopTest.run_tests(
+            trapi_generators=trapi_generators,
+            **vars(args)
+        )
+    )
     print(results)
