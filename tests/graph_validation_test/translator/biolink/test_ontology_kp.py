@@ -2,7 +2,7 @@
 Unit tests of the Ontology KP
 """
 from typing import Optional
-from one_hop_test.ontology_kp import get_parent_concept
+from graph_validation_test.utils.ontology_kp import get_parent_concept
 
 import pytest
 

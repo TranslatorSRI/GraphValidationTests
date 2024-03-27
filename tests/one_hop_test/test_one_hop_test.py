@@ -5,7 +5,7 @@ from sys import stderr
 from typing import Dict
 from json import dump
 from one_hop_test import OneHopTest
-from graph_validation_test.unit_test_templates import (
+from graph_validation_test.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,

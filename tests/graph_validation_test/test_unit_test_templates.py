@@ -6,7 +6,7 @@ from copy import deepcopy
 from deepdiff import DeepDiff
 import pytest
 
-from graph_validation_test.unit_test_templates import (
+from graph_validation_test.utils.unit_test_templates import (
     create_one_hop_message,
     swap_qualifiers,
     # by_subject,
@@ -17,7 +17,7 @@ from graph_validation_test.unit_test_templates import (
 TEST_ASSET_1 = {
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate": "biolink:treats",
+    "predicate_id": "biolink:treats",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease"
 }

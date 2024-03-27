@@ -13,7 +13,7 @@ from graph_validation_test import (
 )
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
-from graph_validation_test.unit_test_templates import by_subject, by_object
+from graph_validation_test.utils.unit_test_templates import by_subject, by_object
 
 
 class StandardsValidationTestCaseRun(TestCaseRun):

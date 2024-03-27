@@ -7,7 +7,7 @@ import pytest
 # from one_hop_test import OneHopTest
 from graph_validation_test.translator.trapi import post_query
 # from graph_validation_test import UnitTestReport
-from one_hop_test.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
+from graph_validation_test.utils.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
 # from one_hop_test.unit_test_templates import by_subject
 # from translator_testing_model.datamodel.pydanticmodel import TestAsset
 
