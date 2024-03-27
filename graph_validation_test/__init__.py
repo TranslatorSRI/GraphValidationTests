@@ -316,7 +316,7 @@ class GraphValidationTest(BiolinkValidator):
     @staticmethod
     async def run_test_cases(test_cases: List[TestCaseRun]):
         # TODO: unsure if one needs to limit concurrent requests here...
-        await gather(*[test_case.run_test_case() for test_case in test_cases])  # , limit=num_concurrent_requests)
+        await gather([test_case.run_test_case() for test_case in test_cases])  # , limit=num_concurrent_requests)
 
     def process_test_run(self, **kwargs) -> List[Dict]:
         """
@@ -358,7 +358,7 @@ class GraphValidationTest(BiolinkValidator):
             runner_settings: Optional[List[str]] = None,
             test_logger: Optional[logging.Logger] = None,
             **kwargs
-    ) -> Dict[str, List[Dict]]:
+    ) -> Dict[str, List]:
         """
         Run one or more Graph Validation tests, of specified category of test,
         against all specified components running in a given environment,
@@ -391,7 +391,7 @@ class GraphValidationTest(BiolinkValidator):
         :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
         :param test_logger: Optional[logging.Logger] = None, Python logging handle
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-        :return: Dict { "pks": List[<pks>], "results": Dict[<pks>, <pks_result>] }
+        :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
         # List of endpoints for testing, based on components and environment
         # requested. The specified test asset is used to query each endpoint
@@ -471,13 +471,13 @@ class GraphValidationTest(BiolinkValidator):
         #     ]
         # }
         results = {
-            "pk": list(),
-            "results": dict()
+            "pks": list(),
+            "results": list()
         }
         for tr in test_runs:
             run_id: str = tr.get_run_id()
             results["pks"].append(run_id)
-            results["results"][run_id] = tr.process_test_run(**kwargs)
+            results["results"].append(tr.process_test_run(**kwargs))
         return results
 
 
