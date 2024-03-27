@@ -2,8 +2,7 @@
 TRAPI and Biolink Model Standards Validation
 test (using reasoner-validator)
 """
-from typing import Optional, List, Dict
-import asyncio
+from typing import Optional, Dict
 
 from reasoner_validator.trapi import call_trapi
 from reasoner_validator.validator import TRAPIResponseValidator
@@ -14,7 +13,7 @@ from graph_validation_test import (
 )
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
-from one_hop_test.unit_test_templates import by_subject, by_object
+from graph_validation_test.unit_test_templates import by_subject, by_object
 
 
 class StandardsValidationTestCaseRun(TestCaseRun):
@@ -22,7 +21,7 @@ class StandardsValidationTestCaseRun(TestCaseRun):
     # default constructor is inherited
     # from BiolinkValidator via TestCaseRun
 
-    async def process_test_case(self):
+    async def run_test_case(self):
         """
         Method to execute a TRAPI lookup a single TestCase
         using the GraphValidationTest associated TestAsset.
@@ -37,7 +36,7 @@ class StandardsValidationTestCaseRun(TestCaseRun):
         #       of test asset fields already accomplished elsewhere?
         test_asset = self.translate_test_asset()
 
-        trapi_request, output_element, output_node_binding = by_subject(test_asset)
+        trapi_request, output_element, output_node_binding = self.test(test_asset)
 
         if not trapi_request:
             # output_element and output_node_binding return values were
@@ -86,28 +85,14 @@ class StandardsValidationTestCaseRun(TestCaseRun):
 
 
 class StandardsValidationTest(GraphValidationTest):
-
-    async def process_test_run(self, **kwargs):
-        """
-        Process a single test run of the StandardsValidationTest test
-        across every specified component in a given deployment environment.
-
-        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-        """
-        pass
+    def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
+        return StandardsValidationTestCaseRun(test=test, **kwargs)
 
 
 if __name__ == '__main__':
-
     args = get_parameters()
-
     # TRAPI test case query generators
     # used for StandardsValidationTest
     trapi_generators = [by_subject, by_object]
-    results: List[Dict] = asyncio.run(
-        StandardsValidationTest.run_tests(
-            trapi_generators=trapi_generators,
-            **vars(args)
-        )
-    )
+    results: Dict = StandardsValidationTest.run_tests(trapi_generators=trapi_generators, **vars(args))
     print(results)

@@ -3,8 +3,7 @@ One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
 from sys import stderr
-from typing import Optional, List, Dict
-import asyncio
+from typing import Optional, Dict
 
 from reasoner_validator.trapi import TRAPISchemaValidator, call_trapi
 from reasoner_validator.validator import TRAPIResponseValidator
@@ -13,7 +12,7 @@ from graph_validation_test import (
     TestCaseRun,
     get_parameters
 )
-from one_hop_test.unit_test_templates import (
+from graph_validation_test.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,
@@ -23,12 +22,10 @@ from one_hop_test.unit_test_templates import (
     raise_predicate_by_subject
 )
 
-# from .utils.asyncio import gather
-
 
 class OneHopTestCaseRun(TestCaseRun):
 
-    async def process_test_case(self):
+    async def run_test_case(self):
         """
         Method to execute a TRAPI lookup, using a 'test' code template
         that defines a single TestCase using the GraphValidationTest associated TestAsset.
@@ -145,21 +142,12 @@ class OneHopTestCaseRun(TestCaseRun):
 
 
 class OneHopTest(GraphValidationTest):
-
-    async def process_test_run(self, **kwargs):
-        """
-        Process a single test run of the OneHopTest test across
-        every specified component in a given deployment environment.
-
-        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-        """
-        pass
+    async def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
+        return OneHopTestCaseRun(test=test, **kwargs)
 
 
 if __name__ == '__main__':
-
     args = get_parameters()
-
     # TRAPI test case query generators
     # used for OneHopTest runs
     trapi_generators = [
@@ -171,10 +159,5 @@ if __name__ == '__main__':
         raise_object_by_subject,
         raise_predicate_by_subject
     ]
-    results: List[Dict] = asyncio.run(
-        OneHopTest.run_tests(
-            trapi_generators=trapi_generators,
-            **vars(args)
-        )
-    )
+    results: Dict = OneHopTest.run_tests(trapi_generators=trapi_generators, **vars(args))
     print(results)
