@@ -182,16 +182,36 @@ class GraphValidationTest(BiolinkValidator):
             output_category=object_category
         )
 
-    async def process_test_run(self, **kwargs):
+    async def process_test_run(self, **kwargs) -> List[Dict]:
         """
-        Process a single test run of the GraphValidation test across
-        every specified component in a given deployment environment.
+        Templated definition of the wrapper method used to invoke a
+        co-routine run to process a given subclass of TestCaseRun, on the
+        currently bound TestAsset, querying a given component endpoint,
+        with queries from each of the specified TRAPI query generators.
 
-        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+        :param kwargs: Dict, optional named parameters passed to the TestRunner.
+
+        :return: None - use 'GraphValidationTest.get_results()'
+                 or its subclass implementation, to access test results.
         """
-        raise NotImplementedError(
-            "This abstract method should be implemented by a subclass of GraphValidationTest!"
-        )
+        test_cases: List = [
+            cls(
+                test,
+                **kwargs
+            )
+            for test in self.get_trapi_generators()
+        ]
+
+        # TODO: unsure if one needs to limit concurrent requests here...
+        #       maybe rather in the GraphValidationTest.run_test(), running
+        #       across all component endpoints, or at the test CLI level(?)
+        #       If so, need to use the locally defined asyncio.gather method?
+        await asyncio.gather(
+            *[await test_case.run_test_case() for test_case in test_cases]
+        )  # , limit=num_concurrent_requests)
+
+        # ... then, return the results
+        return [tc.get_all_messages() for tc in test_cases]
 
     @classmethod
     async def run_tests(
@@ -387,41 +407,6 @@ class TestCaseRun(BiolinkValidator):
 
     def run_test_case(self):
         raise NotImplementedError("Implement this abstract method in a TestCaseRun subclass!")
-
-    @classmethod
-    async def process_test_run(cls, **kwargs) -> List[Dict]:
-        """
-        Templated definition of the wrapper method used to invoke a
-        co-routine run to process a given subclass of TestCaseRun, on the
-        currently bound TestAsset, querying a given component endpoint,
-        with queries from each of the specified TRAPI query generators.
-
-        :param trapi_generators: List, pointers to code functions that
-                                 configure an individual TRAPI query request.
-                                 See one_hop_test.unit_test_templates.
-        :param kwargs: Dict, optional named parameters passed to the TestRunner.
-
-        :return: None - use 'GraphValidationTest.get_results()'
-                 or its subclass implementation, to access test results.
-        """
-        test_cases: List = [
-            cls(
-                test,
-                **kwargs
-            )
-            for test in cls.get_test_type().get_trapi_generators()
-        ]
-
-        # TODO: unsure if one needs to limit concurrent requests here...
-        #       maybe rather in the GraphValidationTest.run_test(), running
-        #       across all component endpoints, or at the test CLI level(?)
-        #       If so, need to use the locally defined asyncio.gather method?
-        await asyncio.gather(
-            *[await test_case.run_test_case() for test_case in test_cases]
-        )  # , limit=num_concurrent_requests)
-
-        # ... then, return the results
-        return [tc.get_all_messages() for tc in test_cases]
 
     @staticmethod
     def get_predicate_id(predicate_name: str) -> str:

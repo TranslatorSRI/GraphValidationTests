@@ -86,7 +86,15 @@ class StandardsValidationTestCaseRun(TestCaseRun):
 
 
 class StandardsValidationTest(GraphValidationTest):
-    pass
+
+    async def process_test_run(self, **kwargs):
+        """
+        Process a single test run of the StandardsValidationTest test
+        across every specified component in a given deployment environment.
+
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+        """
+        pass
 
 
 if __name__ == '__main__':
