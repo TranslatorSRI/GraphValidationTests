@@ -6,7 +6,6 @@ from typing import Dict, List, Optional
 from functools import lru_cache
 from argparse import ArgumentParser
 
-from bmt import utils
 from reasoner_validator.biolink import BiolinkValidator
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
 
@@ -15,8 +14,6 @@ from graph_validation_test.translator.registry import (
     extract_component_test_metadata_from_registry
 )
 from graph_validation_test.utils.asyncio import gather
-
-# from .utils.asyncio import gather
 
 import logging
 logger = logging.getLogger(__name__)
@@ -92,8 +89,12 @@ class TestCaseRun(BiolinkValidator):
         """
         Constructor for a TestCaseRun.
 
-        :param test, declared instance of TestCase query being processed (generally, an executable function)
-        :param kwargs: Dict, optional extra named BiolinkValidator parameters which may be specified for the test run.
+        :param test_run, owner of the use case, which should be
+                         an instance of GraphValidationTest.
+        :param test, declared generator of a TestCase TRAPI query being
+                     processed (generally, an executable function).
+        :param kwargs: Dict, optional extra named BiolinkValidator parameters
+                             which may be specified for the test run.
         """
         assert test_run, "'test_run' is uninitialized!"
         self.test_run = test_run
@@ -217,7 +218,7 @@ class GraphValidationTest(BiolinkValidator):
             self,
             target: str,
             test_asset: TestAsset,
-            trapi_generators: List,
+            trapi_generators: Optional[List] = None,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
@@ -250,7 +251,7 @@ class GraphValidationTest(BiolinkValidator):
         self.trapi_generators: List = trapi_generators or []
 
         self.runner_settings = runner_settings
-        self.logger: Optional[logging.Logger] = test_logger
+        self.test_logger: Optional[logging.Logger] = test_logger
         self.results: Dict = dict()
 
     def get_run_id(self):
@@ -264,6 +265,9 @@ class GraphValidationTest(BiolinkValidator):
 
     def get_runner_settings(self) -> List[str]:
         return self.runner_settings.copy()
+
+    def get_test_logger(self) -> Optional[logging.Logger]:
+        return self.test_logger
 
     @classmethod
     def generate_test_asset_id(cls) -> str:
@@ -323,11 +327,12 @@ class GraphValidationTest(BiolinkValidator):
         Applies a TestCase generator giving a specific subclass
         of TestCaseRun, wrapping queries defined by test-specific
         TRAPI query generators, then runs the derived TestCase
-        instances as co-routines, returning their test messages.
+        instances as co-routines, returning a list of their results.
 
         :param kwargs: Dict, optional named parameters passed to the TestRunner.
 
-        :return: List[Dict] of test messages for all test cases in given test run.
+        :return: List[Dict] of structured test message results for all
+                 TestCases specified by trapi generators of a given test run.
         """
         test_cases: List[TestCaseRun] = [
             self.test_case_wrapper(
