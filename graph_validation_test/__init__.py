@@ -26,57 +26,6 @@ env_spec = {
 }
 
 
-def get_component_infores(component: str):
-    infores_map = {
-        "arax": "arax",
-        "aragorn": "aragorn",
-        "bte": "biothings-explorer",
-        "improving": "improving-agent",
-    }
-    # TODO: what if the component is not yet registered in the model?
-    return f"infores:{infores_map.setdefault(component, component)}"
-
-
-@lru_cache()
-def target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
-    """
-    Resolve target endpoints for running the test.
-
-    :param components: Optional[str], components to be tested
-                       (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
-    :param env: target Translator execution environment of component(s) to be tested.
-    :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
-    """
-    endpoints: List[str] = list()
-    component_list: List[str]
-    if components:
-        # TODO: need to validate/sanitize the list of components
-        component_list = components.split(",")
-    else:
-        component_list = ['ars']
-    for component in component_list:
-        if component == 'ars':
-            endpoints.append(f"https://{env}.transltr.io/ars/api/")
-        else:
-            # TODO: resolve the endpoints for non-ARS targets using the Translator SmartAPI Registry?
-            registry_data: Dict = get_the_registry_data()
-            service_metadata = \
-                extract_component_test_metadata_from_registry(
-                    registry_data,
-                    "ARA",  # TODO: how can I also track KP's?
-                    target_source=get_component_infores(component),
-                    target_x_maturity=env
-                )
-            if not service_metadata:
-                raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
-
-            # TODO: fix this! the service_metadata is a complex
-            #       dictionary of entries.. how do we resolve it?
-            endpoints.append(service_metadata["url"])
-
-    return endpoints
-
-
 class TestCaseRun(BiolinkValidator):
     """
     TestCaseRun is a wrapper for BiolinkValidator, used to aggregate
@@ -347,6 +296,60 @@ class GraphValidationTest(BiolinkValidator):
         # ... then, return the results
         return [tc.get_all_messages() for tc in test_cases]
 
+    @staticmethod
+    def get_component_infores(component: str):
+        assert component
+        infores_map = {
+            "arax": "arax",
+            "aragorn": "aragorn",
+            "bte": "biothings-explorer",
+            "improving": "improving-agent",
+        }
+        # TODO: what if the component is not yet registered in the model?
+        #       Also, what's the relationship to the Translator SmartAPI Registry
+        return f"infores:{infores_map.setdefault(component, component)}"
+
+    @classmethod
+    @lru_cache()
+    def target_component_urls(cls, env: str, components: Optional[str] = None) -> List[str]:
+        """
+        Resolve target endpoints for running the test.
+
+        :param components: Optional[str], components to be tested
+                           (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
+        :param env: target Translator execution environment of component(s) to be tested.
+        :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
+        """
+        endpoints: List[str] = list()
+        component_list: List[str]
+        if components:
+            # TODO: need to validate/sanitize the list of components
+            component_list = components.split(",")
+        else:
+            component_list = ['ars']
+        for component in component_list:
+            if component == 'ars':
+                endpoints.append(f"https://{env}.transltr.io/ars/api/")
+            else:
+                # TODO: resolve the endpoints for non-ARS targets
+                #       using the Translator SmartAPI Registry?
+                registry_data: Dict = get_the_registry_data()
+                service_metadata = \
+                    extract_component_test_metadata_from_registry(
+                        registry_data,
+                        "ARA",  # TODO: how can I also track KP's?
+                        target_source=cls.get_component_infores(component),
+                        target_x_maturity=env
+                    )
+                if not service_metadata:
+                    raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
+
+                # TODO: fix this! the service_metadata is a complex
+                #       dictionary of entries.. how do we resolve it?
+                endpoints.append(service_metadata["url"])
+
+        return endpoints
+
     @classmethod
     def run_tests(
             cls,
@@ -403,7 +406,7 @@ class GraphValidationTest(BiolinkValidator):
         # independently, to generate a separate test report. Each test report
         # may itself be composed of  one or more independent TestCases,
         # depending on the objective and design of the TestRunner.
-        endpoints: List[str] = target_component_urls(env=env_spec[environment], components=components)
+        endpoints: List[str] = cls.target_component_urls(env=env_spec[environment], components=components)
 
         # Load the internal TestAsset being uniformly
         # served to all (endpoint x testcase) test runs.

@@ -1,13 +1,13 @@
 """
 Unit tests for pieces of the GraphValidationTests code
 """
+import pytest
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import TestCaseRun, GraphValidationTest
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
-import logging
-
 from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
 
+import logging
 logger = logging.getLogger(__name__)
 
 TEST_ASSET_1 = {
@@ -34,9 +34,29 @@ SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
 )
 
 
-# def get_component_infores(component: str)
+def test_empty_component_infores():
+    with pytest.raises(AssertionError):
+        assert GraphValidationTest.get_component_infores(component="")
 
-# target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
+
+@pytest.mark.parametrize(
+    "component,infores",
+    [
+        ("arax", "infores:arax"),
+        ("aragorn", "infores:aragorn"),
+        ("bte", "infores:biothings-explorer"),
+        ("improving", "infores:improving-agent"),
+        ("molepro", "infores:molepro")
+    ]
+)
+def test_get_component_infores(component: str, infores: str):
+    assert GraphValidationTest.get_component_infores(component=component) == infores
+
+
+# GraphValidationTest.target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
+def test_target_component_urls():
+    pass
+
 
 def test_generate_test_asset_id():
     assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00002"
