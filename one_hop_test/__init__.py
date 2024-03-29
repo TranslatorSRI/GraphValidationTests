@@ -75,11 +75,10 @@ class OneHopTestCaseRun(TestCaseRun):
 
                 # Make the TRAPI call to the TestCase targeted ARS, KP or
                 # ARA resource, using the case-documented input test edge
-                # trapi_response = await call_trapi(self.default_target, trapi_request)
-                trapi_response = await run_trapi_query(
+                trapi_response: Dict = await run_trapi_query(
                     trapi_request=trapi_request,
-                    target=self.default_target,
-                    environment=self.environment
+                    component=self.get_component(),
+                    environment=self.get_environment()
                 )
 
                 # Capture the raw TRAPI query request and response for reporting

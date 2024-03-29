@@ -4,13 +4,14 @@ test (using reasoner-validator)
 """
 from typing import Optional, Dict
 
-from reasoner_validator.trapi import call_trapi
 from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_test import (
     GraphValidationTest,
     TestCaseRun,
     get_parameters
 )
+from graph_validation_test.translator.trapi import run_trapi_query
+
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
@@ -63,9 +64,13 @@ class StandardsValidationTestCaseRun(TestCaseRun):
             # We'll ignore warnings and info messages
             if not (self.has_critical() or self.has_errors() or self.has_skipped()):
 
-                # Make the TRAPI call to the default TestCase targeted
-                # ARS, KP or ARA component, using the provided 'trapi_request'
-                trapi_response = await call_trapi(self.default_target, trapi_request)
+                # Make the TRAPI call to the TestCase targeted ARS, KP or
+                # ARA resource, using the case-documented input test edge
+                trapi_response: Dict = await run_trapi_query(
+                    trapi_request=trapi_request,
+                    component=self.get_component(),
+                    environment=self.get_environment()
+                )
 
                 # Capture the raw TRAPI query request and response for reporting
                 self.trapi_request = trapi_request

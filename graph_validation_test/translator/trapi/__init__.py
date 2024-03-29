@@ -233,7 +233,7 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
 
     :param trapi_request: Dict, TRAPI request JSON, as a Python data structure.
     :param component: str, simple identifier of a Translator component target:
-                        ars, ara name (e.g. arax) or kp (e.g. molepro)
+                          'ars', ARA acronym (e.g. 'arax') or KP acronym (e.g. 'molepro')
     :param environment: Optional[str] = None, Target Translator execution environment for the test,
                                        one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
     :return:  Dict, TRAPI response JSON, as a Python data structure.
@@ -244,7 +244,6 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
         environment=environment
     )
     if component == 'ars':
-        # TODO: resolve ARS endpoint to in target environment
         # TODO: make the (modified) TRAPI query to the ARS
         pass
     else:

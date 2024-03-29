@@ -63,6 +63,12 @@ class TestCaseRun(BiolinkValidator):
     def get_test_asset(self) -> TestAsset:
         return self.test_run.test_asset
 
+    def get_component(self) -> str:
+        return self.test_run.default_target
+
+    def get_environment(self) -> str:
+        return self.test_run.environment
+
     async def run_test_case(self):
         raise NotImplementedError("Implement me within a suitable test-type specific subclass of TestCaseRun!")
 
