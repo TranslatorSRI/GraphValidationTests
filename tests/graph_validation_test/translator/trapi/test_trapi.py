@@ -4,16 +4,36 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-# from one_hop_test import OneHopTest
-from graph_validation_test.translator.trapi import post_query
-# from graph_validation_test import UnitTestReport
+from graph_validation_test.translator.trapi import post_query, get_component_infores
 from graph_validation_test.utils.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
-# from one_hop_test.unit_test_templates import by_subject
-# from translator_testing_model.datamodel.pydanticmodel import TestAsset
 
 pytest_plugins = ('pytest_asyncio',)
 
 TRAPI_TEST_ENDPOINT = "https://molepro-trapi.transltr.io/molepro/trapi/v1.4"
+
+
+def test_empty_component_infores():
+    with pytest.raises(AssertionError):
+        assert get_component_infores(component="")
+
+
+@pytest.mark.parametrize(
+    "component,infores",
+    [
+        ("arax", "infores:arax"),
+        ("aragorn", "infores:aragorn"),
+        ("bte", "infores:biothings-explorer"),
+        ("improving", "infores:improving-agent"),
+        ("molepro", "infores:molepro")
+    ]
+)
+def test_get_component_infores(component: str, infores: str):
+    assert get_component_infores(component=component) == infores
+
+
+# GraphValidationTest.target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
+def test_target_component_urls():
+    pass
 
 
 @pytest.mark.parametrize(

@@ -3,11 +3,27 @@ Code to submit GraphValidation test queries to
 Translator components - ARS, ARA, KP - via TRAPI
 """
 from sys import stderr
-from typing import Optional, Dict
+from typing import Optional, List, Dict
+from functools import lru_cache
 import requests
-from logging import getLogger
 
+from reasoner_validator.trapi import call_trapi
+from graph_validation_test.translator.registry import (
+    get_the_registry_data,
+    extract_component_test_metadata_from_registry
+)
+
+from logging import getLogger
 logger = getLogger()
+
+
+ars_env_spec = {
+    'dev': 'ars-dev',
+    'ci': 'ars.ci',
+    'test': 'ars.test',
+    'prod': 'ars-prod'
+}
+
 
 ARS_HOSTS = [
     'ars-prod.transltr.io',
@@ -116,10 +132,8 @@ def retrieve_trapi_response(host_url: str, response_id: str):
     return status_code, response_content
 
 
-def retrieve_ars_result(response_id: str, verbose: bool):
-    # TODO: this is coded here as a (missing) singleton...
-    #       how is this to be made thread safe?
-    global trapi_response
+def retrieve_ars_result(response_id: str, verbose: bool) -> Optional[Dict]:
+    trapi_response: Optional[Dict] = None
 
     if verbose:
         print(f"Trying to retrieve ARS Response UUID '{response_id}'...")
@@ -140,22 +154,108 @@ def retrieve_ars_result(response_id: str, verbose: bool):
 
     if status_code != 200:
         print(f"Unsuccessful HTTP status code '{status_code}' reported for ARS PK '{response_id}'?")
-        return
-
-    # Unpack the response content into a dict
-    try:
-        response_dict = response_content.json()
-    except Exception as e:
-        print(f"Cannot decode ARS PK '{response_id}' to a Translator Response, exception: {e}")
-        return
-
-    if 'fields' in response_dict:
-        if 'actor' in response_dict['fields'] and str(response_dict['fields']['actor']) == '9':
-            print("The supplied response id is a collection id. Please supply the UUID for a response")
-        elif 'data' in response_dict['fields']:
-            print(f"Validating ARS PK '{response_id}' TRAPI Response result...")
-            trapi_response = response_dict['fields']['data']
-        else:
-            print("ARS response dictionary is missing 'fields.data'?")
     else:
-        print("ARS response dictionary is missing 'fields'?")
+        # Unpack the response content into a dict
+        try:
+            response_dict = response_content.json()
+
+            if 'fields' in response_dict:
+                if 'actor' in response_dict['fields'] and str(response_dict['fields']['actor']) == '9':
+                    print("The supplied response id is a collection id. Please supply the UUID for a response")
+                elif 'data' in response_dict['fields']:
+                    print(f"Validating ARS PK '{response_id}' TRAPI Response result...")
+                    trapi_response = response_dict['fields']['data']
+                else:
+                    print("ARS response dictionary is missing 'fields.data'?")
+            else:
+                print("ARS response dictionary is missing 'fields'?")
+
+        except Exception as e:
+            print(f"Cannot decode ARS PK '{response_id}' to a Translator Response, exception: {e}")
+
+    return trapi_response
+
+
+def get_component_infores(component: str):
+    assert component
+    infores_map = {
+        "arax": "arax",
+        "aragorn": "aragorn",
+        "bte": "biothings-explorer",
+        "improving": "improving-agent",
+    }
+    # TODO: what if the component is not yet registered in the model?
+    #       Also, what's the relationship to the Translator SmartAPI Registry
+    return f"infores:{infores_map.setdefault(component, component)}"
+
+
+@lru_cache()
+def resolve_component_endpoint(
+        component: Optional[str] = None,
+        environment: Optional[str] = None
+) -> Optional[str]:
+    """
+    Resolve target endpoints for running the test.
+
+    :param component: Optional[str] = None, component to be queried (ideally, drawn from a value in the
+                                            'ComponentEnum' of the Translator Testing Model ; default 'ars')
+    :param environment: Optional[str] = None: target Translator execution environment of the component
+                                              to be accessed; default: 'ci'.
+    :return: Optional[str], environment-specific endpoint for component to be queried. None if unavailable.
+    """
+    if component == 'ars':
+        ars_env: str = ars_env_spec[environment]
+        return f"https://{ars_env}.transltr.io/ars/api/"
+    else:
+        # TODO: resolve the endpoints for non-ARS targets
+        #       using the Translator SmartAPI Registry?
+        registry_data: Dict = get_the_registry_data()
+        service_metadata = \
+            extract_component_test_metadata_from_registry(
+                registry_data,
+                "ARA",  # TODO: how can I also track KP's?
+                target_source=get_component_infores(component),
+                target_x_maturity=environment
+            )
+        if not service_metadata:
+            logger.error("Non-ARS component-specific testing not yet implemented?")
+            return None
+
+        # TODO: fix this! the service_metadata is a complex
+        #       dictionary of entries.. how do we resolve it?
+        return service_metadata["url"]
+
+
+async def run_trapi_query(trapi_request: Dict, component: str, environment: str) -> Optional[Dict]:
+    """
+    Make a call to the TRAPI (or TRAPI-like, e.g. ARS) component, returning the result.
+
+    :param trapi_request: Dict, TRAPI request JSON, as a Python data structure.
+    :param target: str, simple identifier of a Translator component target:
+                        ars, ara name (e.g. arax) or kp (e.g. molepro)
+    :param environment: Optional[str] = None, Target Translator execution environment for the test,
+                                       one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
+    :return:  Dict, TRAPI response JSON, as a Python data structure.
+    """
+    # TODO: why is there a trapi_response in the outer scope?
+    #       Is it still needed or should it be moved into
+    #       a thread-safe, non-singleton variable scope?
+    trapi_response: Optional[Dict] = None
+
+    if component == 'ars':
+        # TODO: resolve ARS endpoint to in target environment
+        # TODO: make the (modified) TRAPI query to the ARS
+        pass
+    else:
+
+
+        endpoint: str = resolve_component_endpoint(
+            component=component,
+            environment=environment
+        )
+
+        # Make the TRAPI call to the TestCase targeted ARS, KP or
+        # ARA resource, using the case-documented input test edge
+        trapi_response: Dict = await call_trapi(endpoint, trapi_request)
+
+    return trapi_response

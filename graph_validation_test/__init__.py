@@ -3,7 +3,7 @@ Abstract base class for the GraphValidation TestRunners
 """
 import asyncio
 from typing import Dict, List, Optional
-from functools import lru_cache
+
 from argparse import ArgumentParser
 
 from reasoner_validator.biolink import BiolinkValidator
@@ -17,13 +17,6 @@ from graph_validation_test.utils.asyncio import gather
 
 import logging
 logger = logging.getLogger(__name__)
-
-env_spec = {
-    'dev': 'ars-dev',
-    'ci': 'ars.ci',
-    'test': 'ars.test',
-    'prod': 'ars-prod'
-}
 
 
 class TestCaseRun(BiolinkValidator):
@@ -166,6 +159,7 @@ class GraphValidationTest(BiolinkValidator):
     def __init__(
             self,
             target: str,
+            environment: str,
             test_asset: TestAsset,
             trapi_generators: Optional[List] = None,
             trapi_version: Optional[str] = None,
@@ -178,6 +172,8 @@ class GraphValidationTest(BiolinkValidator):
         GraphValidationTest constructor.
 
         :param target: str, target endpoint running in a specified environment of component to be tested
+        :param environment: Optional[str] = None, Target Translator execution environment for the test,
+                                   one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
         :param test_asset: TestAsset, target test asset(s) being processed
         :param trapi_generators: List, pointers to code functions that configure an individual
                                  TRAPI query request. e.g. see one_hop_test.unit_test_templates.
@@ -194,6 +190,7 @@ class GraphValidationTest(BiolinkValidator):
             biolink_version=biolink_version,
             **kwargs
         )
+        self.environment: str = environment
         self.test_asset: TestAsset = test_asset
 
         # trapi_generators should probably not be empty but just in case...
@@ -296,60 +293,6 @@ class GraphValidationTest(BiolinkValidator):
         # ... then, return the results
         return [tc.get_all_messages() for tc in test_cases]
 
-    @staticmethod
-    def get_component_infores(component: str):
-        assert component
-        infores_map = {
-            "arax": "arax",
-            "aragorn": "aragorn",
-            "bte": "biothings-explorer",
-            "improving": "improving-agent",
-        }
-        # TODO: what if the component is not yet registered in the model?
-        #       Also, what's the relationship to the Translator SmartAPI Registry
-        return f"infores:{infores_map.setdefault(component, component)}"
-
-    @classmethod
-    @lru_cache()
-    def target_component_urls(cls, env: str, components: Optional[str] = None) -> List[str]:
-        """
-        Resolve target endpoints for running the test.
-
-        :param components: Optional[str], components to be tested
-                           (values from 'ComponentEnum' in TranslatorTestingModel; default 'ars')
-        :param env: target Translator execution environment of component(s) to be tested.
-        :return: List[str], environment-specific endpoint(s) for component(s) to be tested.
-        """
-        endpoints: List[str] = list()
-        component_list: List[str]
-        if components:
-            # TODO: need to validate/sanitize the list of components
-            component_list = components.split(",")
-        else:
-            component_list = ['ars']
-        for component in component_list:
-            if component == 'ars':
-                endpoints.append(f"https://{env}.transltr.io/ars/api/")
-            else:
-                # TODO: resolve the endpoints for non-ARS targets
-                #       using the Translator SmartAPI Registry?
-                registry_data: Dict = get_the_registry_data()
-                service_metadata = \
-                    extract_component_test_metadata_from_registry(
-                        registry_data,
-                        "ARA",  # TODO: how can I also track KP's?
-                        target_source=cls.get_component_infores(component),
-                        target_x_maturity=env
-                    )
-                if not service_metadata:
-                    raise NotImplementedError("Non-ARS component-specific testing not yet implemented?")
-
-                # TODO: fix this! the service_metadata is a complex
-                #       dictionary of entries.. how do we resolve it?
-                endpoints.append(service_metadata["url"])
-
-        return endpoints
-
     @classmethod
     def run_tests(
             cls,
@@ -401,13 +344,6 @@ class GraphValidationTest(BiolinkValidator):
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
-        # List of endpoints for testing, based on components and environment
-        # requested. The specified test asset is used to query each endpoint
-        # independently, to generate a separate test report. Each test report
-        # may itself be composed of  one or more independent TestCases,
-        # depending on the objective and design of the TestRunner.
-        endpoints: List[str] = cls.target_component_urls(env=env_spec[environment], components=components)
-
         # Load the internal TestAsset being uniformly
         # served to all (endpoint x testcase) test runs.
         test_asset: TestAsset = GraphValidationTest.build_test_asset(
@@ -419,17 +355,22 @@ class GraphValidationTest(BiolinkValidator):
         )
 
         # One test run - each running and reporting independently - is
-        # configured to run test cases against every resolved endpoint.
+        # configured to process the specified TestAsset against each
+        # component, running within the specified environment.
+        # Each test run generates a distinct test report, which may
+        # itself be composed of the result(s) of one or more independent
+        # TestCases, depending on the objective and design of the TestRunner.
         test_runs: List[cls] = [
             cls(
                 target=target,
+                environment=environment,
                 test_asset=test_asset,
                 trapi_generators=trapi_generators,
                 trapi_version=trapi_version,
                 biolink_version=biolink_version,
                 runner_settings=runner_settings,
                 test_logger=test_logger
-            ) for target in endpoints
+            ) for target in components
         ]
         #
         # TODO: the following comment is plagiarized from 3rd party TestRunner comments simply as
