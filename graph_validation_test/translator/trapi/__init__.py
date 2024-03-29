@@ -3,7 +3,7 @@ Code to submit GraphValidation test queries to
 Translator components - ARS, ARA, KP - via TRAPI
 """
 from sys import stderr
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 from functools import lru_cache
 import requests
 
@@ -36,10 +36,11 @@ ARS_HOSTS = [
 
 def post_query(url: str, query: Dict, params=None, server: str = ""):
     """
+    Post a JSON query to the specified URL and return the JSON response.
 
     :param url, str URL target for HTTP POST
     :param query, JSON query for posting
-    :param params
+    :param params, optional parameters
     :param server, str human-readable name of server called (for error message reports)
     """
     if params is None:
@@ -231,29 +232,22 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
     Make a call to the TRAPI (or TRAPI-like, e.g. ARS) component, returning the result.
 
     :param trapi_request: Dict, TRAPI request JSON, as a Python data structure.
-    :param target: str, simple identifier of a Translator component target:
+    :param component: str, simple identifier of a Translator component target:
                         ars, ara name (e.g. arax) or kp (e.g. molepro)
     :param environment: Optional[str] = None, Target Translator execution environment for the test,
                                        one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
     :return:  Dict, TRAPI response JSON, as a Python data structure.
     """
-    # TODO: why is there a trapi_response in the outer scope?
-    #       Is it still needed or should it be moved into
-    #       a thread-safe, non-singleton variable scope?
     trapi_response: Optional[Dict] = None
-
+    endpoint: str = resolve_component_endpoint(
+        component=component,
+        environment=environment
+    )
     if component == 'ars':
         # TODO: resolve ARS endpoint to in target environment
         # TODO: make the (modified) TRAPI query to the ARS
         pass
     else:
-
-
-        endpoint: str = resolve_component_endpoint(
-            component=component,
-            environment=environment
-        )
-
         # Make the TRAPI call to the TestCase targeted ARS, KP or
         # ARA resource, using the case-documented input test edge
         trapi_response: Dict = await call_trapi(endpoint, trapi_request)
