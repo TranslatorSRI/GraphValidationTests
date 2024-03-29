@@ -158,9 +158,9 @@ class GraphValidationTest(BiolinkValidator):
 
     def __init__(
             self,
-            target: str,
-            environment: str,
             test_asset: TestAsset,
+            component: Optional[str] = None,
+            environment: Optional[str] = None,
             trapi_generators: Optional[List] = None,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
@@ -171,21 +171,27 @@ class GraphValidationTest(BiolinkValidator):
         """
         GraphValidationTest constructor.
 
-        :param target: str, target endpoint running in a specified environment of component to be tested
-        :param environment: Optional[str] = None, Target Translator execution environment for the test,
-                                   one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
         :param test_asset: TestAsset, target test asset(s) being processed
-        :param trapi_generators: List, pointers to code functions that configure an individual
-                                 TRAPI query request. e.g. see one_hop_test.unit_test_templates.
-        :param trapi_version: Optional[str], target TRAPI version (default: current release)
+        :param component: Optional[str] = None, target component to be tested, (default: 'ars' assumed)
+        :param environment: Optional[str] = None, Translator execution environment for the test,
+                                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci' assumed)
+        :param trapi_generators: Optional[List] = None, pointers to code functions that configure
+                                 TRAPI query requests. e.g. see one_hop_test.unit_test_templates.
+                                 May be empty for some types of tests with fixed TRAPI queries internally?
+        :param trapi_version: Optional[str] = None, target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
-        :param test_logger: Optional[logging.Logger], Python logger, for diagnostics
-        :param kwargs: named arguments to pass on to BiolinkValidator parent class (if useful)
+        :param test_logger: Optional[logging.Logger] = None, Python logger handle (default: not configured)
+        :param kwargs: named arguments to pass on to BiolinkValidator parent class (if and as applicable)
         """
+        if not component:
+            component = 'ars'
+        if not environment:
+            environment = 'ci'
+
         BiolinkValidator.__init__(
             self,
-            default_target=target,
+            default_target=component,
             trapi_version=trapi_version,
             biolink_version=biolink_version,
             **kwargs
@@ -193,7 +199,7 @@ class GraphValidationTest(BiolinkValidator):
         self.environment: str = environment
         self.test_asset: TestAsset = test_asset
 
-        # trapi_generators should probably not be empty but just in case...
+        # trapi_generators should usually not be empty, but just in case...
         self.trapi_generators: List = trapi_generators or []
 
         self.runner_settings = runner_settings
@@ -203,7 +209,7 @@ class GraphValidationTest(BiolinkValidator):
     def get_run_id(self):
         # First implementation of 'run identifier' is
         # is to return the default target endpoint?
-        # TODO: need a more unique run identifier here, e.g. ARS PK-like
+        # TODO: likely need a more appropriate run identifier here, e.g. ARS PK-like?
         return self.default_target
 
     def get_trapi_generators(self) -> List:
@@ -239,7 +245,7 @@ class GraphValidationTest(BiolinkValidator):
         :param object_category: str, CURIE identifying the category of the subject concept
         :return: TestAsset object
         """
-        # TODO: is this absolutely necessary internally inside the test runner,
+        # TODO: is the TestAsset absolutely necessary internally inside this test runner,
         #       which directly uses Biolink fields, not the TestAsset fields?
         return TestAsset.construct(
             id=cls.generate_test_asset_id(),
@@ -344,8 +350,8 @@ class GraphValidationTest(BiolinkValidator):
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
-        # Load the internal TestAsset being uniformly
-        # served to all (endpoint x testcase) test runs.
+        # Load the internal TestAsset being uniformly served
+        # to all TestCase runs against specified components.
         test_asset: TestAsset = GraphValidationTest.build_test_asset(
             subject_id,
             subject_category,
@@ -354,17 +360,17 @@ class GraphValidationTest(BiolinkValidator):
             object_category
         )
 
-        # One test run - each running and reporting independently - is
-        # configured to process the specified TestAsset against each
-        # component, running within the specified environment.
-        # Each test run generates a distinct test report, which may
-        # itself be composed of the result(s) of one or more independent
-        # TestCases, depending on the objective and design of the TestRunner.
+        # A test run - running and reporting independently - is configured
+        # to apply a test derived from the specified TestAsset against each
+        # specified component, within the specified environment. Each test run
+        # generates a distinct test report, which is composed of the result(s)
+        # of one or more independent TestCases derived from the TestAsset,
+        # reflecting on the objective and design of the TestRunner.
         test_runs: List[cls] = [
             cls(
-                target=target,
-                environment=environment,
                 test_asset=test_asset,
+                component=target,
+                environment=environment,
                 trapi_generators=trapi_generators,
                 trapi_version=trapi_version,
                 biolink_version=biolink_version,

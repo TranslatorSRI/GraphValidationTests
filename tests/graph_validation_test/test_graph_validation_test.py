@@ -53,7 +53,7 @@ def test_build_test_asset():
 
 def test_default_graph_validation_test_construction():
     gvt = GraphValidationTest(
-        target="https://some-trapi-service.ncats.io",
+        component="https://some-trapi-service.ncats.io",
         test_asset=SAMPLE_TEST_ASSET,
     )
     assert gvt.get_trapi_version() == DEFAULT_TRAPI_VERSION
@@ -64,7 +64,7 @@ def test_default_graph_validation_test_construction():
 def test_explicit_graph_validation_test_construction():
     trapi_generators = [by_subject]
     gvt = GraphValidationTest(
-        target="https://some-trapi-service.ncats.io",
+        component="https://some-trapi-service.ncats.io",
         test_asset=SAMPLE_TEST_ASSET,
         trapi_generators=trapi_generators,
         trapi_version="1.4.2",
@@ -83,7 +83,7 @@ def test_explicit_graph_validation_test_construction():
 
 def test_test_case_run_report_messages():
     gvt = GraphValidationTest(
-        target="https://some-trapi-service.ncats.io",
+        component="https://some-trapi-service.ncats.io",
         test_asset=SAMPLE_TEST_ASSET,
     )
     tcr = TestCaseRun(
