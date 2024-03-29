@@ -64,29 +64,35 @@ class StandardsValidationTestCaseRun(TestCaseRun):
             # We'll ignore warnings and info messages
             if not (self.has_critical() or self.has_errors() or self.has_skipped()):
 
+                # Capture the raw TRAPI query request for reporting
+                self.trapi_request = trapi_request
+
                 # Make the TRAPI call to the TestCase targeted ARS, KP or
                 # ARA resource, using the case-documented input test edge
-                trapi_response: Dict = await run_trapi_query(
+                trapi_response: Optional[Dict] = await run_trapi_query(
                     trapi_request=trapi_request,
                     component=self.get_component(),
                     environment=self.get_environment()
                 )
 
-                # Capture the raw TRAPI query request and response for reporting
-                self.trapi_request = trapi_request
-                self.trapi_response = trapi_response
+                if not trapi_response:
+                    self.report(code="error.trapi.response.empty")
 
-                # Second sanity check: was the web service (HTTP) call itself successful?
-                status_code: int = trapi_response['status_code']
-                if status_code != 200:
-                    self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
                 else:
-                    #########################################################
-                    # Looks good so far, so now validate the TRAPI response #
-                    #########################################################
-                    validator.check_compliance_of_trapi_response(
-                        response=trapi_response['response_json']
-                    )
+                    # Capture the raw TRAPI query response for reporting
+                    self.trapi_response = trapi_response
+
+                    # Second sanity check: was the web service (HTTP) call itself successful?
+                    status_code: int = trapi_response['status_code']
+                    if status_code != 200:
+                        self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
+                    else:
+                        #########################################################
+                        # Looks good so far, so now validate the TRAPI response #
+                        #########################################################
+                        validator.check_compliance_of_trapi_response(
+                            response=trapi_response['response_json']
+                        )
 
 
 class StandardsValidationTest(GraphValidationTest):

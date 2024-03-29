@@ -73,77 +73,83 @@ class OneHopTestCaseRun(TestCaseRun):
                 #         trapi_request=trapi_request, kp_source=test_asset['kp_source']
                 #     )
 
+                # Capture the raw TRAPI query request for reporting
+                self.trapi_request = trapi_request
+
                 # Make the TRAPI call to the TestCase targeted ARS, KP or
                 # ARA resource, using the case-documented input test edge
-                trapi_response: Dict = await run_trapi_query(
+                trapi_response: Optional[Dict] = await run_trapi_query(
                     trapi_request=trapi_request,
                     component=self.get_component(),
                     environment=self.get_environment()
                 )
 
-                # Capture the raw TRAPI query request and response for reporting
-                self.trapi_request = trapi_request
-                self.trapi_response = trapi_response
+                if not trapi_response:
+                    self.report(code="error.trapi.response.empty")
 
-                # Second sanity check: was the web service (HTTP) call itself successful?
-                status_code: int = trapi_response['status_code']
-                if status_code != 200:
-                    self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
                 else:
-                    #########################################################
-                    # Looks good so far, so now validate the TRAPI response #
-                    #########################################################
-                    response: Optional[Dict] = trapi_response['response_json']
+                    # Capture the raw TRAPI query response for reporting
+                    self.trapi_response = trapi_response
 
-                    if response:
-                        # Report 'trapi_version' and 'biolink_version' recorded
-                        # in the 'response_json' (if the tags are provided)
-                        if 'schema_version' not in response:
-                            self.report(code="warning.trapi.response.schema_version.missing")
-                        else:
-                            trapi_version: str = response['schema_version'] \
-                                if not self.trapi_version else self.trapi_version
-                            print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
-
-                        if 'biolink_version' not in response:
-                            self.report(code="warning.trapi.response.biolink_version.missing")
-                        else:
-                            biolink_version = response['biolink_version'] \
-                                if not self.biolink_version else self.biolink_version
-                            self.get_logger().info(
-                                f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
-                            )
-
-                        # If nothing badly wrong with the TRAPI Response to this point, then we also check
-                        # whether the test input edge was returned in the Response Message knowledge graph
-                        #
-                        # case: Dict contains something like:
-                        #
-                        #     idx: 0,
-                        #     subject_category: 'biolink:SmallMolecule',
-                        #     object_category: 'biolink:Disease',
-                        #     predicate: 'biolink:treats',
-                        #     subject_id: 'CHEBI:3002',  # may have the deprecated key 'subject' here
-                        #     object_id: 'MESH:D001249', # may have the deprecated key 'object' here
-                        #
-                        # the contents for which ought to be returned in
-                        # the TRAPI Knowledge Graph, as a Result mapping?
-                        #
-                        validator: TRAPIResponseValidator = TRAPIResponseValidator(
-                            trapi_version=self.trapi_version,
-                            biolink_version=self.biolink_version
-                        )
-                        if not validator.case_input_found_in_response(test_asset, response, self.trapi_version):
-                            test_edge_id: str = f"{test_asset['idx']}|" \
-                                                f"({test_asset['subject_id']}#{test_asset['subject_category']})" + \
-                                                f"-[{test_asset['predicate']}]->" + \
-                                                f"({test_asset['object_id']}#{test_asset['object_category']})"
-                            self.report(
-                                code="error.trapi.response.knowledge_graph.missing_expected_edge",
-                                identifier=test_edge_id
-                            )
+                    # Second sanity check: check whether the web service (HTTP) call itself was successful?
+                    status_code: int = trapi_response['status_code']
+                    if status_code != 200:
+                        self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
                     else:
-                        self.report(code="error.trapi.response.empty")
+                        #########################################################
+                        # Looks good so far, so now validate the TRAPI response #
+                        #########################################################
+                        response: Optional[Dict] = trapi_response['response_json']
+
+                        if response:
+                            # Report 'trapi_version' and 'biolink_version' recorded
+                            # in the 'response_json' (if the tags are provided)
+                            if 'schema_version' not in response:
+                                self.report(code="warning.trapi.response.schema_version.missing")
+                            else:
+                                trapi_version: str = response['schema_version'] \
+                                    if not self.trapi_version else self.trapi_version
+                                print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
+
+                            if 'biolink_version' not in response:
+                                self.report(code="warning.trapi.response.biolink_version.missing")
+                            else:
+                                biolink_version = response['biolink_version'] \
+                                    if not self.biolink_version else self.biolink_version
+                                self.get_logger().info(
+                                    f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
+                                )
+
+                            # If nothing badly wrong with the TRAPI Response to this point, then we also check
+                            # whether the test input edge was returned in the Response Message knowledge graph
+                            #
+                            # case: Dict contains something like:
+                            #
+                            #     idx: 0,
+                            #     subject_category: 'biolink:SmallMolecule',
+                            #     object_category: 'biolink:Disease',
+                            #     predicate: 'biolink:treats',
+                            #     subject_id: 'CHEBI:3002',  # may have the deprecated key 'subject' here
+                            #     object_id: 'MESH:D001249', # may have the deprecated key 'object' here
+                            #
+                            # the contents for which ought to be returned in
+                            # the TRAPI Knowledge Graph, as a Result mapping?
+                            #
+                            validator: TRAPIResponseValidator = TRAPIResponseValidator(
+                                trapi_version=self.trapi_version,
+                                biolink_version=self.biolink_version
+                            )
+                            if not validator.case_input_found_in_response(test_asset, response, self.trapi_version):
+                                test_edge_id: str = f"{test_asset['idx']}|" \
+                                                    f"({test_asset['subject_id']}#{test_asset['subject_category']})" + \
+                                                    f"-[{test_asset['predicate']}]->" + \
+                                                    f"({test_asset['object_id']}#{test_asset['object_category']})"
+                                self.report(
+                                    code="error.trapi.response.knowledge_graph.missing_expected_edge",
+                                    identifier=test_edge_id
+                                )
+                        else:
+                            self.report(code="error.trapi.response.empty")
 
 
 class OneHopTest(GraphValidationTest):
