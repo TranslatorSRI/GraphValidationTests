@@ -31,8 +31,11 @@ def test_get_component_infores(component: str, infores: str):
     assert get_component_infores(component=component) == infores
 
 
-# GraphValidationTest.target_component_urls(env: str, components: Optional[str] = None) -> List[str]:
-def test_target_component_urls():
+# def resolve_component_endpoint(
+#         component: Optional[str] = None,
+#         environment: Optional[str] = None
+# ) -> Optional[str]:
+def test_resolve_component_endpoint():
     pass
 
 

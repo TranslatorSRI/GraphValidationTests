@@ -343,8 +343,8 @@ class GraphValidationTest(BiolinkValidator):
                                  See one_hop_test.unit_test_templates.
 
         - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
-        :param components: Optional[str] = None, components to be tested
-                                         (values from ComponentEnum in TranslatorTestingModel; default 'ars')
+        :param components: Optional[str] = None, comma-delimited list of components to be tested
+                                         (values from ComponentEnum in TranslatorTestingModel; default ['ars'])
         :param environment: Optional[str] = None, Target Translator execution environment for the test,
                                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
 
@@ -366,6 +366,12 @@ class GraphValidationTest(BiolinkValidator):
             object_category
         )
 
+        if components:
+            # TODO: would component identifier duplication ever been an issue?
+            targets = components.split(",")
+        else:
+            targets = ['ars']
+
         # A test run - running and reporting independently - is configured
         # to apply a test derived from the specified TestAsset against each
         # specified component, within the specified environment. Each test run
@@ -382,7 +388,7 @@ class GraphValidationTest(BiolinkValidator):
                 biolink_version=biolink_version,
                 runner_settings=runner_settings,
                 test_logger=test_logger
-            ) for target in components
+            ) for target in targets
         ]
         #
         # TODO: the following comment is plagiarized from 3rd party TestRunner comments simply as

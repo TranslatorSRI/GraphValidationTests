@@ -197,7 +197,6 @@ def resolve_component_endpoint(
 ) -> Optional[str]:
     """
     Resolve target endpoints for running the test.
-
     :param component: Optional[str] = None, component to be queried (ideally, drawn from a value in the
                                             'ComponentEnum' of the Translator Testing Model ; default 'ars')
     :param environment: Optional[str] = None: target Translator execution environment of the component
