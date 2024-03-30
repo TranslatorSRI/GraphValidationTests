@@ -10,7 +10,7 @@ import requests
 from reasoner_validator.trapi import call_trapi
 from graph_validation_test.translator.registry import (
     get_the_registry_data,
-    extract_component_test_metadata_from_registry
+    get_component_endpoint_from_registry
 )
 
 from logging import getLogger
@@ -208,7 +208,7 @@ def resolve_component_endpoint(
     :param environment: Optional[str] = None: target Translator execution environment of
                                               the component to be accessed;
                                               (default: None == 'ci')
-    :return: Optional[str], environment-specific endpoint for component to be queried. None if unavailable.
+    :return: Optional[str], environment-specific endpoint for component to be queried. None if not available.
     """
     if not component:
         component = 'ars'
@@ -218,24 +218,20 @@ def resolve_component_endpoint(
         ars_env: str = ars_env_spec[environment]
         return f"https://{ars_env}.transltr.io/ars/api/"
     else:
-        # TODO: resolve the endpoint for non-ARS targets
-        #       using the Translator SmartAPI Registry?
         registry_data: Dict = get_the_registry_data()
-        service_metadata = \
-            extract_component_test_metadata_from_registry(
+        endpoint: Optional[str] = \
+            get_component_endpoint_from_registry(
                 registry_data,
-                "ARA",  # TODO: how can I also track KP's?
-                target_source=get_component_infores_object_id(component),
-                target_x_maturity=environment
+                infores_id=get_component_infores_object_id(component),
+                environment=environment
             )
-        if not service_metadata:
-            # Test for a KP:
-            logger.error("Non-ARS component-specific testing not yet implemented?")
+        if not endpoint:
+            logger.error(
+                f"Could not resolve endpoint of component '{component}' within specified environment '{environment}'?"
+            )
             return None
 
-        # TODO: fix this! the service_metadata is a complex
-        #       dictionary of entries.. how do we resolve it?
-        return service_metadata["url"]
+        return endpoint
 
 
 async def run_trapi_query(trapi_request: Dict, component: str, environment: str) -> Optional[Dict]:
@@ -254,6 +250,9 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
         component=component,
         environment=environment
     )
+    if not endpoint:
+        return None
+
     if component == 'ars':
         # TODO: make the (modified) TRAPI query to the ARS
         pass

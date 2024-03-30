@@ -45,6 +45,20 @@ def query_smart_api(url: str = SMARTAPI_URL, parameters: Optional[str] = None) -
     return data
 
 
+def get_the_registry_data(refresh: bool = False) -> Dict:
+    global _the_registry_data
+    if not _the_registry_data or refresh:
+        _the_registry_data = query_smart_api(parameters=SMARTAPI_QUERY_PARAMETERS)
+    return _the_registry_data
+
+
+#########################################
+# Legacy SRI_Testing
+# Translator SmartAPI Registry
+# accessing code - perhaps deprecated
+# in the GraphValidationTest project
+#########################################
+
 def get_nested_tag_value(data: Dict, path: List[str], pos: int) -> Optional[str]:
     """
     Navigate dot delimited tag 'path' into a multi-level dictionary, to return its associated value.
@@ -642,8 +656,26 @@ def extract_component_test_metadata_from_registry(
     }
 
 
-def get_the_registry_data(refresh: bool = False) -> Dict:
-    global _the_registry_data
-    if not _the_registry_data or refresh:
-        _the_registry_data = query_smart_api(parameters=SMARTAPI_QUERY_PARAMETERS)
-    return _the_registry_data
+#########################################
+# Simplified resolution of Translator
+# component endpoints, for the
+# in the GraphValidationTest project
+#########################################
+def get_component_endpoint_from_registry(
+        registry_data: Dict,
+        infores_id: str,
+        environment: str
+) -> Optional[str]:
+    """
+    Get component endpoint from registry data,
+    for a given infores object identifier and
+    for a specified environment.
+    :param registry_data: Dict, Python dictionary contents retrieved
+                                from the Translator SmartAPI Registry
+    :param infores_id: str, object (reference) identifier of the InfoRes CURIE
+                            identifying a known resource in the Registry
+    :param environment: x_maturity environment within which the component
+                        is running and for which the endpoint is requested
+    :return: Optional[str], the endpoint URL if available, None otherwise
+    """
+    return None

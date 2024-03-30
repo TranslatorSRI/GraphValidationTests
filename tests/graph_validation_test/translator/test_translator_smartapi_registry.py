@@ -16,7 +16,7 @@ from graph_validation_test.translator.registry import (
     source_of_interest,
     validate_testable_resource,
     live_trapi_endpoint,
-    select_endpoint,
+    select_endpoint, get_component_endpoint_from_registry,
     # assess_trapi_version
 )
 
@@ -103,7 +103,6 @@ _TEST_JSON_DATA = {
 def test_valid_tag_path():
     value = tag_value(_TEST_JSON_DATA, "testing.one.two.three")
     assert value == "The End!"
-
 
 
 def test_empty_tag_path():
@@ -475,3 +474,25 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
         assert x_maturity in resource_metadata['x_maturity']
     else:
         assert not resource_metadata
+
+
+@pytest.mark.parametrize(
+    "component,environment,result",
+    [
+        # ("arax", None, ""),
+        # ("arax", "dev", ""),
+        # ("aragorn", "prod", ""),
+        # ("biothings-explorer", "dev", ""),
+        # ("improving-agent", "test", ""),
+        # ("molepro", "ci", ""),
+        ("foobar", "ci", None),
+        ("arax", "non-environment", None),
+    ]
+)
+def test_get_component_endpoint_from_registry(
+        component: Optional[str],
+        environment: Optional[str],
+        result: Optional[str]
+):
+    registry_data: Dict = get_the_registry_data()
+    assert get_component_endpoint_from_registry(registry_data, component, environment) == result

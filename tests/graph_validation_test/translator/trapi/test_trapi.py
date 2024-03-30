@@ -38,10 +38,6 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
     assert get_component_infores_object_id(component=component) == infores
 
 
-# def resolve_component_endpoint(
-#         component: Optional[str] = None,
-#         environment: Optional[str] = None
-# ) -> Optional[str]:
 @pytest.mark.parametrize(
     "component,environment,result",
     [
@@ -54,6 +50,8 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
         # ("biothings-explorer", "dev", ""),
         # ("improving-agent", "test", ""),
         # ("molepro", "ci", ""),
+        ("foobar", "ci", None),
+        ("arax", "non-environment", None),
     ]
 )
 def test_resolve_component_endpoint(
