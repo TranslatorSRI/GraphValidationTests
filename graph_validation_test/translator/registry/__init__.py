@@ -678,4 +678,4 @@ def get_component_endpoint_from_registry(
                         is running and for which the endpoint is requested
     :return: Optional[str], the endpoint URL if available, None otherwise
     """
-    return None
+    raise NotImplementedError("Implement me!")
