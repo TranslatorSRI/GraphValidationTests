@@ -229,7 +229,6 @@ def resolve_component_endpoint(
             logger.error(
                 f"Could not resolve endpoint of component '{component}' within specified environment '{environment}'?"
             )
-            return None
 
         return endpoint
 
@@ -255,10 +254,10 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
 
     if component == 'ars':
         # TODO: make the (modified) TRAPI query to the ARS
-        pass
+        raise NotImplementedError("Implement ARS TRAPI query processing!")
     else:
         # Make the TRAPI call to the TestCase targeted ARS, KP or
         # ARA resource, using the case-documented input test edge
-        trapi_response: Dict = await call_trapi(endpoint, trapi_request)
+        trapi_response = await call_trapi(endpoint, trapi_request)
 
     return trapi_response
