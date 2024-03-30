@@ -4,39 +4,64 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from graph_validation_test.translator.trapi import post_query, get_component_infores
-from graph_validation_test.utils.ontology_kp import ONTOLOGY_KP_TRAPI_SERVER, NODE_NORMALIZER_SERVER
+from graph_validation_test.translator.trapi import (
+    post_query,
+    get_component_infores_object_id,
+    resolve_component_endpoint
+)
+from graph_validation_test.utils.ontology_kp import (
+    ONTOLOGY_KP_TRAPI_SERVER,
+    NODE_NORMALIZER_SERVER
+)
 
 pytest_plugins = ('pytest_asyncio',)
 
 TRAPI_TEST_ENDPOINT = "https://molepro-trapi.transltr.io/molepro/trapi/v1.4"
 
 
-def test_empty_component_infores():
+def test_empty_get_component_infores_object_id():
     with pytest.raises(AssertionError):
-        assert get_component_infores(component="")
+        assert get_component_infores_object_id(component="")
 
 
 @pytest.mark.parametrize(
     "component,infores",
     [
-        ("arax", "infores:arax"),
-        ("aragorn", "infores:aragorn"),
-        ("bte", "infores:biothings-explorer"),
-        ("improving", "infores:improving-agent"),
-        ("molepro", "infores:molepro")
+        ("arax", "arax"),
+        ("aragorn", "aragorn"),
+        ("bte", "biothings-explorer"),
+        ("improving", "improving-agent"),
+        ("molepro", "molepro")
     ]
 )
-def test_get_component_infores(component: str, infores: str):
-    assert get_component_infores(component=component) == infores
+def test_get_get_component_infores_object_id(component: str, infores: str):
+    assert get_component_infores_object_id(component=component) == infores
 
 
 # def resolve_component_endpoint(
 #         component: Optional[str] = None,
 #         environment: Optional[str] = None
 # ) -> Optional[str]:
-def test_resolve_component_endpoint():
-    pass
+@pytest.mark.parametrize(
+    "component,environment,result",
+    [
+        (None, None, f"https://ars.ci.transltr.io/ars/api/"),
+        ("ars", None, f"https://ars.ci.transltr.io/ars/api/"),
+        ("ars", "test", f"https://ars.test.transltr.io/ars/api/"),
+        # ("arax", None, ""),
+        # ("arax", "dev", ""),
+        # ("aragorn", "prod", ""),
+        # ("biothings-explorer", "dev", ""),
+        # ("improving-agent", "test", ""),
+        # ("molepro", "ci", ""),
+    ]
+)
+def test_resolve_component_endpoint(
+        component: Optional[str],
+        environment: Optional[str],
+        result: Optional[str]
+):
+    assert resolve_component_endpoint(component, environment) == result
 
 
 @pytest.mark.parametrize(

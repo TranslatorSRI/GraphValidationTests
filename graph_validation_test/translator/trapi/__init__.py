@@ -177,7 +177,14 @@ def retrieve_ars_result(response_id: str, verbose: bool) -> Optional[Dict]:
     return trapi_response
 
 
-def get_component_infores(component: str):
+def get_component_infores_object_id(component: str) -> str:
+    """
+    Returns the InfoRes object identifier of a given component.
+    :param component: str, acronym of the component
+    :return: infores reference identifier of the component
+    """
+    # TODO: can I resolve here whether a given component
+    #       is an ARA or a KP, and return this to the caller?
     assert component
     infores_map = {
         "arax": "arax",
@@ -185,9 +192,7 @@ def get_component_infores(component: str):
         "bte": "biothings-explorer",
         "improving": "improving-agent",
     }
-    # TODO: what if the component is not yet registered in the model?
-    #       Also, what's the relationship to the Translator SmartAPI Registry
-    return f"infores:{infores_map.setdefault(component, component)}"
+    return infores_map.setdefault(component, component)
 
 
 @lru_cache()
@@ -197,27 +202,34 @@ def resolve_component_endpoint(
 ) -> Optional[str]:
     """
     Resolve target endpoints for running the test.
-    :param component: Optional[str] = None, component to be queried (ideally, drawn from a value in the
-                                            'ComponentEnum' of the Translator Testing Model ; default 'ars')
-    :param environment: Optional[str] = None: target Translator execution environment of the component
-                                              to be accessed; default: 'ci'.
+    :param component: Optional[str] = None, component to be queried, ideally, drawn from a value
+                                            in the 'ComponentEnum' of the Translator Testing Model;
+                                            (default: None == 'ars')
+    :param environment: Optional[str] = None: target Translator execution environment of
+                                              the component to be accessed;
+                                              (default: None == 'ci')
     :return: Optional[str], environment-specific endpoint for component to be queried. None if unavailable.
     """
+    if not component:
+        component = 'ars'
+    if not environment:
+        environment = 'ci'
     if component == 'ars':
         ars_env: str = ars_env_spec[environment]
         return f"https://{ars_env}.transltr.io/ars/api/"
     else:
-        # TODO: resolve the endpoints for non-ARS targets
+        # TODO: resolve the endpoint for non-ARS targets
         #       using the Translator SmartAPI Registry?
         registry_data: Dict = get_the_registry_data()
         service_metadata = \
             extract_component_test_metadata_from_registry(
                 registry_data,
                 "ARA",  # TODO: how can I also track KP's?
-                target_source=get_component_infores(component),
+                target_source=get_component_infores_object_id(component),
                 target_x_maturity=environment
             )
         if not service_metadata:
+            # Test for a KP:
             logger.error("Non-ARS component-specific testing not yet implemented?")
             return None
 
