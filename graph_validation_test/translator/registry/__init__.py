@@ -16,7 +16,7 @@ SMARTAPI_URL = "https://smart-api.info/api/"
 SMARTAPI_QUERY_PARAMETERS = "q=__all__&tags=%22trapi%22&" + \
                             "fields=servers,info,_meta,_status,paths,tags,openapi,swagger&size=1000&from=0"
 
-MINIMUM_BIOLINK_VERSION = "3.6.0"
+MINIMUM_BIOLINK_VERSION = "4.1.4"
 
 
 # Singleton reading of the Registry Data
@@ -174,7 +174,7 @@ def assess_trapi_version(
                 == SemVer.from_string(service_version, core_fields=['major', 'minor'], ext_fields=[]):
             candidate_version = service_version
     else:
-        # 2. If the 'trapi_version' argument IS NOT set (i.e. is 'None'),
+        # 2. If the 'target_version' argument IS NOT set (i.e. is 'None'),
         #    then select the specified service version as a candidate
         candidate_version = service_version
 
@@ -656,6 +656,31 @@ def extract_component_test_metadata_from_registry(
     }
 
 
+def find_infores(service: Dict, target_infores_id: str) -> bool:
+    """
+    Source filtering function, checking a source identifier against a set of identifiers.
+    The target_source strings may also be wildcard patterns with a single asterix (only)
+    with possible prefix only, suffix only or prefix-<body>-suffix matches.
+
+    :param service: Dict, Translator SmartAPI Registry entry for one
+                          service 'hit' containing an 'infores' property
+    :param target_infores_id: str, infores reference identifier
+    :return: bool, True if matched; False otherwise.
+    """
+    assert service, "registry.source_of_interest() method call: unexpected empty service?!?"
+    assert target_infores_id, "registry.source_of_interest() empty infores_id"
+
+    service_infores: str = tag_value(service, "info.x-translator.infores")
+
+    # Internally, within SRI Testing, we only track the object_id of the infores CURIE
+    service_infores_id = service_infores.replace("infores:", "") if service_infores else None
+
+    if service_infores_id and target_infores_id == service_infores_id:
+        return True
+    else:
+        return False
+
+
 #########################################
 # Simplified resolution of Translator
 # component endpoints, for the
@@ -664,7 +689,9 @@ def extract_component_test_metadata_from_registry(
 def get_component_endpoint_from_registry(
         registry_data: Dict,
         infores_id: str,
-        environment: str
+        environment: str,
+        target_trapi_version: Optional[str],
+        target_biolink_version: Optional[str]
 ) -> Optional[str]:
     """
     Get component endpoint from registry data,
@@ -676,6 +703,44 @@ def get_component_endpoint_from_registry(
                             identifying a known resource in the Registry
     :param environment: x_maturity environment within which the component
                         is running and for which the endpoint is requested
+    :param target_trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
+    :param target_biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
     :return: Optional[str], the endpoint URL if available, None otherwise
     """
-    raise NotImplementedError("Implement me!")
+    # sanity check(?)
+    assert registry_data
+    assert infores_id
+    assert environment
+
+    # this dictionary, indexed by service 'infores',
+    # will track the selected TRAPI version
+    # for each distinct information resource
+    selected_service_trapi_version: Dict = dict()
+
+    for index, service in enumerate(registry_data['hits']):
+
+        if not find_infores(service=service, target_infores_id=infores_id):
+            continue
+
+        # Filter early for TRAPI version
+        service_trapi_version = tag_value(service, "info.x-translator.version")
+        assess_trapi_version(infores_id, service_trapi_version, target_trapi_version, selected_service_trapi_version)
+
+        # Current service doesn't have appropriate trapi_version, so skip the service
+        if infores_id not in selected_service_trapi_version:
+            continue
+
+        if target_biolink_version:
+
+            biolink_version = tag_value(service, "info.x-translator.biolink-version")
+
+            # TODO: temporary hack to deal with resources which are somewhat sloppy or erroneous in their declaration
+            #       of the applicable Biolink Model version for validation: enforce a minimium Biolink Model version.
+            if not biolink_version or SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(
+                    biolink_version):
+                biolink_version = MINIMUM_BIOLINK_VERSION
+
+            if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(biolink_version):
+                continue
+
+    return None

@@ -197,17 +197,21 @@ def get_component_infores_object_id(component: str) -> str:
 
 @lru_cache()
 def resolve_component_endpoint(
-        component: Optional[str] = None,
-        environment: Optional[str] = None
+        component: Optional[str],
+        environment: Optional[str],
+        target_trapi_version: Optional[str],
+        target_biolink_version: Optional[str]
 ) -> Optional[str]:
     """
     Resolve target endpoints for running the test.
-    :param component: Optional[str] = None, component to be queried, ideally, drawn from a value
+    :param component: Optional[str], component to be queried, ideally, drawn from a value
                                             in the 'ComponentEnum' of the Translator Testing Model;
                                             (default: None == 'ars')
-    :param environment: Optional[str] = None: target Translator execution environment of
+    :param environment: Optional[str]: target Translator execution environment of
                                               the component to be accessed;
                                               (default: None == 'ci')
+    :param target_trapi_version: Optional[str], target TRAPI version (default: latest public release)
+    :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return: Optional[str], environment-specific endpoint for component to be queried. None if not available.
     """
     if not component:
@@ -223,7 +227,9 @@ def resolve_component_endpoint(
             get_component_endpoint_from_registry(
                 registry_data,
                 infores_id=get_component_infores_object_id(component),
-                environment=environment
+                environment=environment,
+                target_trapi_version=target_trapi_version,
+                target_biolink_version=target_biolink_version
             )
         if not endpoint:
             logger.error(
@@ -233,7 +239,13 @@ def resolve_component_endpoint(
         return endpoint
 
 
-async def run_trapi_query(trapi_request: Dict, component: str, environment: str) -> Optional[Dict]:
+async def run_trapi_query(
+        trapi_request: Dict,
+        component: str,
+        environment: str,
+        target_trapi_version: Optional[str],
+        target_biolink_version: Optional[str]
+) -> Optional[Dict]:
     """
     Make a call to the TRAPI (or TRAPI-like, e.g. ARS) component, returning the result.
 
@@ -242,12 +254,16 @@ async def run_trapi_query(trapi_request: Dict, component: str, environment: str)
                           'ars', ARA acronym (e.g. 'arax') or KP acronym (e.g. 'molepro')
     :param environment: Optional[str] = None, Target Translator execution environment for the test,
                                        one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
+    :param target_trapi_version: Optional[str], target TRAPI version (default: latest public release)
+    :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return:  Dict, TRAPI response JSON, as a Python data structure.
     """
     trapi_response: Optional[Dict] = None
     endpoint: str = resolve_component_endpoint(
         component=component,
-        environment=environment
+        environment=environment,
+        target_trapi_version=target_trapi_version,
+        target_biolink_version=target_biolink_version
     )
     if not endpoint:
         return None

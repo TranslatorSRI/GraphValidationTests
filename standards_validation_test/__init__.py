@@ -72,7 +72,9 @@ class StandardsValidationTestCaseRun(TestCaseRun):
                 trapi_response: Optional[Dict] = await run_trapi_query(
                     trapi_request=trapi_request,
                     component=self.get_component(),
-                    environment=self.get_environment()
+                    environment=self.get_environment(),
+                    target_trapi_version=self.trapi_version,
+                    target_biolink_version=self.biolink_version
                 )
 
                 if not trapi_response:
