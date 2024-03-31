@@ -479,12 +479,12 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
 @pytest.mark.parametrize(
     "component,environment,result",
     [
-        # ("arax", None, ""),
-        # ("arax", "dev", ""),
-        # ("aragorn", "prod", ""),
-        # ("biothings-explorer", "dev", ""),
-        # ("improving-agent", "test", ""),
-        # ("molepro", "ci", ""),
+        ("arax", None, None),
+        ("arax", "dev", None),
+        ("aragorn", "prod", None),
+        ("biothings-explorer", "dev", None),
+        ("improving-agent", "test", None),
+        ("molepro", "ci", None),
         ("foobar", "ci", None),
         ("arax", "non-environment", None),
     ]
@@ -495,4 +495,10 @@ def test_get_component_endpoint_from_registry(
         result: Optional[str]
 ):
     registry_data: Dict = get_the_registry_data()
-    assert get_component_endpoint_from_registry(registry_data, component, environment) == result
+    assert get_component_endpoint_from_registry(
+        registry_data=registry_data,
+        infores_id=component,
+        environment=environment,
+        target_trapi_version=None,
+        target_biolink_version=None
+    ) == result

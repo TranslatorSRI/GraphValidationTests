@@ -717,6 +717,7 @@ def get_component_endpoint_from_registry(
     # for each distinct information resource
     selected_service_trapi_version: Dict = dict()
 
+    service_metadata: Dict[str, Dict[str, str]] = dict()
     for index, service in enumerate(registry_data['hits']):
 
         if not find_infores(service=service, target_infores_id=infores_id):
@@ -731,16 +732,21 @@ def get_component_endpoint_from_registry(
             continue
 
         if target_biolink_version:
-
             biolink_version = tag_value(service, "info.x-translator.biolink-version")
-
             # TODO: temporary hack to deal with resources which are somewhat sloppy or erroneous in their declaration
             #       of the applicable Biolink Model version for validation: enforce a minimium Biolink Model version.
             if not biolink_version or SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(
                     biolink_version):
                 biolink_version = MINIMUM_BIOLINK_VERSION
-
             if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(biolink_version):
                 continue
 
-    return None
+    # Return the best endpoint for target
+    # infores_id, x-maturity environment
+    # TRAPI and Biolink Model versions
+    endpoint: Optional[str] = None
+    for service_id, details in service_metadata.items():
+        if details["trapi_version"] == selected_service_trapi_version.setdefault(details["infores"], None):
+            endpoint = details["url"]
+
+    return endpoint
