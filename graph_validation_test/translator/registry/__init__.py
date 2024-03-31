@@ -282,6 +282,12 @@ def capture_tag_value(service_metadata: Dict, resource: str, tag: str, value: st
 #       See https://github.com/TranslatorSRI/SRI_testing/issues/61 and also
 #           https://github.com/TranslatorSRI/SRI_testing/issues/59
 DEPLOYMENT_TYPES: List[str] = ['production', 'staging', 'testing', 'development']
+DEPLOYMENT_TYPE_MAP: Dict[str, str] = {
+    "prod": "production",
+    "ci": "staging",  # TODO: is this correct?
+    "test": "testing",
+    "dev": "development"
+}
 
 
 def validate_servers(
@@ -337,7 +343,7 @@ def validate_servers(
     return server_urls
 
 
-def select_accessible_endpoint(urls: Optional[List[str]], check_access: bool) -> str:
+def select_accessible_endpoint(urls: Optional[List[str]], check_access: bool) -> Optional[str]:
     url: Optional[str] = None
     for endpoint in urls:
         if not check_access:
@@ -362,12 +368,15 @@ def select_endpoint(
     # This is a revised version of the SRI_Testing harness endpoint
     # selector which is agnostic about test_data_location
     """
-    Select one test URL based on active endpoints from available server_urls. Usually, by the time this method is
-    called, any 'x_maturity' preference has constrained the server_urls. If the server_urls have several 'x_maturity'
-    environments, the highest precedence x_maturity  is taken. The precedence is in order of: 'production', 'staging',
-    'testing' and 'development' (this could change in the future, based on Translator community deliberations...).
+    Select one test URL based on active endpoints from available 'server_urls'.
+    Usually, by the time this method is called, any 'x_maturity' preference
+    has constrained the 'server_urls'. If the 'server_urls' have several 'x_maturity'
+    environments, the highest precedence x_maturity  is taken.
+    The precedence is in order of: 'production', 'staging', 'testing' and 'development'
+    (this could change in the future, based on Translator community deliberations...).
 
-    :param server_urls: Dict, the indexed catalog of available Translator SmartAPI Registry entry 'servers' block urls
+    :param server_urls: Dict, the indexed catalog of available
+                              Translator SmartAPI Registry entry 'servers' block urls
     :param check_access: bool, verify TRAPI access of endpoints before returning (Default: True)
 
     :return: Optional[Tuple[str, str]], selected URL endpoint, 'x-maturity' tag
@@ -376,8 +385,8 @@ def select_endpoint(
     for x_maturity in DEPLOYMENT_TYPES:
         if x_maturity in server_urls:
             urls = server_urls[x_maturity]
-            url: str = select_accessible_endpoint(urls, check_access)
-            if url:
+            url: Optional[str] = select_accessible_endpoint(urls, check_access)
+            if url is not None:
                 # Return selected endpoint, fully resolved
                 # with associated available test data
                 return url, x_maturity
@@ -686,6 +695,52 @@ def find_infores(service: Dict, target_infores_id: str) -> bool:
         return False
 
 
+def resolve_endpoint(
+        server_urls: List,
+        x_maturity: Optional[str] = None,
+        check_access: bool = True
+) -> Optional[Tuple[str, str]]:
+    # This is a revised version of the SRI_Testing harness endpoint
+    # selector which is agnostic about test_data_location
+    """
+    Select one test URL based on active endpoints from available 'server_urls'.
+    Usually, by the time this method is called, any 'x_maturity' preference
+    has constrained the 'server_urls'.
+
+    If 'x_maturity' is given then only an endpoint running in it will be returned.
+    Otherwise, if the 'server_urls' have several 'x_maturity' environments,
+    the highest precedence x_maturity is returned.
+
+    The precedence is in order of: 'production', 'staging', 'testing' and 'development'
+    (this could change in the future, based on Translator community deliberations...).
+
+    :param server_urls: List, service 'servers' block list of available servers hosting the service
+    :param x_maturity: Optional[str] = None, target x_maturity environment within which the component
+                                              is running and for which the endpoint is requested
+                                              One of ['production', 'staging', 'testing', 'development']
+                                              (default: check x-maturity environments in precedence order)
+    :param check_access: bool, verify TRAPI access of endpoints before returning (Default: True)
+
+    :return: Optional[Tuple[str, str]], Tuple of 'x-maturity' and 'url' of an active endpoint
+    """
+    target_environments: List[str]
+
+    if x_maturity:
+        target_environments = [x_maturity]
+    else:
+        # Check available environments from the
+        # precedence order of the DEPLOYMENT_TYPES
+        target_environments = DEPLOYMENT_TYPES
+    for x_maturity in target_environments:
+        urls = [server["url"] for server in server_urls if server["x-maturity"] == x_maturity]
+        url: Optional[str] = select_accessible_endpoint(urls, check_access)
+        if url is not None:
+            return x_maturity, url
+
+    # default is failure
+    return None
+
+
 #########################################
 # Simplified resolution of Translator
 # component endpoints, for the
@@ -722,7 +777,7 @@ def get_component_endpoint_from_registry(
     # will track the selected TRAPI version
     # for each distinct information resource
     selected_service_trapi_version: Dict = dict()
-    service_metadata: Dict[str, Dict[str, str]] = dict()
+    endpoint: Optional[str] = None
     for index, service in enumerate(registry_data['hits']):
 
         if not find_infores(service=service, target_infores_id=infores_id):
@@ -732,26 +787,30 @@ def get_component_endpoint_from_registry(
         service_trapi_version = tag_value(service, "info.x-trapi.version")
         assess_trapi_version(infores_id, service_trapi_version, target_trapi_version, selected_service_trapi_version)
 
-        # Current service doesn't have an appropriate trapi_version, so skip the service
+        # Current service doesn't have a compatible 'service_trapi_version', so skip the service
         if infores_id not in selected_service_trapi_version:
             continue
 
-        # only need to filter on Biolink Release if
-        biolink_version = tag_value(service, "info.x-translator.biolink-version")
-        # TODO: temporary hack to deal with resources which are somewhat sloppy or erroneous in their declaration
-        #       of the applicable Biolink Model version for validation: enforce a minimium Biolink Model version.
-        if not biolink_version or SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(
-                biolink_version):
-            biolink_version = MINIMUM_BIOLINK_VERSION
-        if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(biolink_version):
-            continue
+        # only need to filter on Biolink Release if a 'target_biolink_version' is given?
+        if target_biolink_version:
+            service_biolink_version = tag_value(service, "info.x-translator.biolink-version")
+            if (not service_biolink_version or
+                    SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(service_biolink_version)):
+                service_biolink_version = MINIMUM_BIOLINK_VERSION
+            if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(service_biolink_version):
+                continue
 
-    # Return the best endpoint for target
-    # infores_id, x-maturity environment
-    # TRAPI and Biolink Model versions
-    endpoint: Optional[str] = None
-    for service_id, details in service_metadata.items():
-        if details["trapi_version"] == selected_service_trapi_version.setdefault(details["infores"], None):
-            endpoint = details["url"]
+        assert environment in DEPLOYMENT_TYPE_MAP.keys(), f"Unknown environment '{environment}'"
+        # need to map ['dev', 'ci', 'test', 'prod'] onto full name in DEPLOYMENT_TYPES
+        x_maturity = DEPLOYMENT_TYPE_MAP[environment]
 
-    return endpoint
+        endpoint_entry: Optional[Tuple[str, str]] = \
+            resolve_endpoint(server_urls=service["servers"], x_maturity=x_maturity)
+        if endpoint_entry is not None:
+            x_maturity_found, url = endpoint_entry
+
+            # Is this a necessary sanity check?
+            if x_maturity == x_maturity_found:
+                return endpoint
+
+    return None

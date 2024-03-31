@@ -479,8 +479,8 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
 @pytest.mark.parametrize(
     "component,environment,result",
     [
-        ("arax", "ci", None),
-        ("aragorn", "test", None),
+        ("arax", "dev", "https://arax.ncats.io/beta/api/arax/v1.4"),
+        ("aragorn", "dev", None),
         ("biothings-explorer", "dev", None),
         ("improving-agent", "ci", None),
         ("molepro", "ci", None),

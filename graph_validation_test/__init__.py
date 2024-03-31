@@ -460,19 +460,19 @@ def get_parameters():
     parser = ArgumentParser(description="Translator SRI Automated Test Harness")
 
     parser.add_argument(
-        "--environment",
-        type=str,
-        required=True,
-        choices=['dev', 'ci', 'test', 'prod'],
-        help="Translator execution environment of the Translator Component targeted for testing.",
-    )
-
-    parser.add_argument(
         "--components",
         type=str,
         help="Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum' " +
              "(may be a comma separated string of such names; default: run the test against the 'ars')",
         default=None
+    )
+
+    parser.add_argument(
+        "--environment",
+        type=str,
+        required=True,
+        choices=['dev', 'ci', 'test', 'prod'],
+        help="Translator execution environment of the Translator Component targeted for testing.",
     )
 
     parser.add_argument(

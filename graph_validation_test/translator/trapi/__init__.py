@@ -207,9 +207,8 @@ def resolve_component_endpoint(
     :param component: Optional[str], component to be queried, ideally, drawn from a value
                                             in the 'ComponentEnum' of the Translator Testing Model;
                                             (default: None == 'ars')
-    :param environment: Optional[str]: target Translator execution environment of
-                                              the component to be accessed;
-                                              (default: None == 'ci')
+    :param environment: Optional[str]: target Translator execution environment of the component to be accessed;
+                                              One of ['dev', 'ci', 'test', 'prod'] (default: None == 'ci')
     :param target_trapi_version: Optional[str], target TRAPI version (default: latest public release)
     :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return: Optional[str], environment-specific endpoint for component to be queried. None if not available.
@@ -253,7 +252,7 @@ async def run_trapi_query(
     :param component: str, simple identifier of a Translator component target:
                           'ars', ARA acronym (e.g. 'arax') or KP acronym (e.g. 'molepro')
     :param environment: Optional[str] = None, Target Translator execution environment for the test,
-                                       one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
+                                              one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
     :param target_trapi_version: Optional[str], target TRAPI version (default: latest public release)
     :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return:  Dict, TRAPI response JSON, as a Python data structure.
