@@ -479,19 +479,18 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
 @pytest.mark.parametrize(
     "component,environment,result",
     [
-        ("arax", None, None),
-        ("arax", "dev", None),
-        ("aragorn", "prod", None),
+        ("arax", "ci", None),
+        ("aragorn", "test", None),
         ("biothings-explorer", "dev", None),
-        ("improving-agent", "test", None),
+        ("improving-agent", "ci", None),
         ("molepro", "ci", None),
         ("foobar", "ci", None),
         ("arax", "non-environment", None),
     ]
 )
 def test_get_component_endpoint_from_registry(
-        component: Optional[str],
-        environment: Optional[str],
+        component: str,
+        environment: str,
         result: Optional[str]
 ):
     registry_data: Dict = get_the_registry_data()

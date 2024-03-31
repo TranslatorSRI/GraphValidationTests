@@ -7,17 +7,22 @@ from functools import lru_cache
 import requests
 from requests.exceptions import RequestException
 
-from reasoner_validator.versioning import SemVer
+from reasoner_validator.versioning import SemVer, get_latest_version
+from reasoner_validator.biolink import Toolkit
 
 import logging
 logger = logging.getLogger(__name__)
 
+LATEST_TRAPI_VERSION = get_latest_version("1")
+MINIMUM_BIOLINK_VERSION = "4.1.4"
+
+# We pragmatically assume that the 'latest' is
+# Biolink Model Toolkit version of the model
+LATEST_BIOLINK_VERSION = Toolkit().get_model_version()
+
 SMARTAPI_URL = "https://smart-api.info/api/"
 SMARTAPI_QUERY_PARAMETERS = "q=__all__&tags=%22trapi%22&" + \
                             "fields=servers,info,_meta,_status,paths,tags,openapi,swagger&size=1000&from=0"
-
-MINIMUM_BIOLINK_VERSION = "4.1.4"
-
 
 # Singleton reading of the Registry Data
 # (do I need to periodically refresh it in long-running applications?)
@@ -707,16 +712,16 @@ def get_component_endpoint_from_registry(
     :param target_biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
     :return: Optional[str], the endpoint URL if available, None otherwise
     """
-    # sanity check(?)
-    assert registry_data
-    assert infores_id
-    assert environment
+    if not target_trapi_version:
+        target_trapi_version = LATEST_TRAPI_VERSION
+
+    if not target_biolink_version:
+        target_biolink_version = LATEST_BIOLINK_VERSION
 
     # this dictionary, indexed by service 'infores',
     # will track the selected TRAPI version
     # for each distinct information resource
     selected_service_trapi_version: Dict = dict()
-
     service_metadata: Dict[str, Dict[str, str]] = dict()
     for index, service in enumerate(registry_data['hits']):
 
@@ -724,22 +729,22 @@ def get_component_endpoint_from_registry(
             continue
 
         # Filter early for TRAPI version
-        service_trapi_version = tag_value(service, "info.x-translator.version")
+        service_trapi_version = tag_value(service, "info.x-trapi.version")
         assess_trapi_version(infores_id, service_trapi_version, target_trapi_version, selected_service_trapi_version)
 
-        # Current service doesn't have appropriate trapi_version, so skip the service
+        # Current service doesn't have an appropriate trapi_version, so skip the service
         if infores_id not in selected_service_trapi_version:
             continue
 
-        if target_biolink_version:
-            biolink_version = tag_value(service, "info.x-translator.biolink-version")
-            # TODO: temporary hack to deal with resources which are somewhat sloppy or erroneous in their declaration
-            #       of the applicable Biolink Model version for validation: enforce a minimium Biolink Model version.
-            if not biolink_version or SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(
-                    biolink_version):
-                biolink_version = MINIMUM_BIOLINK_VERSION
-            if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(biolink_version):
-                continue
+        # only need to filter on Biolink Release if
+        biolink_version = tag_value(service, "info.x-translator.biolink-version")
+        # TODO: temporary hack to deal with resources which are somewhat sloppy or erroneous in their declaration
+        #       of the applicable Biolink Model version for validation: enforce a minimium Biolink Model version.
+        if not biolink_version or SemVer.from_string(MINIMUM_BIOLINK_VERSION) >= SemVer.from_string(
+                biolink_version):
+            biolink_version = MINIMUM_BIOLINK_VERSION
+        if not SemVer.from_string(target_biolink_version) >= SemVer.from_string(biolink_version):
+            continue
 
     # Return the best endpoint for target
     # infores_id, x-maturity environment
