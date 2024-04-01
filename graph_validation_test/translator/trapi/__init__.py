@@ -9,6 +9,7 @@ import requests
 
 from reasoner_validator.trapi import call_trapi
 from graph_validation_test.translator.registry import (
+    DEPLOYMENT_TYPE_MAP,
     get_the_registry_data,
     get_component_endpoint_from_registry
 )
@@ -215,8 +216,15 @@ def resolve_component_endpoint(
     """
     if not component:
         component = 'ars'
+
     if not environment:
         environment = 'ci'
+    elif environment not in DEPLOYMENT_TYPE_MAP.keys():
+        logger.error(
+            f"resolve_component_endpoint(): unexpected environment type: '{environment}', Cannot resolve endpoint!"
+        )
+        return None
+
     if component == 'ars':
         ars_env: str = ars_env_spec[environment]
         return f"https://{ars_env}.transltr.io/ars/api/"

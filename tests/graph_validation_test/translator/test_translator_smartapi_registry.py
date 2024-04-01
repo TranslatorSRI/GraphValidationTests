@@ -480,12 +480,11 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
     "component,environment,result",
     [
         ("arax", "dev", "https://arax.ncats.io/beta/api/arax/v1.4"),
-        ("aragorn", "dev", None),
-        ("biothings-explorer", "dev", None),
-        ("improving-agent", "ci", None),
-        ("molepro", "ci", None),
-        ("foobar", "ci", None),
-        ("arax", "non-environment", None),
+        ("aragorn", "prod", "https://aragorn.transltr.io/aragorn"),
+        ("biothings-explorer", "dev", "https://api.bte.ncats.io/v1"),
+        ("improving-agent", "ci", "https://ia.ci.transltr.io/api/v1.4/"),
+        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.4"),
+        ("foobar", "ci", None)
     ]
 )
 def test_get_component_endpoint_from_registry(
@@ -494,10 +493,22 @@ def test_get_component_endpoint_from_registry(
         result: Optional[str]
 ):
     registry_data: Dict = get_the_registry_data()
-    assert get_component_endpoint_from_registry(
+    endpoint: Optional[str] = get_component_endpoint_from_registry(
         registry_data=registry_data,
         infores_id=component,
         environment=environment,
         target_trapi_version=None,
         target_biolink_version=None
-    ) == result
+    )
+    assert endpoint == result
+
+
+def test_get_bad_environment_component_endpoint_from_registry():
+    registry_data: Dict = get_the_registry_data()
+    assert not get_component_endpoint_from_registry(
+        registry_data=registry_data,
+        infores_id="arax",
+        environment="bad-environment",
+        target_trapi_version=None,
+        target_biolink_version=None
+    )

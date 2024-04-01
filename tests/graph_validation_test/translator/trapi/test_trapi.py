@@ -43,13 +43,13 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
     [
         (None, None, f"https://ars.ci.transltr.io/ars/api/"),
         ("ars", None, f"https://ars.ci.transltr.io/ars/api/"),
+        ("ars", "non-environment", None),
         ("ars", "test", f"https://ars.test.transltr.io/ars/api/"),
-        # ("arax", None, ""),
-        # ("arax", "dev", ""),
-        # ("aragorn", "prod", ""),
-        # ("biothings-explorer", "dev", ""),
-        # ("improving-agent", "test", ""),
-        # ("molepro", "ci", ""),
+        ("arax", "dev", "https://arax.ncats.io/beta/api/arax/v1.4"),
+        ("aragorn", "prod", "https://aragorn.transltr.io/aragorn"),
+        ("biothings-explorer", "dev", "https://api.bte.ncats.io/v1"),
+        ("improving-agent", "ci", "https://ia.ci.transltr.io/api/v1.4/"),
+        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.4"),
         ("foobar", "ci", None),
         ("arax", "non-environment", None),
     ]
@@ -59,7 +59,14 @@ def test_resolve_component_endpoint(
         environment: Optional[str],
         result: Optional[str]
 ):
-    assert resolve_component_endpoint(component, environment) == result
+    endpoint: Optional[str] = \
+        resolve_component_endpoint(
+            component=component,
+            environment=environment,
+            target_trapi_version=None,
+            target_biolink_version=None
+        )
+    assert endpoint == result
 
 
 @pytest.mark.parametrize(

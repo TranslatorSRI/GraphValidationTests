@@ -228,25 +228,37 @@ def live_trapi_endpoint(url: str) -> Optional[Dict]:
     if not url:
         return None
 
-    # We test TRAPI endpoints by a simple 'GET'
-    # to its '/meta_knowledge_graph' endpoint
-    mkg_test_url: str = f"{url}/meta_knowledge_graph"
-    try:
-        request = requests.get(mkg_test_url)
-        if request.status_code == 200:
-            # Success! given url is deemed a 'live' TRAPI endpoint
-            # TODO: since we are accessing this endpoint now, perhaps we can
-            #       harvest some of its metadata here, for validation purposes?
-            data: Optional[Dict] = request.json()
-            return data
-        else:
-            logger.error(
-                f"live_trapi_endpoint(): TRAPI endpoint '{url}' is inaccessible? " +
-                f"Returned http status code: {request.status_code}?"
-            )
-    except RequestException as re:
-        logger.error(f"live_trapi_endpoint(): requests.get() exception {str(re)}?")
-
+    # We initially only tested TRAPI endpoints by a simple 'GET'
+    # to its '/meta_knowledge_graph' endpoint.
+    #
+    # However, not all ARA's implement this (less meaningful for ARA's?)
+    #
+    # Chris Bizon instead suggested use of the fake query
+    # '/asyncquery_status/abcdefg' which all TRAPI endpoints should implement,
+    # and which returns http status '200' even though the query itself 'fails'.
+    #
+    # It turns out that Translator components don't uniformly support that;
+    # However, it is likely that all Translator components support one or the other
+    #
+    # Thus, for now, we will test both, to get evidence for a "live" endpoint
+    testing_endpoints: List[str] = ["meta_knowledge_graph", "asyncquery_status/abcdefg"]
+    for endpoint in testing_endpoints:
+        test_url: str = f"{url}/{endpoint}"
+        try:
+            request = requests.get(test_url)
+            if request.status_code == 200:
+                # Success! given url is deemed a 'live' TRAPI endpoint
+                # TODO: since we are accessing this endpoint now, perhaps we can
+                #       harvest some of its metadata here, for validation purposes?
+                data: Optional[Dict] = request.json()
+                return data
+            else:
+                logger.warning(
+                    f"live_trapi_endpoint(): TRAPI endpoint '{test_url}' is inaccessible? " +
+                    f"Status code: {request.status_code}?"
+                )
+        except RequestException as re:
+            logger.warning(f"live_trapi_endpoint(): requests.get() exception {str(re)}?")
     return None
 
 
@@ -806,11 +818,14 @@ def get_component_endpoint_from_registry(
 
         endpoint_entry: Optional[Tuple[str, str]] = \
             resolve_endpoint(server_urls=service["servers"], x_maturity=x_maturity)
+
         if endpoint_entry is not None:
-            x_maturity_found, url = endpoint_entry
+            x_maturity_found, endpoint = endpoint_entry
 
             # Is this a necessary sanity check?
             if x_maturity == x_maturity_found:
+                logger.info(f"Found live '{infores_id}' service '{endpoint}' running in '{x_maturity}'.")
                 return endpoint
 
+    logger.warning(f"No '{environment}' endpoint found for '{infores_id}'")
     return None
