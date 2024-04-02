@@ -5,10 +5,10 @@ from typing import Optional
 import pytest
 
 from graph_validation_test.translator.trapi import (
-    post_query,
     get_component_infores_object_id,
     resolve_component_endpoint
 )
+from graph_validation_test.utils.http import post_query
 from graph_validation_test.utils.ontology_kp import (
     ONTOLOGY_KP_TRAPI_SERVER,
     NODE_NORMALIZER_SERVER
