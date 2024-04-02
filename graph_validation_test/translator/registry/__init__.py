@@ -789,7 +789,6 @@ def get_component_endpoint_from_registry(
     # will track the selected TRAPI version
     # for each distinct information resource
     selected_service_trapi_version: Dict = dict()
-    endpoint: Optional[str] = None
     for index, service in enumerate(registry_data['hits']):
 
         if not find_infores(service=service, target_infores_id=infores_id):
@@ -813,6 +812,7 @@ def get_component_endpoint_from_registry(
                 continue
 
         assert environment in DEPLOYMENT_TYPE_MAP.keys(), f"Unknown environment '{environment}'"
+
         # need to map ['dev', 'ci', 'test', 'prod'] onto full name in DEPLOYMENT_TYPES
         x_maturity = DEPLOYMENT_TYPE_MAP[environment]
 

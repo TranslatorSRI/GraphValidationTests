@@ -505,10 +505,11 @@ def test_get_component_endpoint_from_registry(
 
 def test_get_bad_environment_component_endpoint_from_registry():
     registry_data: Dict = get_the_registry_data()
-    assert not get_component_endpoint_from_registry(
-        registry_data=registry_data,
-        infores_id="arax",
-        environment="bad-environment",
-        target_trapi_version=None,
-        target_biolink_version=None
-    )
+    with pytest.raises(AssertionError):
+        get_component_endpoint_from_registry(
+            registry_data=registry_data,
+            infores_id="arax",
+            environment="bad-environment",
+            target_trapi_version=None,
+            target_biolink_version=None
+        )
