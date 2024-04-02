@@ -118,8 +118,9 @@ class OneHopTestCaseRun(TestCaseRun):
                             else:
                                 biolink_version = response['biolink_version'] \
                                     if not self.biolink_version else self.biolink_version
-                                self.get_logger().info(
-                                    f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
+                                self.log(
+                                    message_type="info",
+                                    message=f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
                                 )
 
                             # If nothing badly wrong with the TRAPI Response to this point, then we also check
@@ -144,7 +145,7 @@ class OneHopTestCaseRun(TestCaseRun):
                             if not validator.case_input_found_in_response(test_asset, response, self.trapi_version):
                                 test_edge_id: str = f"{test_asset['idx']}|" \
                                                     f"({test_asset['subject_id']}#{test_asset['subject_category']})" + \
-                                                    f"-[{test_asset['predicate']}]->" + \
+                                                    f"-[{test_asset['predicate_id']}]->" + \
                                                     f"({test_asset['object_id']}#{test_asset['object_category']})"
                                 self.report(
                                     code="error.trapi.response.knowledge_graph.missing_expected_edge",

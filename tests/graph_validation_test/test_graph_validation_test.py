@@ -78,7 +78,7 @@ def test_explicit_graph_validation_test_construction():
     assert gvt.get_biolink_version() == "4.1.4"
     assert by_subject in gvt.get_trapi_generators()
     assert "Inferred" in gvt.get_runner_settings()
-    assert gvt.get_test_logger() == logger
+    gvt.log(message_type="info", message="Hello World!")
 
 
 def test_test_case_run_report_messages():

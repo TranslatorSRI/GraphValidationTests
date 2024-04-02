@@ -57,8 +57,8 @@ class TestCaseRun(BiolinkValidator):
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
 
-    def get_logger(self) -> Optional[logging.Logger]:
-        return self.test_run.logger
+    def log(self, message_type: str, message: str) -> None:
+        self.test_run.log(message_type, message)
 
     def get_test_asset(self) -> TestAsset:
         return self.test_run.test_asset
@@ -209,7 +209,16 @@ class GraphValidationTest(BiolinkValidator):
         self.trapi_generators: List = trapi_generators or []
 
         self.runner_settings = runner_settings
-        self.test_logger: Optional[logging.Logger] = test_logger
+        if test_logger:
+            self.logger_map = {
+                "info": test_logger.info,
+                "warning": test_logger.warning,
+                "error": test_logger.error,
+                "critical": test_logger.critical
+            }
+        else:
+            self.logger_map = None
+
         self.results: Dict = dict()
 
     def get_run_id(self):
@@ -224,8 +233,10 @@ class GraphValidationTest(BiolinkValidator):
     def get_runner_settings(self) -> List[str]:
         return self.runner_settings.copy()
 
-    def get_test_logger(self) -> Optional[logging.Logger]:
-        return self.test_logger
+    def log(self, message_type: str, message: str):
+        if self.logger_map is not None and \
+                message_type in self.logger_map.keys():
+            self.logger_map[message_type](message)
 
     @classmethod
     def generate_test_asset_id(cls) -> str:
