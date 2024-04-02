@@ -4,6 +4,9 @@ Unit tests for One Hop Test code validation
 from sys import stderr
 from typing import Dict
 from json import dump
+
+from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
+
 from one_hop_test import OneHopTest
 from graph_validation_test.utils.unit_test_templates import (
     by_subject,
@@ -28,7 +31,9 @@ def test_one_hop_test():
         raise_predicate_by_subject
     ]
     results: Dict = OneHopTest.run_tests(
+        **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        **SAMPLE_TEST_INPUT_1
+        environment=TestEnvEnum.ci,
+        components="arax,molepro"
     )
     dump(results, stderr, indent=4)

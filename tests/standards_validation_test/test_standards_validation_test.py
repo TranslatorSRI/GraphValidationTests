@@ -4,6 +4,7 @@ Unit tests for Standards Validation Test code validation
 from sys import stderr
 from typing import Dict
 from json import dump
+from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
 from standards_validation_test import StandardsValidationTest
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
 from tests import SAMPLE_TEST_INPUT_1
@@ -15,7 +16,9 @@ def test_standards_validation_test():
         by_object
     ]
     results: Dict = StandardsValidationTest.run_tests(
+        **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        **SAMPLE_TEST_INPUT_1
+        environment=TestEnvEnum.ci,
+        components="arax,molepro"
     )
     dump(results, stderr, indent=4)
