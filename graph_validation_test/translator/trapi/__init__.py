@@ -2,7 +2,6 @@
 Code to submit GraphValidation test queries to
 Translator components - ARS, ARA, KP - via TRAPI
 """
-from sys import stderr
 from typing import Optional, Dict
 from functools import lru_cache
 import requests
@@ -35,82 +34,63 @@ ARS_HOSTS = [
 ]
 
 
-def post_query(url: str, query: Dict, params=None, server: str = ""):
-    """
-    Post a JSON query to the specified URL and return the JSON response.
-
-    :param url, str URL target for HTTP POST
-    :param query, JSON query for posting
-    :param params, optional parameters
-    :param server, str human-readable name of server called (for error message reports)
-    """
-    if params is None:
-        response = requests.post(url, json=query)
-    else:
-        response = requests.post(url, json=query, params=params)
-    if not response.status_code == 200:
-        print(
-            f"Server {server} at '\nUrl: '{url}', Query: '{query}' with " +
-            f"parameters '{params}' returned HTTP error code: '{response.status_code}'",
-            file=stderr
-        )
-        return {}
-    return response.json()
-
-
-def generate_test_error_msg_prefix(case: Dict, test_name: str) -> str:
-    assert case
-    test_msg_prefix: str = "test_onehops.py::test_trapi_"
-    resource_id: str = ""
-    component: str = "kp"
-    if 'ara_source' in case and case['ara_source']:
-        component = "ara"
-        ara_id = case['ara_source'].replace("infores:", "")
-        resource_id += ara_id + "|"
-    test_msg_prefix += f"{component}s["
-    if 'kp_source' in case and case['kp_source']:
-        kp_id = case['kp_source'].replace("infores:", "")
-        resource_id += kp_id
-    edge_idx = case['idx']
-    edge_id = generate_edge_id(resource_id, edge_idx)
-    if not test_name:
-        test_name = "input"
-    test_msg_prefix += f"{edge_id}-{test_name}] FAILED"
-    return test_msg_prefix
-
-
-def generate_edge_id(resource_id: str, edge_i: int) -> str:
-    return f"{resource_id}#{str(edge_i)}"
-
-
-def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
-    """
-    Method to annotate KP constraint on an ARA call
-    as an attribute_constraint object on the test edge.
-    :param trapi_request: Dict, original TRAPI message
-    :param kp_source: str, KP InfoRes (from kp_source field of test edge)
-    :return: Dict, trapi_request annotated with additional KP 'attribute_constraint'
-    """
-    assert "message" in trapi_request
-    message: Dict = trapi_request["message"]
-    assert "query_graph" in message
-    query_graph: Dict = message["query_graph"]
-    assert "edges" in query_graph
-    edges: Dict = query_graph["edges"]
-    assert "ab" in edges
-    edge: Dict = edges["ab"]
-
-    # annotate the edge constraint on the (presumed single) edge object
-    edge["attribute_constraints"] = [
-        {
-            "id": "biolink:knowledge_source",
-            "name": "knowledge source",
-            "value": [kp_source],
-            "operator": "=="
-        }
-    ]
-
-    return trapi_request
+#
+# TODO: delete since perhaps this legacy SRI_Testing harness
+#       code is not used anywhere in this repository
+#
+# def generate_test_error_msg_prefix(case: Dict, test_name: str) -> str:
+#     assert case
+#     test_msg_prefix: str = "test_onehops.py::test_trapi_"
+#     resource_id: str = ""
+#     component: str = "kp"
+#     if 'ara_source' in case and case['ara_source']:
+#         component = "ara"
+#         ara_id = case['ara_source'].replace("infores:", "")
+#         resource_id += ara_id + "|"
+#     test_msg_prefix += f"{component}s["
+#     if 'kp_source' in case and case['kp_source']:
+#         kp_id = case['kp_source'].replace("infores:", "")
+#         resource_id += kp_id
+#     edge_idx = case['idx']
+#     edge_id = generate_edge_id(resource_id, edge_idx)
+#     if not test_name:
+#         test_name = "input"
+#     test_msg_prefix += f"{edge_id}-{test_name}] FAILED"
+#     return test_msg_prefix
+#
+#
+# def generate_edge_id(resource_id: str, edge_i: int) -> str:
+#     return f"{resource_id}#{str(edge_i)}"
+#
+#
+# def constrain_trapi_request_to_kp(trapi_request: Dict, kp_source: str) -> Dict:
+#     """
+#     Method to annotate KP constraint on an ARA call
+#     as an attribute_constraint object on the test edge.
+#     :param trapi_request: Dict, original TRAPI message
+#     :param kp_source: str, KP InfoRes (from kp_source field of test edge)
+#     :return: Dict, trapi_request annotated with additional KP 'attribute_constraint'
+#     """
+#     assert "message" in trapi_request
+#     message: Dict = trapi_request["message"]
+#     assert "query_graph" in message
+#     query_graph: Dict = message["query_graph"]
+#     assert "edges" in query_graph
+#     edges: Dict = query_graph["edges"]
+#     assert "ab" in edges
+#     edge: Dict = edges["ab"]
+#
+#     # annotate the edge constraint on the (presumed single) edge object
+#     edge["attribute_constraints"] = [
+#         {
+#             "id": "biolink:knowledge_source",
+#             "name": "knowledge source",
+#             "value": [kp_source],
+#             "operator": "=="
+#         }
+#     ]
+#
+#     return trapi_request
 
 
 def retrieve_trapi_response(host_url: str, response_id: str):
@@ -219,6 +199,7 @@ def resolve_component_endpoint(
 
     if not environment:
         environment = 'ci'
+
     elif environment not in DEPLOYMENT_TYPE_MAP.keys():
         logger.error(
             f"resolve_component_endpoint(): unexpected environment type: '{environment}', Cannot resolve endpoint!"
@@ -227,21 +208,29 @@ def resolve_component_endpoint(
 
     if component == 'ars':
         ars_env: str = ars_env_spec[environment]
+        # TODO: how do I check if the given ARS service is online here?
         return f"https://{ars_env}.transltr.io/ars/api/"
+
     else:
-        registry_data: Dict = get_the_registry_data()
-        endpoint: Optional[str] = \
-            get_component_endpoint_from_registry(
-                registry_data,
-                infores_id=get_component_infores_object_id(component),
-                environment=environment,
-                target_trapi_version=target_trapi_version,
-                target_biolink_version=target_biolink_version
-            )
+        endpoint: Optional[str] = None
+        err_msg: str = \
+            f"Could not resolve endpoint of component '{component}' " + \
+            f"within specified environment '{environment}'?"
+        try:
+            registry_data: Dict = get_the_registry_data()
+            endpoint: Optional[str] = \
+                get_component_endpoint_from_registry(
+                    registry_data,
+                    infores_id=get_component_infores_object_id(component),
+                    environment=environment,
+                    target_trapi_version=target_trapi_version,
+                    target_biolink_version=target_biolink_version
+                )
+        except AssertionError as ae:
+            err_msg = f"Exception occurred while resolving: {str(ae)}"
+
         if not endpoint:
-            logger.error(
-                f"Could not resolve endpoint of component '{component}' within specified environment '{environment}'?"
-            )
+            logger.error(err_msg)
 
         return endpoint
 
