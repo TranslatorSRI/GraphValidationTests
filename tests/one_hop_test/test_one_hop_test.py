@@ -37,3 +37,23 @@ def test_one_hop_test():
         components="arax,molepro"
     )
     dump(results, stderr, indent=4)
+
+
+# ARS tests not yet supported so yes... results will
+# always be empty, with a logger message to inform why
+def test_one_hop_test_of_ars():
+    trapi_generators = [
+        by_subject,
+        inverse_by_new_subject,
+        by_object,
+        raise_subject_entity,
+        raise_object_entity,
+        raise_object_by_subject,
+        raise_predicate_by_subject
+    ]
+    results: Dict = OneHopTest.run_tests(
+        **SAMPLE_TEST_INPUT_1,
+        trapi_generators=trapi_generators,
+        environment=TestEnvEnum.ci
+    )
+    assert not results

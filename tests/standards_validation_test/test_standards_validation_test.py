@@ -22,3 +22,18 @@ def test_standards_validation_test():
         components="arax,molepro"
     )
     dump(results, stderr, indent=4)
+
+
+# ARS tests not yet supported so yes... results will
+# always be empty, with a logger message to inform why
+def test_standards_validation_test_on_ars():
+    trapi_generators = [
+        by_subject,
+        by_object
+    ]
+    results: Dict = StandardsValidationTest.run_tests(
+        **SAMPLE_TEST_INPUT_1,
+        trapi_generators=trapi_generators,
+        environment=TestEnvEnum.ci
+    )
+    assert not results

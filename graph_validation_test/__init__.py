@@ -367,6 +367,13 @@ class GraphValidationTest(BiolinkValidator):
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
+
+        # TODO: short term limitation: can't test ARS endpoints, see the missing ARS code in the
+        #       run_trapi_query() method of the graph_validation_test.translator.trapi package module.
+        if not components or 'ars' in components:
+            logger.error("ARS testing is not yet supported by GraphValidationTests")
+            return dict()
+
         # Load the internal TestAsset being uniformly served
         # to all TestCase runs against specified components.
         test_asset: TestAsset = GraphValidationTest.build_test_asset(
