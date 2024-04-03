@@ -49,8 +49,8 @@ include = [
 python = ">=3.9,<3.13"
 deepdiff = "^6.7.1"
 
-reasoner-validator = { git = "https://github.com/NCATSTranslator/reasoner-validator.git", branch = "graph-validation-test-revisions" }
-#reasoner-validator = "^4.0.0"
+#reasoner-validator = { git = "https://github.com/NCATSTranslator/reasoner-validator.git", branch = "graph-validation-test-revisions" }
+reasoner-validator = "^4.0.0"
 
 translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "main" }
 #translator-testing-model = "^0.2.3"
