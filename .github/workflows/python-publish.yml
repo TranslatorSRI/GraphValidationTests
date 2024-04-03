@@ -7,7 +7,7 @@ on:
 jobs:
 
   test:
-    uses: NCATSTranslator/OneHopTests/.github/workflows/test.yml@master
+    uses: NCATSTranslator/GraphValidationTests/.github/workflows/test.yml@master
 
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI

@@ -8,7 +8,9 @@ on:
     paths:
     - 'pyproject.toml'
     - 'poetry.lock'
+    - 'graph_validation/**'
     - 'one_hop_test/**'
+    - 'standards_validation_test/**'
     - 'tests/**'
     - '.github/workflows/test.yml'
   pull_request:
