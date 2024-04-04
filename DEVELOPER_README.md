@@ -14,9 +14,10 @@ Steps to properly issue a new project release:
 2. Document release changes in the **CHANGELOG.md**
 3. Update the **`[Tool Poetry]version =`** field in the **pyprojects.yaml**, e.g. "0.0.1"
 4. Run **`poetry update`** (preferably within  **`poetry shell`**)
-5. Commit or pull request merge all files (including the **poetry.lock** file) to **master**
-6. Add the equivalent Git **tag** to **master**. This should be the Semantic Version string from step 4 with an added 'v' prefix, i.e. "v0.0.1".
-7. Push **master** to remote (if not already done with by a pull request in step 5).
-8.  Check if Git Actions for testing and documentation complete successfully.
-9. Create the release using the same release tag, i.e. "v0.0.1".
-10. Check if Git Action for package deployment is successful and check if the new version (i.e. "v0.0.1") is now visible on **[pypy.org](https://pypi.org/search/?q=OneHopTests)**
+5. The project pip **requirements.txt** file snapshot of dependencies should also be updated at this point (type **`$ poetry export --output requirements.txt`**, assuming that the proper poetry export plugin is installed). This may facilitate module deployment within environments that prefer to use pip.
+6. Commit or pull request merge all files (including the **poetry.lock** file) to **master**
+7. Add the equivalent Git **tag** to **master**. This should be the Semantic Version string from step 4 with an added 'v' prefix, i.e. "v0.0.1".
+8. Push **master** to remote (if not already done with by a pull request in step 5).
+9. Check if Git Actions for testing and documentation complete successfully.
+10. Create the release using the same release tag, i.e. "v0.0.1".
+11. Check if Git Action for package deployment is successful and check if the new version (i.e. "v0.0.1") is now visible on **[pypy.org](https://pypi.org/search/?q=OneHopTests)**
