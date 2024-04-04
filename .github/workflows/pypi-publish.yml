@@ -4,6 +4,10 @@ on:
   release:
     types: [created]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
 
   test:
@@ -34,12 +38,12 @@ jobs:
       - name: Publish distribution 📦 to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
           verbose: true
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          skip_existing: true
+          skip-existing: true
           verbose: true
