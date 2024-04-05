@@ -102,10 +102,19 @@ class StandardsValidationTest(GraphValidationTest):
         return StandardsValidationTestCaseRun(test_run=self, test=test, **kwargs)
 
 
-if __name__ == '__main__':
-    args = get_parameters()
+def run_standards_validation_tests(**kwargs) -> Dict:
     # TRAPI test case query generators
     # used for StandardsValidationTest
     trapi_generators = [by_subject, by_object]
-    results: Dict = StandardsValidationTest.run_tests(trapi_generators=trapi_generators, **vars(args))
+    return StandardsValidationTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+
+
+def main():
+    args = get_parameters(tool_name="Translator TRAPI and Biolink Model Validation of Knowledge Graphs")
+    results: Dict = run_standards_validation_tests(**vars(args))
+    # TODO: need to save these results somewhere central?
     print(results)
+
+
+if __name__ == '__main__':
+    main()

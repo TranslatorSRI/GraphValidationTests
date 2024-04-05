@@ -466,31 +466,37 @@ class GraphValidationTest(BiolinkValidator):
         return results
 
 
-def get_parameters():
+def get_parameters(tool_name: str):
     """Parse CLI args."""
 
     # Sample command line interface parameters:
-    #     --environment 'ci'
-    #     --subject_id 'MONDO:0005301'
-    #     --predicate_id 'treats'
-    #     --object_id  'PUBCHEM.COMPOUND:107970'
+    #     --components 'molepro,arax'
+    #     --environment 'dev'
+    #     --subject_id 'DRUGBANK:DB01592'
+    #     --subject_category 'biolink:SmallMolecule',
+    #     --predicate_id 'biolink:ameliorates_condition',
+    #     --object_id 'MONDO:0011426',
+    #     --object_category 'biolink:Disease'
 
-    parser = ArgumentParser(description="Translator SRI Automated Test Harness")
+    parser = ArgumentParser(description=tool_name)
 
     parser.add_argument(
         "--components",
         type=str,
-        help="Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum' " +
-             "(may be a comma separated string of such names; default: run the test against the 'ars')",
-        default=None
+        required=True,  # TODO: later, if and when implemented, the default could become 'ars' if unspecified...
+        help="Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum'; " +
+             "which may be a comma separated string of such names (e.g. 'arax,molepro')"
+             # "(Default: if unspecified, the test is run against the 'ars')",
+        # default=None
     )
 
     parser.add_argument(
         "--environment",
         type=str,
-        required=True,
         choices=['dev', 'ci', 'test', 'prod'],
-        help="Translator execution environment of the Translator Component targeted for testing.",
+        default=None,
+        help="Translator execution environment of the Translator Component targeted for testing. " +
+             "(Default: if unspecified, run the test within the 'ci' environment)",
     )
 
     parser.add_argument(
@@ -507,7 +513,6 @@ def get_parameters():
         help="Statement Biolink Predicate identifier",
     )
 
-    # TODO: should this be multi-valued or not?
     parser.add_argument(
         "--object_id",
         type=str,
@@ -518,14 +523,15 @@ def get_parameters():
     parser.add_argument(
         "--trapi_version",
         type=str,
-        help="TRAPI version expected for knowledge graph access (default: use current default release)",
+        help="TRAPI version expected for knowledge graph access (Default: use latest TRAPI community release)",
         default=None
     )
 
     parser.add_argument(
         "--biolink_version",
         type=str,
-        help="Biolink Model version expected for knowledge graph access (default: use current default release)",
+        help="Biolink Model version expected for knowledge graph access " +
+             "(Default: use current default release of the Biolink Model Toolkit)",
         default=None
     )
 
@@ -533,7 +539,7 @@ def get_parameters():
         "--log_level",
         type=str,
         choices=["ERROR", "WARNING", "INFO", "DEBUG"],
-        help="Level of the logs.",
+        help="Level of the logs (Default: WARNING)",
         default="WARNING"
     )
 

@@ -5,7 +5,7 @@ from the legacy SRI_Testing project)
 from sys import stderr
 from typing import Optional, Dict
 
-from reasoner_validator.trapi import TRAPISchemaValidator, call_trapi
+from reasoner_validator.trapi import TRAPISchemaValidator
 from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_test import (
     GraphValidationTest,
@@ -160,8 +160,7 @@ class OneHopTest(GraphValidationTest):
         return OneHopTestCaseRun(test_run=self, test=test, **kwargs)
 
 
-if __name__ == '__main__':
-    args = get_parameters()
+def run_one_hop_tests(**kwargs) -> Dict:
     # TRAPI test case query generators
     # used for OneHopTest runs
     trapi_generators = [
@@ -173,5 +172,15 @@ if __name__ == '__main__':
         raise_object_by_subject,
         raise_predicate_by_subject
     ]
-    results: Dict = OneHopTest.run_tests(trapi_generators=trapi_generators, **vars(args))
+    return OneHopTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+
+
+def main():
+    args = get_parameters(tool_name="One Hop Test of Knowledge Graph Navigation")
+    results: Dict = run_one_hop_tests(**vars(args))
+    # TODO: need to save these results somewhere central?
     print(results)
+
+
+if __name__ == '__main__':
+    main()

@@ -5,8 +5,11 @@ from sys import stderr
 from typing import Dict
 from json import dump
 from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
-from standards_validation_test import StandardsValidationTest
+
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
+
+from standards_validation_test import StandardsValidationTest, run_standards_validation_tests
+
 from tests import SAMPLE_TEST_INPUT_1
 
 
@@ -37,3 +40,8 @@ def test_standards_validation_test_on_ars():
         environment=TestEnvEnum.ci
     )
     assert not results
+
+
+def test_run_standards_validation_tests(**kwargs):
+    results: Dict = run_standards_validation_tests(**SAMPLE_TEST_INPUT_1, components="arax,molepro")
+    assert results
