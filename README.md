@@ -1,5 +1,4 @@
-
-# GraphValidationTests
+# Graph Validation Tests
 
 [![Pyversions](https://img.shields.io/pypi/pyversions/reasoner-validator)](https://pypi.python.org/pypi/OneHopTests)
 [![Publish Python Package](https://github.com/TranslatorSRI/OneHopTests/actions/workflows/python-publish.yml/badge.svg)](https://pypi.org/project/OneHopTests/)
@@ -20,7 +19,7 @@ The **StandardsValidationTest** and **OneHopTest** test runners may be run direc
 
 ### Installation
 
-The **GraphValidationTests** module can be installed from pypi and used as part of the Translator-wide automated testing.
+The **graph-validation-tests** module can be installed from pypi and used as part of the Translator-wide automated testing.
 
 _Note: Requires 3.9 <= Python release <= 3.12_
 
@@ -30,7 +29,7 @@ From within your target working directory:
 
 - Create a python virtual environment: `python -m venv venv`
 - Activate your environment: `. ./venv/bin/activate`
-- Install dependencies: `pip install GraphValidationTests`
+- Install dependencies: `pip install graph-validation-tests`
 
 then proceed with [command line execution](#cli) or [script level execution](#programmatic-level-execution).
 
@@ -38,7 +37,7 @@ then proceed with [command line execution](#cli) or [script level execution](#pr
 
 You can also check out the project from Github. If you do that, the installation process will be slightly different, since the project itself uses [Poetry](https://python-poetry.org/) for dependency management - the following instructions assume that you've [installed Poetry on your system](https://python-poetry.org/docs/#installation).
 
-- Check out the code: `git checkout https://github.com/TranslatorSRI/GraphValidationTests.git`
+- Check out the code: `git checkout https://github.com/TranslatorSRI/graph-validation-tests.git`
 - Create a Poetry shell: `poetry shell`
 - Install dependencies: `poetry install`
 
