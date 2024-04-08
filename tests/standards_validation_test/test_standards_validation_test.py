@@ -42,6 +42,6 @@ def test_standards_validation_test_on_ars():
     assert not results
 
 
-def test_run_standards_validation_tests(**kwargs):
+def test_run_standards_validation_tests():
     results: Dict = run_standards_validation_tests(**SAMPLE_TEST_INPUT_1, components="arax,molepro")
     assert results

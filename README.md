@@ -82,8 +82,6 @@ options:
                         TRAPI version expected for knowledge graph access (default: use current default release)
   --biolink_version BIOLINK_VERSION
                         Biolink Model version expected for knowledge graph access (default: use current default release)
-  --log_level {ERROR,WARNING,INFO,DEBUG}
-                        Level of the logs.
 ```
 
 ### Programmatic Level Execution
@@ -107,7 +105,6 @@ test_data = {
     #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
-    #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 results = run_standards_validation_tests(**test_data)
 print(results)
@@ -133,7 +130,6 @@ test_data = {
     #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
-    #     "logger": logger,  # Python Optional[logging.Logger] = None
 }
 results = run_one_hop_tests(**test_data)
 print(results)
@@ -154,8 +150,7 @@ from graph_validation_test.utils.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
-import logging
-logger = logging.getLogger(__file__)
+
 test_data = {
     # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
@@ -167,8 +162,7 @@ test_data = {
     "environment": TestEnvEnum.test,
     "trapi_version": "1.5.0-beta",
     "biolink_version": "4.1.6",
-    "runner_settings": "Inferred",
-    "logger": logger
+    "runner_settings": "Inferred"
 }
 trapi_generators = [
     # by_subject,
@@ -288,7 +282,7 @@ etc...
 
 A [full change log](CHANGELOG.md) is provided documenting each release, but we summarize key release limitations here:
 
-### Release 0.0.1
+### v0.0.\* Releases
 
-- This release only supports testing of [Translator SmartAPI Registry](https://smart-api.info/registry/translator) catalogued components which are TRAPI implementations for Translator Autonomous Relay Agent (ARA) and Knowledge Providers (KP), but _not_ direct testing of the Translator Autonomous Relay System (ARS) or Translator user interface (UI)
+- This initial code release only supports testing of [Translator SmartAPI Registry](https://smart-api.info/registry/translator) catalogued components which are TRAPI implementations for Translator Autonomous Relay Agent (ARA) and Knowledge Providers (KP), but _not_ direct testing of the Translator Autonomous Relay System (ARS) or Translator user interface (UI)
 - Standards validation tests currently calls release 4.0.0 of the [reasoner-validator](https://github.com/NCATSTranslator/reasoner-validator), which is currently limited to TRAPI release 1.4.2 validation (not yet the recent TRAPI 1.5.0 releases)

@@ -765,7 +765,7 @@ starlette==0.37.2 ; python_version >= "3.9" and python_version < "3.13" \
     --hash=sha256:9af890290133b79fc3db55474ade20f6220a364a0402e0b556e7cd5e1e093823
 stringcase==1.2.0 ; python_version >= "3.9" and python_version < "3.13" \
     --hash=sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008
-tomli==2.0.1 ; python_version >= "3.9" and python_version < "3.11" \
+tomli==2.0.1 ; python_version >= "3.9" and python_full_version <= "3.11.0a6" \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
 tqdm==4.66.2 ; python_version >= "3.9" and python_version < "3.13" \

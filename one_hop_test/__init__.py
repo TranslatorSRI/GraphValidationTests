@@ -2,7 +2,6 @@
 One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
-from sys import stderr
 from typing import Optional, Dict
 
 from reasoner_validator.trapi import TRAPISchemaValidator
@@ -22,6 +21,8 @@ from graph_validation_test.utils.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
+import logging
+logger = logging.getLogger(__name__)
 
 
 class OneHopTestCaseRun(TestCaseRun):
@@ -111,16 +112,17 @@ class OneHopTestCaseRun(TestCaseRun):
                             else:
                                 trapi_version: str = response['schema_version'] \
                                     if not self.trapi_version else self.trapi_version
-                                print(f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'", file=stderr)
+                                logger.info(
+                                    f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'"
+                                )
 
                             if 'biolink_version' not in response:
                                 self.report(code="warning.trapi.response.biolink_version.missing")
                             else:
                                 biolink_version = response['biolink_version'] \
                                     if not self.biolink_version else self.biolink_version
-                                self.log(
-                                    message_type="info",
-                                    message=f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
+                                logger.info(
+                                    f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
                                 )
 
                             # If nothing badly wrong with the TRAPI Response to this point, then we also check

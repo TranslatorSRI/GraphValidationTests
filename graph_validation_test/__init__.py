@@ -31,10 +31,8 @@ class TestCaseRun(BiolinkValidator):
         """
         Constructor for a TestCaseRun.
 
-        :param test_run, owner of the use case, which should be
-                         an instance of GraphValidationTest.
-        :param test, declared generator of a TestCase TRAPI query being
-                     processed (generally, an executable function).
+        :param test_run: owner of the use case, which should be an instance of a subclass of GraphValidationTest.
+        :param test: declared generator of a TestCase TRAPI query being processed (generally, an executable function).
         :param kwargs: Dict, optional extra named BiolinkValidator parameters
                              which may be specified for the test run.
         """
@@ -56,9 +54,6 @@ class TestCaseRun(BiolinkValidator):
 
         self.trapi_request: Optional[Dict] = None
         self.trapi_response: Optional[Dict[str, int]] = None
-
-    def log(self, message_type: str, message: str) -> None:
-        self.test_run.log(message_type, message)
 
     def get_test_asset(self) -> TestAsset:
         return self.test_run.test_asset
@@ -124,25 +119,21 @@ class TestCaseRun(BiolinkValidator):
         """
         if self.has_critical():
             critical_msg = self.dump_critical(flat=True)
-            if self.test_run.logger:
-                self.test_run.logger.critical(critical_msg)
+            logger.critical(critical_msg)
 
         elif self.has_errors():
             # we now treat 'soft' errors similar to critical errors (above) but
             # the validation messages will be differentiated on the user interface
             err_msg = self.dump_errors(flat=True)
-            if self.test_run.logger:
-                self.test_run.logger.error(err_msg)
+            logger.error(err_msg)
 
         elif self.has_warnings():
             wrn_msg = self.dump_warnings(flat=True)
-            if self.test_run.logger:
-                self.test_run.logger.warning(wrn_msg)
+            logger.warning(wrn_msg)
 
         elif self.has_information():
             info_msg = self.dump_info(flat=True)
-            if self.test_run.logger:
-                self.test_run.logger.info(info_msg)
+            logger.info(info_msg)
 
         else:
             pass  # do nothing... just silent pass through...
@@ -171,7 +162,6 @@ class GraphValidationTest(BiolinkValidator):
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
-            test_logger: Optional[logging.Logger] = None,
             **kwargs
     ):
         """
@@ -187,7 +177,6 @@ class GraphValidationTest(BiolinkValidator):
         :param trapi_version: Optional[str] = None, target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
         :param runner_settings: Optional[List[str]], extra string directives to the Test Runner (default: None)
-        :param test_logger: Optional[logging.Logger] = None, Python logger handle (default: not configured)
         :param kwargs: named arguments to pass on to BiolinkValidator parent class (if and as applicable)
         """
         if not component:
@@ -209,15 +198,6 @@ class GraphValidationTest(BiolinkValidator):
         self.trapi_generators: List = trapi_generators or []
 
         self.runner_settings = runner_settings
-        if test_logger:
-            self.logger_map = {
-                "info": test_logger.info,
-                "warning": test_logger.warning,
-                "error": test_logger.error,
-                "critical": test_logger.critical
-            }
-        else:
-            self.logger_map = None
 
         self.results: Dict = dict()
 
@@ -232,11 +212,6 @@ class GraphValidationTest(BiolinkValidator):
 
     def get_runner_settings(self) -> List[str]:
         return self.runner_settings.copy()
-
-    def log(self, message_type: str, message: str):
-        if self.logger_map is not None and \
-                message_type in self.logger_map.keys():
-            self.logger_map[message_type](message)
 
     @classmethod
     def generate_test_asset_id(cls) -> str:
@@ -330,7 +305,6 @@ class GraphValidationTest(BiolinkValidator):
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
-            test_logger: Optional[logging.Logger] = None,
             **kwargs
     ) -> Dict[str, List]:
         """
@@ -363,7 +337,6 @@ class GraphValidationTest(BiolinkValidator):
         :param trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
         :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
-        :param test_logger: Optional[logging.Logger] = None, Python logging handle
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
@@ -404,8 +377,7 @@ class GraphValidationTest(BiolinkValidator):
                 trapi_generators=trapi_generators,
                 trapi_version=trapi_version,
                 biolink_version=biolink_version,
-                runner_settings=runner_settings,
-                test_logger=test_logger
+                runner_settings=runner_settings
             ) for target in targets
         ]
         #
@@ -503,7 +475,14 @@ def get_parameters(tool_name: str):
         "--subject_id",
         type=str,
         required=True,
-        help="Statement object concept CURIE",
+        help="Statement subject concept CURIE",
+    )
+
+    parser.add_argument(
+        "--subject_category",
+        type=str,
+        required=True,
+        help="Statement subject concept Biolink category (CURIE)",
     )
 
     parser.add_argument(
@@ -517,7 +496,14 @@ def get_parameters(tool_name: str):
         "--object_id",
         type=str,
         required=True,
-        help="Statement object concept CURIE ",
+        help="Statement object concept CURIE",
+    )
+
+    parser.add_argument(
+        "--object_category",
+        type=str,
+        required=True,
+        help="Statement object concept Biolink category (CURIE)",
     )
 
     parser.add_argument(
@@ -533,14 +519,6 @@ def get_parameters(tool_name: str):
         help="Biolink Model version expected for knowledge graph access " +
              "(Default: use current default release of the Biolink Model Toolkit)",
         default=None
-    )
-
-    parser.add_argument(
-        "--log_level",
-        type=str,
-        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
-        help="Level of the logs (Default: WARNING)",
-        default="WARNING"
     )
 
     return parser.parse_args()
