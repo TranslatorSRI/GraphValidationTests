@@ -2,8 +2,9 @@
 One Hop Tests (core tests extracted
 from the legacy SRI_Testing project)
 """
+import sys
 from typing import Optional, Dict
-
+from json import dump
 from reasoner_validator.trapi import TRAPISchemaValidator
 from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_test import (
@@ -181,7 +182,7 @@ def main():
     args = get_parameters(tool_name="One Hop Test of Knowledge Graph Navigation")
     results: Dict = run_one_hop_tests(**vars(args))
     # TODO: need to save these results somewhere central?
-    print(results)
+    dump(results, sys.stdout)
 
 
 if __name__ == '__main__':

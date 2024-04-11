@@ -1,6 +1,11 @@
 from bmt import Toolkit
 from reasoner_validator.biolink import get_biolink_model_toolkit
 from reasoner_validator.versioning import get_latest_version
+import os
+
+TEST_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
+SCRIPTS_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "scripts")
 
 DEFAULT_TRAPI_VERSION = get_latest_version("1")
 DEFAULT_BMT: Toolkit = get_biolink_model_toolkit()
@@ -17,5 +22,4 @@ SAMPLE_TEST_INPUT_1 = {
     #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
-    #     "logger": logger,  # Python Optional[logging.Logger] = None
 }

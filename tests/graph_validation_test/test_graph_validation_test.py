@@ -69,14 +69,14 @@ def test_explicit_graph_validation_test_construction():
         trapi_generators=trapi_generators,
         trapi_version="1.4.2",
         biolink_version="4.1.4",
-        runner_settings=["Inferred"]
+        runner_settings=["inferred"]
     )
     assert by_subject in gvt.get_trapi_generators()
     assert by_object not in gvt.get_trapi_generators()
     assert gvt.get_trapi_version() == "v1.4.2"
     assert gvt.get_biolink_version() == "4.1.4"
     assert by_subject in gvt.get_trapi_generators()
-    assert "Inferred" in gvt.get_runner_settings()
+    assert "inferred" in gvt.get_runner_settings()
 
 
 def test_test_case_run_report_messages():

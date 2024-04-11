@@ -449,6 +449,9 @@ def get_parameters(tool_name: str):
     #     --predicate_id 'biolink:ameliorates_condition',
     #     --object_id 'MONDO:0011426',
     #     --object_category 'biolink:Disease'
+    #     --trapi_version '1.5.0'
+    #     --biolink_version '4.1.6'
+    #     --runner_settings 'inferred'
 
     parser = ArgumentParser(description=tool_name)
 
@@ -518,6 +521,13 @@ def get_parameters(tool_name: str):
         type=str,
         help="Biolink Model version expected for knowledge graph access " +
              "(Default: use current default release of the Biolink Model Toolkit)",
+        default=None
+    )
+
+    parser.add_argument(
+        "--runner_settings",
+        nargs='+',
+        help="Scalar settings for the TestRunner, e.g. 'inferred'",
         default=None
     )
 
