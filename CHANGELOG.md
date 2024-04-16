@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.0.3
+
+- co-routine management of co-routine processing pushed up to a top level 'asyncio.run' of the highest level (now 'async') method, converting processing underneath to await runs on async methods, down to the lowest level parallel processing of co-routines of test cases
+- Ontology KP graph access unit tests are temporarily skipped (Automat/Ubergraph offline on release day?)
+
 ## 0.0.2
 
 - fixes bugs in release 0.0.1, particularly, missing parameters at the CLI level
