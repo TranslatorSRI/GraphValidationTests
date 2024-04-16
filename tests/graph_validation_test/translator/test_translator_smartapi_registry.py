@@ -481,8 +481,8 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
     [
         ("arax", "dev", "https://arax.ncats.io/beta/api/arax/v1.4"),
         ("aragorn", "prod", "https://aragorn.transltr.io/aragorn"),
-        ("biothings-explorer", "dev", "https://api.bte.ncats.io/v1"),
-        ("improving-agent", "ci", "https://ia.ci.transltr.io/api/v1.4/"),
+        ("biothings-explorer", "test", "https://bte.test.transltr.io/v1"),
+        ("improving-agent", "test", "https://ia.test.transltr.io/api/v1.4/"),
         ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.4"),
         ("foobar", "ci", None)
     ]
