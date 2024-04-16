@@ -3,7 +3,7 @@
 ## 0.0.3
 
 - co-routine management of co-routine processing pushed up to a top level 'asyncio.run' of the highest level (now 'async') method, converting processing underneath to await runs on async methods, down to the lowest level parallel processing of co-routines of test cases
-- Ontology KP graph access unit tests are temporarily skipped (Automat/Ubergraph offline on release day?)
+- Some Ontology KP graph and Translator endpoing access unit tests are temporarily skipped (endpoints offline on release day?)
 
 ## 0.0.2
 
