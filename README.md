@@ -91,6 +91,8 @@ options:
 To run TRAPI and Biolink Model validation tests validating query outputs from a knowledge graph TRAPI component:
 
 ```python
+from typing import Dict
+import asyncio
 from standards_validation_test import run_standards_validation_tests
 
 test_data = {
@@ -106,7 +108,7 @@ test_data = {
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 }
-results = run_standards_validation_tests(**test_data)
+results: Dict = asyncio.run(run_standards_validation_tests(**test_data))
 print(results)
 ```
 
@@ -115,6 +117,8 @@ print(results)
 To run "One Hop" knowledge graph navigation tests validating query outputs from a knowledge graph TRAPI component:
 
 ```python
+from typing import Dict
+import asyncio
 from one_hop_test import run_one_hop_tests
 
 test_data = {
@@ -131,14 +135,15 @@ test_data = {
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 }
-results = run_one_hop_tests(**test_data)
+results: Dict = asyncio.run(run_one_hop_tests(**test_data))
 print(results)
 ```
 
 The above wrapper method runs all related TestCases derived from the specified TestAsset (i.e. subject_id, etc.) without any special test parameters. If more fine-grained testing is desired, a subset of the underlying TRAPI queries can be run directly, something like this (here, we ignore the TestCases 'by_subject', 'inverse_by_new_subject' and 'by_object', and specify the 'strict_validation' parameter of True to Biolink Model validation, as understood by the **reasoner-validator** code running behind the scenes):
 
 ```python
-from 
+from typing import Dict
+import asyncio
 from standards_validation_test import StandardsValidationTest
 from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
 from graph_validation_test.utils.unit_test_templates import (
@@ -176,7 +181,9 @@ trapi_generators = [
 kwargs = {
     "strict_validation": True
 }
-StandardsValidationTest.run_tests(**test_data, trapi_generators=trapi_generators, **kwargs)
+results: Dict = asyncio.run(StandardsValidationTest.run_tests(
+    **test_data, trapi_generators=trapi_generators, **kwargs)
+)
 ```
 
 Note that the trapi_generation variables - defined in the **graph_validation_test.utils.unit_test_templates** module - are all simply Python functions returning TRAPI JSON messages to send to the target components. In principle, if one understands what those functions are doing, you could write your own methods to do other kinds of TRAPI queries whose output can then be validated against the specified TRAPI and Biolink Model releases.

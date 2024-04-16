@@ -1,7 +1,6 @@
 """
 Abstract base class for the GraphValidation TestRunners
 """
-import asyncio
 from typing import Dict, List, Optional
 
 from argparse import ArgumentParser
@@ -266,7 +265,7 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: unsure if one needs to limit concurrent requests here...
         await gather([test_case.run_test_case() for test_case in test_cases])  # , limit=num_concurrent_requests)
 
-    def process_test_run(self, **kwargs) -> List[Dict]:
+    async def process_test_run(self, **kwargs) -> List[Dict]:
         """
         Applies a TestCase generator giving a specific subclass
         of TestCaseRun, wrapping queries defined by test-specific
@@ -286,13 +285,13 @@ class GraphValidationTest(BiolinkValidator):
             for test in self.get_trapi_generators()
         ]
 
-        asyncio.run(self.run_test_cases(test_cases))
+        await self.run_test_cases(test_cases)
 
         # ... then, return the results
         return [tc.get_all_messages() for tc in test_cases]
 
     @classmethod
-    def run_tests(
+    async def run_tests(
             cls,
             subject_id: str,
             subject_category: str,
@@ -434,7 +433,7 @@ class GraphValidationTest(BiolinkValidator):
         for tr in test_runs:
             run_id: str = tr.get_run_id()
             results["pks"].append(run_id)
-            results["results"].append(tr.process_test_run(**kwargs))
+            results["results"].append(await tr.process_test_run(**kwargs))
         return results
 
 

@@ -3,6 +3,7 @@ TRAPI and Biolink Model Standards Validation
 test (using reasoner-validator)
 """
 from typing import Optional, Dict
+import asyncio
 
 from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_test import (
@@ -102,16 +103,17 @@ class StandardsValidationTest(GraphValidationTest):
         return StandardsValidationTestCaseRun(test_run=self, test=test, **kwargs)
 
 
-def run_standards_validation_tests(**kwargs) -> Dict:
+async def run_standards_validation_tests(**kwargs) -> Dict:
     # TRAPI test case query generators
     # used for StandardsValidationTest
     trapi_generators = [by_subject, by_object]
-    return StandardsValidationTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+    results: Dict = await StandardsValidationTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+    return results
 
 
 def main():
     args = get_parameters(tool_name="Translator TRAPI and Biolink Model Validation of Knowledge Graphs")
-    results: Dict = run_standards_validation_tests(**vars(args))
+    results: Dict = asyncio.run(run_standards_validation_tests(**vars(args)))
     # TODO: need to save these results somewhere central?
     print(results)
 

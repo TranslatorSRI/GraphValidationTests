@@ -5,6 +5,8 @@ from the legacy SRI_Testing project)
 import sys
 from typing import Optional, Dict
 from json import dump
+import asyncio
+
 from reasoner_validator.trapi import TRAPISchemaValidator
 from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_test import (
@@ -163,7 +165,7 @@ class OneHopTest(GraphValidationTest):
         return OneHopTestCaseRun(test_run=self, test=test, **kwargs)
 
 
-def run_one_hop_tests(**kwargs) -> Dict:
+async def run_one_hop_tests(**kwargs) -> Dict:
     # TRAPI test case query generators
     # used for OneHopTest runs
     trapi_generators = [
@@ -175,12 +177,13 @@ def run_one_hop_tests(**kwargs) -> Dict:
         raise_object_by_subject,
         raise_predicate_by_subject
     ]
-    return OneHopTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+    results: Dict = await OneHopTest.run_tests(trapi_generators=trapi_generators, **kwargs)
+    return results
 
 
 def main():
     args = get_parameters(tool_name="One Hop Test of Knowledge Graph Navigation")
-    results: Dict = run_one_hop_tests(**vars(args))
+    results: Dict = asyncio.run(run_one_hop_tests(**vars(args)))
     # TODO: need to save these results somewhere central?
     dump(results, sys.stdout)
 
