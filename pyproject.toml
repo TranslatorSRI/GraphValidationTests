@@ -37,6 +37,7 @@ classifiers = [
 ]
 
 packages = [
+    {include = "graph_validaion_test"},
     {include = "one_hop_test"},
     {include = "standards_validation_test"}
 ]
