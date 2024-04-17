@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-validation-tests"
-version = "0.0.3"
+version = "0.0.4"
 description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
@@ -37,7 +37,7 @@ classifiers = [
 ]
 
 packages = [
-    {include = "graph_validaion_test"},
+    {include = "graph_validation_test"},
     {include = "one_hop_test"},
     {include = "standards_validation_test"}
 ]

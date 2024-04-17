@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.4 (package bug fix; deprecates v0.0.3 in pypi - yanked)
+
+- added missing 'graph_validation_test' to the release
+
 ## 0.0.3
 
 - co-routine management of co-routine processing pushed up to a top level 'asyncio.run' of the highest level (now 'async') method, converting processing underneath to await runs on async methods, down to the lowest level parallel processing of co-routines of test cases
