@@ -38,9 +38,6 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
     assert get_component_infores_object_id(component=component) == infores
 
 
-@pytest.mark.skip(
-    "Translator endpoints in transition on April 16th, 2024, but need to deploy this project without unit test failure"
-)
 @pytest.mark.parametrize(
     "component,environment,result",
     [
@@ -52,7 +49,7 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
         ("aragorn", "ci", "https://aragorn.ci.transltr.io/aragorn"),
         ("biothings-explorer", "test", "https://bte.test.transltr.io/v1"),
         ("improving-agent", "test", "https://ia.test.transltr.io/api/v1.4/"),
-        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.4"),
+        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.5"),
         ("foobar", "ci", None),
         ("arax", "non-environment", None),
     ]
@@ -72,7 +69,6 @@ def test_resolve_component_endpoint(
     assert endpoint == result
 
 
-@pytest.mark.skip("Ubergraph offline on April 16th, 2024, but need to deploy this project without unit test failure")
 @pytest.mark.parametrize(
     "curie,category,result",
     [

@@ -13,7 +13,7 @@ SAMPLE_TEST_INPUT_1 = {
     # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:ameliorates_condition",
+    "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
     #

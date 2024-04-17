@@ -21,7 +21,7 @@ async def test_standards_validation_test():
     results: Dict = await StandardsValidationTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.ci,
+        environment=TestEnvEnum.prod,
         components="arax,molepro"
     )
     dump(results, stderr, indent=4)
@@ -38,12 +38,17 @@ async def test_standards_validation_test_on_ars():
     results: Dict = await StandardsValidationTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.ci
+        environment=TestEnvEnum.prod
     )
     assert not results
 
 
 @pytest.mark.asyncio
 async def test_run_standards_validation_tests():
-    results: Dict = await run_standards_validation_tests(**SAMPLE_TEST_INPUT_1, components="arax,molepro")
+    results: Dict = await run_standards_validation_tests(
+        **SAMPLE_TEST_INPUT_1,
+        environment=TestEnvEnum.prod,
+        components="arax,molepro"
+    )
     assert results
+    dump(results, stderr, indent=4)

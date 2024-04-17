@@ -35,7 +35,7 @@ async def test_one_hop_test():
     results: Dict = await OneHopTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.ci,
+        environment=TestEnvEnum.prod,
         components="arax,molepro"
     )
     dump(results, stderr, indent=4)
@@ -57,21 +57,32 @@ async def test_one_hop_test_of_ars():
     results: Dict = await OneHopTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.ci
+        environment=TestEnvEnum.prod
     )
     assert not results
 
 
 @pytest.mark.asyncio
 async def test_run_one_hop_tests():
-    results: Dict = await run_one_hop_tests(**SAMPLE_TEST_INPUT_1, components="arax,molepro")
+    results: Dict = await run_one_hop_tests(
+        **SAMPLE_TEST_INPUT_1,
+        environment=TestEnvEnum.prod,
+        components="arax,molepro"
+    )
     assert results
+    dump(results, stderr, indent=4)
 
 
 @pytest.mark.asyncio
 async def test_run_one_hop_tests_with_runner_parameters():
-    results: Dict = await run_one_hop_tests(**SAMPLE_TEST_INPUT_1, components="arax,molepro")
+    results: Dict = await run_one_hop_tests(
+        **SAMPLE_TEST_INPUT_1,
+        environment=TestEnvEnum.prod,
+        components="arax,molepro",
+        strict_validation=True
+    )
     assert results
+    dump(results, stderr, indent=4)
 
 
 # subprocess.run(
@@ -80,6 +91,7 @@ async def test_run_one_hop_tests_with_runner_parameters():
 #     check=False, encoding=None, errors=None, text=None, env=None,
 #     universal_newlines=None, **other_popen_kwargs
 # )
+@pytest.mark.skip("Not yet fully implemented")
 def test_one_hop_cli():
     # command: List = ["python", "-m", "one_hop_test.__init__"]
     # args: Dict = SAMPLE_TEST_INPUT_1.copy()

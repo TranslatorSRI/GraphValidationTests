@@ -99,7 +99,7 @@ test_data = {
     # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:treats",
+    "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
     "components": "arax,molepro"
@@ -125,7 +125,7 @@ test_data = {
     # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:treats",
+    "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
     "components": "arax,molepro"
@@ -160,7 +160,7 @@ test_data = {
     # One test edge (asset)
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:treats",
+    "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
     "components": "arax,molepro",
@@ -209,33 +209,11 @@ This is a sample of what the JSON output from test runs currently looks like (th
                         "error": {
                             "error.trapi.response.knowledge_graph.missing_expected_edge": {
                                 "global": {
-                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:treats]->(MONDO:0011426#biolink:Disease)": null
+                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:has_side_effect]->(MONDO:0011426#biolink:Disease)": null
                                 }
                             }
                         },
                         "critical": {}
-                    }
-                }
-            },
-            {
-                "arax": {
-                    "inverse_by_new_subject": {
-                        "info": {},
-                        "skipped": {},
-                        "warning": {},
-                        "error": {},
-                        "critical": {
-                            "critical.trapi.request.invalid": {
-                                "global": {
-                                    "predicate 'biolink:treats'": [
-                                        {
-                                            "context": "inverse_by_new_subject",
-                                            "reason": "is an unknown or has no inverse?"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
                     }
                 }
             },
@@ -249,33 +227,11 @@ etc ...
                         "error": {
                             "error.trapi.response.knowledge_graph.missing_expected_edge": {
                                 "global": {
-                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:treats]->(MONDO:0011426#biolink:Disease)": null
+                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:has_side_effect]->(MONDO:0011426#biolink:Disease)": null
                                 }
                             }
                         },
                         "critical": {}
-                    }
-                }
-            },
-            {
-                "molepro": {
-                    "inverse_by_new_subject": {
-                        "info": {},
-                        "skipped": {},
-                        "warning": {},
-                        "error": {},
-                        "critical": {
-                            "critical.trapi.request.invalid": {
-                                "global": {
-                                    "predicate 'biolink:treats'": [
-                                        {
-                                            "context": "inverse_by_new_subject",
-                                            "reason": "is an unknown or has no inverse?"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
                     }
                 }
             },

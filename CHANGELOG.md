@@ -1,8 +1,15 @@
 # Change Log
 
+## 0.0.5
+
+- Belated upgrade to TranslatorTestingModel release 0.2.6
+- Fix sample data to more credible predicate
+- Tweak unit test environments to match current deployment reality
+- Reactivate skipped unit tests after updating some url's to currently active endpoints
+
 ## 0.0.4 (package bug fix; deprecates v0.0.3 in pypi - yanked)
 
-- added missing 'graph_validation_test' to the release
+- Added missing 'graph_validation_test' to the release
 
 ## 0.0.3
 

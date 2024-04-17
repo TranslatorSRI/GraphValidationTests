@@ -17,7 +17,7 @@ from graph_validation_test.utils.unit_test_templates import (
 TEST_ASSET_1 = {
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
-    "predicate_id": "biolink:treats",
+    "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease"
 }
@@ -37,7 +37,7 @@ TEST_TRAPI_TEMPLATE = {
                 "ab": {
                     "subject": "a",
                     "object": "b",
-                    "predicates": ["biolink:treats"]
+                    "predicates": ["biolink:has_side_effect"]
                 }
             }
         },

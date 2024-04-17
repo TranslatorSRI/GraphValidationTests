@@ -476,9 +476,6 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
         assert not resource_metadata
 
 
-@pytest.mark.skip(
-    "Translator endpoints in transition on April 16th, 2024, but need to deploy this project without unit test failure"
-)
 @pytest.mark.parametrize(
     "component,environment,result",
     [
@@ -486,7 +483,7 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
         ("aragorn", "ci", "https://aragorn.ci.transltr.io/aragorn"),
         ("biothings-explorer", "test", "https://bte.test.transltr.io/v1"),
         ("improving-agent", "test", "https://ia.test.transltr.io/api/v1.4/"),
-        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.4"),
+        ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.5"),
         ("foobar", "ci", None)
     ]
 )
