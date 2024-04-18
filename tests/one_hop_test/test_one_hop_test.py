@@ -7,7 +7,10 @@ from json import dump
 import subprocess
 import pytest
 
-from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
+from translator_testing_model.datamodel.pydanticmodel import (
+    TestEnvEnum,
+    ComponentEnum
+)
 from graph_validation_test.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -36,7 +39,10 @@ async def test_one_hop_test():
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
         environment=TestEnvEnum.prod,
-        components="arax,molepro"
+        components=[
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+        ]
     )
     dump(results, stderr, indent=4)
 
@@ -67,7 +73,10 @@ async def test_run_one_hop_tests():
     results: Dict = await run_one_hop_tests(
         **SAMPLE_TEST_INPUT_1,
         environment=TestEnvEnum.prod,
-        components="arax,molepro"
+        components=[
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+        ]
     )
     assert results
     dump(results, stderr, indent=4)
@@ -78,7 +87,10 @@ async def test_run_one_hop_tests_with_runner_parameters():
     results: Dict = await run_one_hop_tests(
         **SAMPLE_TEST_INPUT_1,
         environment=TestEnvEnum.prod,
-        components="arax,molepro",
+        components=[
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+        ],
         strict_validation=True
     )
     assert results

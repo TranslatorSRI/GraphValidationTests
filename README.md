@@ -33,9 +33,9 @@ From within your target working directory:
 
 then proceed with [command line execution](#cli) or [script level execution](#programmatic-level-execution).
 
-#### From Github
+#### From GitHub
 
-You can also check out the project from Github. If you do that, the installation process will be slightly different, since the project itself uses [Poetry](https://python-poetry.org/) for dependency management - the following instructions assume that you've [installed Poetry on your system](https://python-poetry.org/docs/#installation).
+You can also check out the project from GitHub. If you do that, the installation process will be slightly different, since the project itself uses [Poetry](https://python-poetry.org/) for dependency management - the following instructions assume that you've [installed Poetry on your system](https://python-poetry.org/docs/#installation).
 
 - Check out the code: `git checkout https://github.com/TranslatorSRI/graph-validation-tests.git`
 - Create a Poetry shell: `poetry shell`
@@ -68,8 +68,8 @@ Translator TRAPI and Biolink Model Validation of Knowledge Graphs
 options:
   -h, --help            show this help message and exit
   --components COMPONENTS
-                        Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum' (may be a comma separated      
-                        string of such names; default: run the test against the 'ars')
+                        Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum' 
+                        (may be a comma separated string of such names; default: run the test against the 'ars')
   --environment {dev,ci,test,prod}
                         Translator execution environment of the Translator Component targeted for testing.
   --subject_id SUBJECT_ID
@@ -93,6 +93,7 @@ To run TRAPI and Biolink Model validation tests validating query outputs from a 
 ```python
 from typing import Dict
 import asyncio
+from translator_testing_model.datamodel.pydanticmodel import ComponentEnum
 from standards_validation_test import run_standards_validation_tests
 
 test_data = {
@@ -102,11 +103,14 @@ test_data = {
     "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
-    "components": "arax,molepro"
-    #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
-    #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
-    #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
-    #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
+    "components": [
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+    ]
+    # "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
+    # "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
+    # "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
+    # "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 }
 results: Dict = asyncio.run(run_standards_validation_tests(**test_data))
 print(results)
@@ -119,6 +123,7 @@ To run "One Hop" knowledge graph navigation tests validating query outputs from 
 ```python
 from typing import Dict
 import asyncio
+from translator_testing_model.datamodel.pydanticmodel import ComponentEnum
 from one_hop_test import run_one_hop_tests
 
 test_data = {
@@ -128,7 +133,10 @@ test_data = {
     "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
-    "components": "arax,molepro"
+    "components": [
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+    ]
     #
     #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
     #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
@@ -145,7 +153,7 @@ The above wrapper method runs all related TestCases derived from the specified T
 from typing import Dict
 import asyncio
 from standards_validation_test import StandardsValidationTest
-from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum
+from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum, ComponentEnum
 from graph_validation_test.utils.unit_test_templates import (
     # by_subject,
     # inverse_by_new_subject,
@@ -163,7 +171,10 @@ test_data = {
     "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
-    "components": "arax,molepro",
+    "components": [
+            ComponentEnum("arax"),
+            ComponentEnum("molepro")
+    ],
     "environment": TestEnvEnum.test,
     "trapi_version": "1.5.0-beta",
     "biolink_version": "4.1.6",
@@ -178,6 +189,8 @@ trapi_generators = [
     raise_object_by_subject,
     raise_predicate_by_subject
 ]
+
+# A test runner specific parameter passed through
 kwargs = {
     "strict_validation": True
 }

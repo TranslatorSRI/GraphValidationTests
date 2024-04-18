@@ -6,7 +6,11 @@ from typing import Dict, List, Optional
 from argparse import ArgumentParser
 
 from reasoner_validator.biolink import BiolinkValidator
-from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestEnvEnum
+from translator_testing_model.datamodel.pydanticmodel import (
+    TestAsset,
+    TestEnvEnum,
+    ComponentEnum
+)
 
 from graph_validation_test.translator.registry import (
     get_the_registry_data,
@@ -300,7 +304,7 @@ class GraphValidationTest(BiolinkValidator):
             object_category: str,
             trapi_generators: List,
             environment: Optional[TestEnvEnum] = TestEnvEnum.ci,
-            components: Optional[str] = None,
+            components: Optional[List[ComponentEnum]] = None,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
@@ -327,10 +331,10 @@ class GraphValidationTest(BiolinkValidator):
                                  See one_hop_test.unit_test_templates.
 
         - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
-        :param components: Optional[str] = None, comma-delimited list of components to be tested
-                                         (values from ComponentEnum in TranslatorTestingModel; default ['ars'])
+        :param components: Optional[List[ComponentEnum]] = None, comma-delimited list of components to be tested
+                           (Values specified in ComponentEnum in TranslatorTestingModel; default ['ars'])
         :param environment: Optional[str] = None, Target Translator execution environment for the test,
-                                           one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
+                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
 
         - Metadata globally configuring the test(s) to be run.
         :param trapi_version: Optional[str] = None, target TRAPI version (default: latest public release)
@@ -339,11 +343,13 @@ class GraphValidationTest(BiolinkValidator):
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
         :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
         """
+        if not components:
+            components = [ComponentEnum('ars')]
 
-        # TODO: short term limitation: can't test ARS endpoints, see the missing ARS code in the
-        #       run_trapi_query() method of the graph_validation_test.translator.trapi package module.
-        if not components or 'ars' in components:
-            logger.error("ARS testing is not yet supported by GraphValidationTests")
+        # TODO: (April 2024) short term limitation: can't test ARS endpoints, see the missing ARS code in
+        #       the run_trapi_query() method of the graph_validation_test.translator.trapi package module.
+        if 'ars' in components:
+            logger.error("Default ARS testing is not yet supported by GraphValidationTests")
             return dict()
 
         # Load the internal TestAsset being uniformly served
@@ -355,12 +361,6 @@ class GraphValidationTest(BiolinkValidator):
             object_id,
             object_category
         )
-
-        if components:
-            # TODO: would component identifier duplication ever been an issue?
-            targets = components.split(",")
-        else:
-            targets = ['ars']
 
         # A test run - running and reporting independently - is configured
         # to apply a test derived from the specified TestAsset against each
@@ -377,7 +377,7 @@ class GraphValidationTest(BiolinkValidator):
                 trapi_version=trapi_version,
                 biolink_version=biolink_version,
                 runner_settings=runner_settings
-            ) for target in targets
+            ) for target in components
         ]
         #
         # TODO: the following comment is plagiarized from 3rd party TestRunner comments simply as
@@ -530,4 +530,11 @@ def get_parameters(tool_name: str):
         default=None
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    # convert any comma-delimited string of components infores
+    # identifiers into the expected List of ComponentEnum entries
+    if "components" in args:
+        args["components"] = [ComponentEnum(entry) for entry in args["components"].split(",")]
+
+    return args

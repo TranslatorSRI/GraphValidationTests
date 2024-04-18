@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.6
+
+- Moved, into inside of **`graph_validation_test.get_parameters()`** method, the string parsing of CLI comma-delimited components parameter to the **`List[ComponentEnum]`** now expected as the **`components`** parameter of the **`graph_validation_test.run_tests()`** method.
+
 ## 0.0.5
 
 - Belated upgrade to TranslatorTestingModel release 0.2.6
