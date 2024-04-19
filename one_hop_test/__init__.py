@@ -115,7 +115,7 @@ class OneHopTestCaseRun(TestCaseRun):
                             else:
                                 trapi_version: str = response['schema_version'] \
                                     if not self.trapi_version else self.trapi_version
-                                logger.info(
+                                logger.debug(
                                     f"run_one_hop_unit_test() using TRAPI version: '{trapi_version}'"
                                 )
 
@@ -124,7 +124,7 @@ class OneHopTestCaseRun(TestCaseRun):
                             else:
                                 biolink_version = response['biolink_version'] \
                                     if not self.biolink_version else self.biolink_version
-                                logger.info(
+                                logger.debug(
                                     f"run_one_hop_unit_test() using Biolink Model version: '{biolink_version}'"
                                 )
 
