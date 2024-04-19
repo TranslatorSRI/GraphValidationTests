@@ -1666,27 +1666,23 @@ telegram = ["requests"]
 
 [[package]]
 name = "translator-testing-model"
-version = "0.0.0"
+version = "0.2.7"
 description = "This is the project description."
 optional = false
-python-versions = ">=3.9,<3.13"
-files = []
-develop = false
+python-versions = "<3.13,>=3.9"
+files = [
+    {file = "translator_testing_model-0.2.7-py3-none-any.whl", hash = "sha256:5943490c730bf028e02e195770eb80e89a5b9afbd227b982eb15fd8e669eb86c"},
+    {file = "translator_testing_model-0.2.7.tar.gz", hash = "sha256:caec9e998437b43a067d810c9df2aef5d6f61b3769b2753475c5d46a74729a10"},
+]
 
 [package.dependencies]
-bmt = "^1.2.1"
-linkml-runtime = "^1.6.1"
-pandas = "^2.1.2"
-pydantic = "^2"
+bmt = ">=1.2.1,<2.0.0"
+linkml-runtime = ">=1.6.1,<2.0.0"
+pandas = ">=2.1.2,<3.0.0"
+pydantic = ">=2,<3"
 
 [package.extras]
 docs = ["linkml (>=1.6.1,<2.0.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/TranslatorSRI/TranslatorTestingModel.git"
-reference = "ef5d68e"
-resolved_reference = "ef5d68e45f4c145ef5e4a83ef5517c2567a5dbb6"
 
 [[package]]
 name = "typing-extensions"
@@ -1823,4 +1819,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "7d3e495a53c9e3fe4504f58abf63afe68f62b1d68b38e588230f518375f183e5"
+content-hash = "c9c9709f2e96faca3e85c9d6ea1be2d4303ea5e4b194132ee8fd50026f7c298b"
