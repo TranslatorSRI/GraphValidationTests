@@ -11,6 +11,7 @@ DEFAULT_TRAPI_VERSION = get_latest_version("1")
 DEFAULT_BMT: Toolkit = get_biolink_model_toolkit()
 SAMPLE_TEST_INPUT_1 = {
     # One test edge (asset)
+    "test_asset_id": "TestAsset_1",
     "subject_id": "DRUGBANK:DB01592",
     "subject_category": "biolink:SmallMolecule",
     "predicate_id": "biolink:has_side_effect",

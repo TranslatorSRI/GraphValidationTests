@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.0.7
+
+- Removing internal generation of TestAsset identifiers, assuming that they are provided by the caller of the system, via the run_tests method, which now expects a 'test_asset_id' string argument, as does the 'build_test_asset' method.
+- Reformatting the return values of various methods of the system, in particular, the **`GraphValidationTest.run_tests()`** method, to better align with Translator TestHarness expectations.
+
 ## 0.0.6
 
 - Moved, into inside of **`graph_validation_test.get_parameters()`** method, the string parsing of CLI comma-delimited components parameter to the **`List[ComponentEnum]`** now expected as the **`components`** parameter of the **`graph_validation_test.run_tests()`** method.

@@ -18,7 +18,7 @@ TEST_ASSET_1 = {
     "object_category": "biolink:Disease"
 }
 
-
+TEST_ASSET_ID = "TestAsset_1"
 TEST_SUBJECT_ID = "MONDO:0005301"
 TEST_SUBJECT_CATEGORY = "biolink:Disease"
 TEST_PREDICATE_NAME = "treats"
@@ -26,22 +26,17 @@ TEST_PREDICATE_ID = f"biolink:{TEST_PREDICATE_NAME}"
 TEST_OBJECT_ID = "PUBCHEM.COMPOUND:107970"
 TEST_OBJECT_CATEGORY = "biolink:SmallMolecule"
 SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
-        subject_id=TEST_SUBJECT_ID,
-        subject_category=TEST_SUBJECT_CATEGORY,
-        predicate_id=TEST_PREDICATE_ID,
-        object_id=TEST_OBJECT_ID,
-        object_category=TEST_OBJECT_CATEGORY
+    test_asset_id=TEST_ASSET_ID,
+    subject_id=TEST_SUBJECT_ID,
+    subject_category=TEST_SUBJECT_CATEGORY,
+    predicate_id=TEST_PREDICATE_ID,
+    object_id=TEST_OBJECT_ID,
+    object_category=TEST_OBJECT_CATEGORY
 )
 
 
-def test_generate_test_asset_id():
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00002"
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00003"
-    assert GraphValidationTest.generate_test_asset_id() == "TestAsset:00004"
-
-
 def test_build_test_asset():
-    assert SAMPLE_TEST_ASSET.id == "TestAsset:00001"
+    assert SAMPLE_TEST_ASSET.id == TEST_ASSET_ID
     assert SAMPLE_TEST_ASSET.input_id == TEST_SUBJECT_ID
     assert SAMPLE_TEST_ASSET.input_category == TEST_SUBJECT_CATEGORY
     assert SAMPLE_TEST_ASSET.predicate_id == TEST_PREDICATE_ID

@@ -223,12 +223,12 @@ deprecation==2.1.0 ; python_version >= "3.9" and python_version < "3.13" \
 dictdiffer==0.9.0 ; python_version >= "3.9" and python_version < "3.13" \
     --hash=sha256:17bacf5fbfe613ccf1b6d512bd766e6b21fb798822a133aa86098b8ac9997578 \
     --hash=sha256:442bfc693cfcadaf46674575d2eba1c53b42f5e404218ca2c2ff549f2df56595
-exceptiongroup==1.2.0 ; python_version >= "3.9" and python_version < "3.11" \
-    --hash=sha256:4bfd3996ac73b41e9b9628b04e079f193850720ea5945fc96a08633c66912f14 \
-    --hash=sha256:91f5c769735f051a4290d52edd0858999b57e5876e9f85937691bd4c9fa3ed68
-fastapi==0.110.1 ; python_version >= "3.9" and python_version < "3.13" \
-    --hash=sha256:5df913203c482f820d31f48e635e022f8cbfe7350e4830ef05a3163925b1addc \
-    --hash=sha256:6feac43ec359dfe4f45b2c18ec8c94edb8dc2dfc461d417d9e626590c071baad
+exceptiongroup==1.2.1 ; python_version >= "3.9" and python_version < "3.11" \
+    --hash=sha256:5258b9ed329c5bbdd31a309f53cbfb0b155341807f6ff7606a1e801a891b29ad \
+    --hash=sha256:a4785e48b045528f5bfe627b6ad554ff32def154f42372786903b7abcfe1aa16
+fastapi==0.110.2 ; python_version >= "3.9" and python_version < "3.13" \
+    --hash=sha256:239403f2c0a3dda07a9420f95157a7f014ddb2b770acdbc984f9bdf3ead7afdb \
+    --hash=sha256:b53d673652da3b65e8cd787ad214ec0fe303cad00d2b529b86ce7db13f17518d
 fonttools==4.51.0 ; python_version >= "3.9" and python_version < "3.13" \
     --hash=sha256:0118ef998a0699a96c7b28457f15546815015a2710a1b23a7bf6c1be60c01636 \
     --hash=sha256:0d145976194a5242fdd22df18a1b451481a88071feadf251221af110ca8f00ce \

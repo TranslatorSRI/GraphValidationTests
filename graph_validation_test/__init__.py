@@ -1,15 +1,16 @@
 """
 Abstract base class for the GraphValidation TestRunners
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from argparse import ArgumentParser
 
 from reasoner_validator.biolink import BiolinkValidator
+from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESSAGES_BY_TEST
 from translator_testing_model.datamodel.pydanticmodel import (
     TestAsset,
     TestEnvEnum,
-    ComponentEnum
+    ComponentEnum, TestCaseResultEnum
 )
 
 from graph_validation_test.translator.registry import (
@@ -90,6 +91,7 @@ class TestCaseRun(BiolinkValidator):
         """
         test_edge: Dict[str, str] = dict()
 
+        # TODO: should "idx" be renamed to "test_asset_id" or will this break the reasoner-validator?
         test_edge["idx"] = self.get_test_asset().id
         test_edge["subject_id"] = self.get_test_asset().input_id
         test_edge["subject_category"] = self.get_test_asset().input_category
@@ -217,13 +219,9 @@ class GraphValidationTest(BiolinkValidator):
         return self.runner_settings.copy()
 
     @classmethod
-    def generate_test_asset_id(cls) -> str:
-        cls._id += 1
-        return f"TestAsset:{cls._id:0>5}"
-
-    @classmethod
     def build_test_asset(
             cls,
+            test_asset_id: str,
             subject_id: str,
             subject_category: str,
             predicate_id: str,
@@ -233,6 +231,7 @@ class GraphValidationTest(BiolinkValidator):
         """
         Construct a Python TestAsset object.
 
+        :param test_asset_id: str, CURIE identifying the identifier of the subject concept
         :param subject_id: str, CURIE identifying the identifier of the subject concept
         :param subject_category: str, CURIE identifying the category of the subject concept
         :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
@@ -243,7 +242,7 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: is the TestAsset absolutely necessary internally inside this test runner,
         #       which directly uses Biolink fields, not the TestAsset fields?
         return TestAsset.construct(
-            id=cls.generate_test_asset_id(),
+            id=test_asset_id,
             input_id=subject_id,
             input_category=subject_category,
             predicate_id=predicate_id,
@@ -269,7 +268,136 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: unsure if one needs to limit concurrent requests here...
         await gather([test_case.run_test_case() for test_case in test_cases])  # , limit=num_concurrent_requests)
 
-    async def process_test_run(self, **kwargs) -> List[Dict]:
+    FAILURE_MODES = ("error", "critical")
+
+    def compute_status(self, tcr: TestCaseRun) -> Tuple[str, TestCaseResultEnum, Dict]:
+        """
+        Method to construct components for a test case result based on
+        the failure mode assessment of non-empty validation messages.
+
+        :param tcr: TestCaseRun containing reasoner-validator style validation message from test execution.
+        :return: Tuple[str, TestCaseResultEnum, Dict], where position 0 is the target,
+                 position 1 is the testcase status (passed/failed/skipped) and
+                 position 2 is a (possible empty) dictionary of non-empty validation messages
+        """
+        target: str = tcr.default_target
+        test: str = tcr.default_test
+        messages_by_target: MESSAGES_BY_TARGET = tcr.get_all_messages()
+        if target in messages_by_target:
+            messages_by_test: MESSAGES_BY_TEST = messages_by_target[target]
+            if test in messages_by_test:
+                message_catalog: MESSAGE_CATALOG = messages_by_test[test]
+                mtype: str
+                messages: Dict
+                non_empty_messages: MESSAGE_CATALOG = {
+                    mtype: messages for mtype, messages in message_catalog.items() if message_catalog[mtype]
+                }
+                # TODO: this first iteration in which FAILURE_MODES are
+                #       immutable (not sensitive to TestRunner parameters)
+                if not non_empty_messages or not any([mtype in non_empty_messages for mtype in self.FAILURE_MODES]):
+                    return target, TestCaseResultEnum.test_passed, non_empty_messages
+                else:
+                    return target, TestCaseResultEnum.test_failed, non_empty_messages
+        # TODO: seems sensible to assumed that if the target or test are
+        #       missing in test results, then the test was skipped?
+        return target, TestCaseResultEnum.test_skipped, {}
+
+    def format_results(self, test_cases: List[TestCaseRun]) -> Dict:
+        """
+        This function normalizes and restructures TestCaseRun
+        results for the upstream consumer of TestRunner results.
+
+        :param test_cases: List[TestCaseRun], list of Test Case runs with results.
+
+        :return: Dict, of structured test message results for all TestCases,
+                       specified by TRAPI generators of a given test run.
+        """
+        # Originally, the results == [tc.get_all_messages() for tc in test_cases], which gives
+        # [
+        #    {
+        #        'molepro': {
+        #            'by_subject': {
+        #                'info': {},
+        #                'skipped': {},
+        #                'warning': {},
+        #                'error': {},
+        #                'critical': {}
+        #            }
+        #        }
+        #    },
+        #    {
+        #        'molepro': {
+        #            'inverse_by_new_subject': {
+        #                'info': {},
+        #                'skipped': {},
+        #                'warning': {},
+        #                'error': {
+        #                    'error.trapi.response.knowledge_graph.missing_expected_edge': {
+        #                        'global': {
+        #                            'TestAsset:00001|(PUBCHEM.COMPOUND:4091#biolink:SmallMolecule)-\
+        #                            [biolink:affects]->\
+        #                            (NCBIGene:2475#biolink:Gene)': None
+        #                        }
+        #                    }
+        #                },
+        #                'critical': {}
+        #            }
+        #        }
+        #    },
+        #    etc...
+        # ]
+        #
+        # with the source test_asset as recorded within the test_case.test_run.test_asset property. Note that all the
+        # test case message blocks have the same testing target component (although that doesn't have to be the case).
+        #
+        # We probably need to return something more like the following (using the source test asset information...):
+        #
+        # results == {
+        #     "<test_case_id_1>": {
+        #         "molepro": <result_1>,
+        #         etc...
+        #     }
+        #     "<test case id 2>": {
+        #         "molepro": <result 2>,
+        #         etc...
+        #     }
+        #     etc...
+        # ]
+        # where the 'test_asset_id_#' is something sensible, probably composite of the test asset identifier and
+        # the identifier of the test template method used to generate the TestCase-specific TRAPI query.
+        #
+        # The <result_#> value could minimally simply be be "PASSED" or "FAILED"; however, perhaps it ought to be
+        # a somewhat more complex informative data value for this TestRunner, accounting for the extensive validation
+        # messages categories provided by reasoner-validator, i.e. 'info', 'skipped', 'warning', 'error', 'critical'.
+        #
+        # How should these messages be binned into test PASSED or FAILED? Should “PASSED” only be tolerant of
+        # “information” messages? Are “skipped test” messages indicative of a failed test?
+        #
+        # Are “Warnings” to also be taken as an indication of a test failure? Could/should we give TestRunner
+        # “stringency” indications which affect whether “skipped” and “warnings” are returned as “PASSED”?
+        #
+        # The above <result_#> could be a 2-Tuple of (<PASSED|FAILED>, <pruned message catalog>) where the message
+        # catelog is a Python dictionary pruned of all empty reasoner-validator validation message partitions,
+        # where the status of the test is determined by the aforementioned stringency rules, however coded.
+        #
+        results: Dict = dict()
+        for tcr in test_cases:
+            # TODO: not sure how robust this is: will the 'id' always be defined?
+            test_asset_id: str = tcr.test_run.test_asset.id
+            test_name: str = tcr.default_test
+            test_case_id: str = f"{test_asset_id}-{test_name}"
+            if test_case_id not in results:
+                results[test_case_id] = dict()
+            target: str
+            status: TestCaseResultEnum
+            messages: MESSAGE_CATALOG
+            target, status, messages = self.compute_status(tcr)
+            # TODO: we blissfully assume that targets only come up once for a given test_case_id
+            results[test_case_id][target] = (status, messages)
+
+        return results
+
+    async def process_test_run(self, **kwargs) -> Dict:
         """
         Applies a TestCase generator giving a specific subclass
         of TestCaseRun, wrapping queries defined by test-specific
@@ -278,8 +406,8 @@ class GraphValidationTest(BiolinkValidator):
 
         :param kwargs: Dict, optional named parameters passed to the TestRunner.
 
-        :return: List[Dict] of structured test message results for all
-                 TestCases specified by trapi generators of a given test run.
+        :return: Dict, of structured test message results for all TestCases,
+                       specified by TRAPI generators of a given test run.
         """
         test_cases: List[TestCaseRun] = [
             self.test_case_wrapper(
@@ -292,11 +420,12 @@ class GraphValidationTest(BiolinkValidator):
         await self.run_test_cases(test_cases)
 
         # ... then, return the results
-        return [tc.get_all_messages() for tc in test_cases]
+        return self.format_results(test_cases)
 
     @classmethod
     async def run_tests(
             cls,
+            test_asset_id: str,
             subject_id: str,
             subject_category: str,
             predicate_id: str,
@@ -309,7 +438,7 @@ class GraphValidationTest(BiolinkValidator):
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
             **kwargs
-    ) -> Dict[str, List]:
+    ) -> Dict[str, Dict]:
         """
         Run one or more Graph Validation tests, of specified category of test,
         against all specified components running in a given environment,
@@ -317,8 +446,10 @@ class GraphValidationTest(BiolinkValidator):
 
         Parameters provided to specify the test are:
 
-        - TestAsset to be used for test queries.
         :param cls: The target TestRunner subclass of GraphValidationTest of the test type to be run.
+
+        - TestAsset to be used for test queries.
+        :param test_asset_id: str, the identifier of the test asset driving test cases in this run of tests
         :param subject_id: str, CURIE identifying the identifier of the subject concept
         :param subject_category: str, CURIE identifying the category of the subject concept
         :param predicate_id: str, name of Biolink Model predicate defining the statement predicate_id being tested.
@@ -341,7 +472,7 @@ class GraphValidationTest(BiolinkValidator):
         :param biolink_version: Optional[str] = None, target Biolink Model version (default: Biolink toolkit release)
         :param runner_settings: Optional[List[str]] = None, extra string parameters to the Test Runner
         :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
-        :return: Dict { "pks": List[<pk>], "results": List[<pk_indexed_results>] }
+        :return: Dict { "pks": Dict[<target>, <pk>], "results": Dict[<test_case_id>, <test_case_results>] }
         """
         if not components:
             components = [ComponentEnum('ars')]
@@ -355,6 +486,7 @@ class GraphValidationTest(BiolinkValidator):
         # Load the internal TestAsset being uniformly served
         # to all TestCase runs against specified components.
         test_asset: TestAsset = GraphValidationTest.build_test_asset(
+            test_asset_id,
             subject_id,
             subject_category,
             predicate_id,
@@ -427,13 +559,15 @@ class GraphValidationTest(BiolinkValidator):
         #     ]
         # }
         results = {
-            "pks": list(),
-            "results": list()
+            "pks": dict(),
+            "results": dict()
         }
         for tr in test_runs:
-            run_id: str = tr.get_run_id()
-            results["pks"].append(run_id)
-            results["results"].append(await tr.process_test_run(**kwargs))
+            target: str = tr.default_target
+            test_run_id: str = tr.get_run_id()
+            results["pks"].update({target: test_run_id})
+            results["results"].update(await tr.process_test_run(**kwargs))
+
         return results
 
 
@@ -471,6 +605,13 @@ def get_parameters(tool_name: str):
         default=None,
         help="Translator execution environment of the Translator Component targeted for testing. " +
              "(Default: if unspecified, run the test within the 'ci' environment)",
+    )
+
+    parser.add_argument(
+        "--test_asset_id",
+        type=str,
+        required=True,
+        help="Identifier of TestAsset associated with specified test run parameters",
     )
 
     parser.add_argument(
