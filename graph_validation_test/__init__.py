@@ -10,7 +10,8 @@ from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESS
 from translator_testing_model.datamodel.pydanticmodel import (
     TestAsset,
     TestEnvEnum,
-    ComponentEnum, TestCaseResultEnum
+    ComponentEnum,
+    TestCaseResultEnum
 )
 
 from graph_validation_test.translator.registry import (
@@ -295,12 +296,12 @@ class GraphValidationTest(BiolinkValidator):
                 # TODO: this first iteration in which FAILURE_MODES are
                 #       immutable (not sensitive to TestRunner parameters)
                 if not non_empty_messages or not any([mtype in non_empty_messages for mtype in self.FAILURE_MODES]):
-                    return target, TestCaseResultEnum.test_passed, non_empty_messages
+                    return target, TestCaseResultEnum.PASSED, non_empty_messages
                 else:
-                    return target, TestCaseResultEnum.test_failed, non_empty_messages
+                    return target, TestCaseResultEnum.FAILED, non_empty_messages
         # TODO: seems sensible to assumed that if the target or test are
         #       missing in test results, then the test was skipped?
-        return target, TestCaseResultEnum.test_skipped, {}
+        return target, TestCaseResultEnum.SKIPPED, {}
 
     def format_results(self, test_cases: List[TestCaseRun]) -> Dict:
         """

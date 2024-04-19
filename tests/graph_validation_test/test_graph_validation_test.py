@@ -1,7 +1,6 @@
 """
 Unit tests for pieces of the GraphValidationTests code
 """
-import pytest
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import TestCaseRun, GraphValidationTest
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object

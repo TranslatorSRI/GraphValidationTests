@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.0.8
+
+- update to reasoner-validator 4.0.1 (which uses Pydantic 2)
+- remove reasoner-pydantic; delete the **graph_validation_test.requests** (which used reasoner-pydantic) an **graph_validation_test.utils.testsuite** modules (both unused legacy modules copied over from Benchmarks for coding inspiration)
+- change some logger messages to 'debug' (from 'info')
+
 ## 0.0.7
 
 - Removing internal generation of TestAsset identifiers, assuming that they are provided by the caller of the system, via the run_tests method, which now expects a 'test_asset_id' string argument, as does the 'build_test_asset' method.

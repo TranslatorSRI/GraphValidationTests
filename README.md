@@ -230,7 +230,7 @@ This is a sample of what the JSON output from test runs currently looks like (th
                     }
                 }
             },
-etc ...
+"etc ...",
             {
                 "molepro": {
                     "by_subject": {
