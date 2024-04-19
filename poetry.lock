@@ -1685,7 +1685,7 @@ docs = ["linkml (>=1.6.1,<2.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/TranslatorSRI/TranslatorTestingModel.git"
-reference = "ef5d68e4"
+reference = "ef5d68e"
 resolved_reference = "ef5d68e45f4c145ef5e4a83ef5517c2567a5dbb6"
 
 [[package]]
@@ -1823,4 +1823,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "b73376e2427479899a0d515bb670d7c37bdd95b776f0fb6fab695f1c1ddda252"
+content-hash = "7d3e495a53c9e3fe4504f58abf63afe68f62b1d68b38e588230f518375f183e5"
