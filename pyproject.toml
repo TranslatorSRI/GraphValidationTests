@@ -53,7 +53,7 @@ deepdiff = "^6.7.1"
 #reasoner-validator = { git = "https://github.com/NCATSTranslator/reasoner-validator.git", branch = "graph-validation-test-revisions" }
 reasoner-validator = "^4.0.1"
 
-translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", rev = "ef5d68e4" }
+translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", rev = "ef5d68e" }
 #translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "fix-TestCaseResultEnum-values" }
 #translator-testing-model = "^0.2.7"
 
