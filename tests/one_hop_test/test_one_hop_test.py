@@ -109,7 +109,6 @@ def test_one_hop_cli():
     # args: Dict = SAMPLE_TEST_INPUT_1.copy()
     # args["components"] = "arax,molepro"
     # [command.extend([f"--{flag}", value]) for flag, value in args.items()]
-    # results = check_output(command)
     # results = check_output(["dir"])
     # results = check_output([
     #     "python", "-m", "venv", "--clear", "test_venv", ";",

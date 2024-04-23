@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-validation-tests"
-version = "0.0.8"
+version = "0.0.9"
 description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
@@ -47,11 +47,11 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 deepdiff = "^6.7.1"
 
 #reasoner-validator = { git = "https://github.com/NCATSTranslator/reasoner-validator.git", branch = "graph-validation-test-revisions" }
-reasoner-validator = "^4.0.1"
+reasoner-validator = "^4.0.2"
 
 #translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", rev = "ef5d68e" }
 #translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "fix-TestCaseResultEnum-values" }

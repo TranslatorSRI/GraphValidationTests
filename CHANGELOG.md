@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.9
+
+- update to reasoner-validator 4.0.2 (which updates BMT to 1.4.2 and adds Bioregistry 0.11.0)
+
 ## 0.0.8
 
 - update to reasoner-validator 4.0.1 (which uses Pydantic 2)
