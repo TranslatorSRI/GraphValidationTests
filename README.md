@@ -206,51 +206,130 @@ Note that the trapi_generation variables - defined in the **graph_validation_tes
 This is a sample of what the JSON output from test runs currently looks like (this sample came from a OneHopTest run).
 
 ```json
-{
-    "pks": [
-        "arax",
-        "molepro"
-    ],
-    "results": [
-        [
-            {
-                "arax": {
-                    "by_subject": {
-                        "info": {},
-                        "skipped": {},
-                        "warning": {},
-                        "error": {
-                            "error.trapi.response.knowledge_graph.missing_expected_edge": {
-                                "global": {
-                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:has_side_effect]->(MONDO:0011426#biolink:Disease)": null
-                                }
+{    
+    "pks": {
+        "molepro": "molepro"
+    },
+    "results": {
+        "TestAsset_1-by_subject": {
+            "molepro": [
+                "FAILED",
+                {
+                    "error": {
+                        "error.trapi.response.knowledge_graph.missing_expected_edge": {
+                            "global": {
+                                "TestAsset_1|(CHEBI:58579#biolink:SmallMolecule)-[biolink:is_active_metabolite_of]->(UniProtKB:Q9NQ88#biolink:Protein)": null
                             }
-                        },
-                        "critical": {}
+                        }
                     }
                 }
-            },
-"etc ...",
-            {
-                "molepro": {
-                    "by_subject": {
-                        "info": {},
-                        "skipped": {},
-                        "warning": {},
-                        "error": {
-                            "error.trapi.response.knowledge_graph.missing_expected_edge": {
-                                "global": {
-                                    "TestAsset:00001|(DRUGBANK:DB01592#biolink:SmallMolecule)-[biolink:has_side_effect]->(MONDO:0011426#biolink:Disease)": null
-                                }
+            ]
+        },
+        "TestAsset_1-inverse_by_new_subject": {
+            "molepro": [
+                "FAILED",
+                {
+                    "critical": {
+                        "critical.trapi.request.invalid": {
+                            "global": {
+                                "predicate 'biolink:is_active_metabolite_of'": [
+                                    {
+                                        "context": "inverse_by_new_subject",
+                                        "reason": "is an unknown or has no inverse?"
+                                    }
+                                ]
                             }
-                        },
-                        "critical": {}
+                        }
                     }
                 }
-            },
-etc...
-        ]
-    ]
+            ]
+        },
+        "TestAsset_1-by_object": {
+            "molepro": [
+                "FAILED",
+                {
+                    "error": {
+                        "error.trapi.response.knowledge_graph.missing_expected_edge": {
+                            "global": {
+                                "TestAsset_1|(CHEBI:58579#biolink:SmallMolecule)-[biolink:is_active_metabolite_of]->(UniProtKB:Q9NQ88#biolink:Protein)": null
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "TestAsset_1-raise_subject_entity": {
+            "molepro": [
+                "FAILED",
+                {
+                    "critical": {
+                        "critical.trapi.request.invalid": {
+                            "global": {
+                                "subject 'CHEBI:58579[biolink:SmallMolecule]'": [
+                                    {
+                                        "context": "raise_subject_entity",
+                                        "reason": "has no 'is_a' parent since it is either not an ontology term or does not map onto a parent ontology term."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "TestAsset_1-raise_object_entity": {
+            "molepro": [
+                "FAILED",
+                {
+                    "critical": {
+                        "critical.trapi.request.invalid": {
+                            "global": {
+                                "object 'UniProtKB:Q9NQ88[biolink:Protein]'": [
+                                    {
+                                        "context": "raise_object_entity",
+                                        "reason": "has no 'is_a' parent since it is either not an ontology term or does not map onto a parent ontology term."
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "TestAsset_1-raise_object_by_subject": {
+            "molepro": [
+                "FAILED",
+                {
+                    "error": {
+                        "error.trapi.response.knowledge_graph.missing_expected_edge": {
+                            "global": {
+                                "TestAsset_1|(CHEBI:58579#biolink:SmallMolecule)-[biolink:is_active_metabolite_of]->(UniProtKB:Q9NQ88#biolink:Protein)": null
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "TestAsset_1-raise_predicate_by_subject": {
+            "molepro": [
+                "FAILED",
+                {
+                    "critical": {
+                        "critical.trapi.request.invalid": {
+                            "global": {
+                                "predicate 'biolink:is_active_metabolite_of'": [
+                                    {
+                                        "context": "raise_predicate_by_subject",
+                                        "reason": "has no 'is_a' parent"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
 }
 ```
 
