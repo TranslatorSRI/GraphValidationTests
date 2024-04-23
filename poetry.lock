@@ -1706,23 +1706,28 @@ telegram = ["requests"]
 
 [[package]]
 name = "translator-testing-model"
-version = "0.2.7"
+version = "0.0.0"
 description = "This is the project description."
 optional = false
-python-versions = "<3.13,>=3.9"
-files = [
-    {file = "translator_testing_model-0.2.7-py3-none-any.whl", hash = "sha256:5943490c730bf028e02e195770eb80e89a5b9afbd227b982eb15fd8e669eb86c"},
-    {file = "translator_testing_model-0.2.7.tar.gz", hash = "sha256:caec9e998437b43a067d810c9df2aef5d6f61b3769b2753475c5d46a74729a10"},
-]
+python-versions = ">=3.9,<3.13"
+files = []
+develop = false
 
 [package.dependencies]
-bmt = ">=1.2.1,<2.0.0"
-linkml-runtime = ">=1.6.1,<2.0.0"
-pandas = ">=2.1.2,<3.0.0"
-pydantic = ">=2,<3"
+bioregistry = "^0.11.1"
+bmt = "^1.4.0"
+linkml-runtime = "^1.7.5"
+pandas = "^2.1.2"
+pydantic = "^2"
 
 [package.extras]
-docs = ["linkml (>=1.6.1,<2.0.0)"]
+docs = ["linkml (>=1.7.8,<2.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/TranslatorSRI/TranslatorTestingModel.git"
+reference = "bmt-and-linkml-updates"
+resolved_reference = "183bb8e3ac5643cbdd53763511a007d6ed319e9b"
 
 [[package]]
 name = "typing-extensions"
@@ -1844,4 +1849,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "82a461fc082b797f108a54e53b54098e4776a78435d973334d88eb40964d88b0"
+content-hash = "fb021eb425278f6bb92fc18d8a5716ad9fe1fb09cfa0b83d9730d4d065bb2e53"

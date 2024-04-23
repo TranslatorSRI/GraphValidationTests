@@ -811,9 +811,7 @@ tomli==2.0.1 ; python_version >= "3.10" and python_version < "3.11" \
 tqdm==4.66.2 ; python_version >= "3.10" and python_version < "3.13" \
     --hash=sha256:1ee4f8a893eb9bef51c6e35730cebf234d5d0b6bd112b0271e10ed7c24a02bd9 \
     --hash=sha256:6cd52cdf0fef0e0f543299cfc96fec90d7b8a7e88745f411ec33eb44d5ed3531
-translator-testing-model==0.2.7 ; python_version >= "3.10" and python_version < "3.13" \
-    --hash=sha256:5943490c730bf028e02e195770eb80e89a5b9afbd227b982eb15fd8e669eb86c \
-    --hash=sha256:caec9e998437b43a067d810c9df2aef5d6f61b3769b2753475c5d46a74729a10
+translator-testing-model @ git+https://github.com/TranslatorSRI/TranslatorTestingModel.git@bmt-and-linkml-updates ; python_version >= "3.10" and python_version < "3.13"
 typing-extensions==4.11.0 ; python_version >= "3.10" and python_version < "3.13" \
     --hash=sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0 \
     --hash=sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a
