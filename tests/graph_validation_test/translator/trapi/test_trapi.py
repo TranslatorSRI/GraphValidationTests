@@ -46,7 +46,7 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
         ("ars", "non-environment", None),
         ("ars", "test", f"https://ars.test.transltr.io/ars/api/"),
         ("arax", "dev", "https://arax.ncats.io/beta/api/arax/v1.4"),
-        ("aragorn", "ci", "https://aragorn.ci.transltr.io/aragorn"),
+        ("aragorn", "prod", "https://aragorn.transltr.io/aragorn"),
         ("biothings-explorer", "test", "https://bte.test.transltr.io/v1"),
         ("improving-agent", "test", "https://ia.test.transltr.io/api/v1.4/"),
         ("molepro", "ci", "https://molepro-trapi.ci.transltr.io/molepro/trapi/v1.5"),
