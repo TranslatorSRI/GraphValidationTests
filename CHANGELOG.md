@@ -1,12 +1,11 @@
 # Change Log
 
-## 0.0.10
-
-- constrain Python to ">=3.10,<3.12" (discovered problem with 3.12 for some code runtime situations)
-
 ## 0.0.9
 
+- constrain Python to ">=3.10,<3.12" (discovered problem with 3.12 for some code runtime situations)
 - update to reasoner-validator 4.0.2 (which updates BMT to 1.4.2 and adds Bioregistry 0.11.0)
+- pulling in update to TranslatorTestingModel
+- formatted test status messages converted from 2-tuple to a dictionary with "status" and "messages"
 
 ## 0.0.8
 

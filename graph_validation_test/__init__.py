@@ -273,12 +273,12 @@ class GraphValidationTest(BiolinkValidator):
 
     def compute_status(self, tcr: TestCaseRun) -> Tuple[str, TestCaseResultEnum, Dict]:
         """
-        Method to construct components for a test case result based on
-        the failure mode assessment of non-empty validation messages.
+        Method to construct components for a test case result based on the failure mode
+        assessment of non-empty validation messages (which are also returned).
 
         :param tcr: TestCaseRun containing reasoner-validator style validation message from test execution.
         :return: Tuple[str, TestCaseResultEnum, Dict], where position 0 is the target,
-                 position 1 is the testcase status (passed/failed/skipped) and
+                 position 1 is the testcase TestCaseResultEnum status (PASSED|FAILED|SKIPPED) and
                  position 2 is a (possible empty) dictionary of non-empty validation messages
         """
         target: str = tcr.default_target
@@ -309,14 +309,15 @@ class GraphValidationTest(BiolinkValidator):
         results for the upstream consumer of TestRunner results.
 
         :param test_cases: List[TestCaseRun], list of Test Case runs with results.
-
-        :return: Dict, of structured test message results for all TestCases,
+        :return: Dict, structured test PASSED/FAILED/SKIPPED status and message
+                       results for all TestCases, indexed by a "test_case_id"
+                       of format "<test_asset_id>-<test_name>" "test_name" as
                        specified by TRAPI generators of a given test run.
         """
         # Originally, the results == [tc.get_all_messages() for tc in test_cases], which gives
         # [
-        #    {
-        #        'molepro': {
+        #    {   # components are "ars", ARA or KP infores object references
+        #        '<component_id>': {
         #            'by_subject': {
         #                'info': {},
         #                'skipped': {},
@@ -327,7 +328,7 @@ class GraphValidationTest(BiolinkValidator):
         #        }
         #    },
         #    {
-        #        'molepro': {
+        #        '<component_id>': {
         #            'inverse_by_new_subject': {
         #                'info': {},
         #                'skipped': {},
@@ -355,11 +356,18 @@ class GraphValidationTest(BiolinkValidator):
         #
         # results == {
         #     "<test_case_id_1>": {
-        #         "molepro": <result_1>,
+        #         "<component_1>": {
+        #            "status: <PASSED|FAILED|SKIPPED>, # for result 1
+        #            "messages": <reasoner-validator formatted message partition>
+        #         }
+        #         "<component_2>": {
+        #            "status: <PASSED|FAILED|SKIPPED>, # for 'test_case_id_1' from 'component_2'
+        #            "messages": <reasoner-validator formatted message partition>
+        #         }
         #         etc...
         #     }
         #     "<test case id 2>": {
-        #         "molepro": <result 2>,
+        #         "<component_1>": <result 2>,
         #         etc...
         #     }
         #     etc...
@@ -377,8 +385,14 @@ class GraphValidationTest(BiolinkValidator):
         # Are “Warnings” to also be taken as an indication of a test failure? Could/should we give TestRunner
         # “stringency” indications which affect whether “skipped” and “warnings” are returned as “PASSED”?
         #
-        # The above <result_#> could be a 2-Tuple of (<PASSED|FAILED>, <pruned message catalog>) where the message
-        # catelog is a Python dictionary pruned of all empty reasoner-validator validation message partitions,
+        # The above <result_#> could be a dictionary of format:
+        #
+        # {
+        #     "status": "<PASSED|FAILED|SKIPPED>",
+        #     "messages": "<pruned message catalog>"
+        # }
+        #
+        # where the message catalog is a Python dictionary pruned of all empty reasoner-validator message partitions,
         # where the status of the test is determined by the aforementioned stringency rules, however coded.
         #
         results: Dict = dict()
@@ -389,12 +403,17 @@ class GraphValidationTest(BiolinkValidator):
             test_case_id: str = f"{test_asset_id}-{test_name}"
             if test_case_id not in results:
                 results[test_case_id] = dict()
-            target: str
+            component: str
             status: TestCaseResultEnum
             messages: MESSAGE_CATALOG
-            target, status, messages = self.compute_status(tcr)
-            # TODO: we blissfully assume that targets only come up once for a given test_case_id
-            results[test_case_id][target] = (status, messages)
+            component, status, messages = self.compute_status(tcr)
+            # TODO: sanity check? we blissfully assume that a 'component'
+            #       is only reported once for a given 'test_case_id'
+            assert component not in results[test_case_id]
+            results[test_case_id][component] = {
+                "status": status,
+                "messages": messages
+            }
 
         return results
 

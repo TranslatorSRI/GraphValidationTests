@@ -1,6 +1,7 @@
 """
 Unit tests for pieces of the GraphValidationTests code
 """
+from typing import List, Dict
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_test import TestCaseRun, GraphValidationTest
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
@@ -99,3 +100,34 @@ def test_test_case_run_report_messages():
     skipped = tcr.get_skipped()
     assert len(skipped) == 1
     assert "skipped.test" in skipped
+
+
+def test_format_results():
+    test_asset_id: str = "TestAsset_1"
+    test_asset: TestAsset = TestAsset(id=test_asset_id)
+    gvt: GraphValidationTest = GraphValidationTest(
+        test_asset=test_asset
+    )
+    tcr_1: TestCaseRun = TestCaseRun(
+        test_run=gvt,
+        test=by_subject
+    )
+    tcr_2: TestCaseRun = TestCaseRun(
+        test_run=gvt,
+        test=by_object
+    )
+    test_cases: List[TestCaseRun] = [
+        tcr_1,
+        tcr_2
+    ]
+    formatted_output: Dict = gvt.format_results(test_cases)
+    assert formatted_output
+    by_subject_test_case_id: str = f"{test_asset_id}-by_subject"
+    assert formatted_output[by_subject_test_case_id]
+    by_object_test_case_id: str = f"{test_asset_id}-by_object"
+    assert formatted_output[by_object_test_case_id]
+    assert "ars" in formatted_output[by_object_test_case_id]
+    assert formatted_output[by_object_test_case_id]["ars"]
+    assert "status" in formatted_output[by_object_test_case_id]["ars"]
+    assert formatted_output[by_object_test_case_id]["ars"]["status"] == "SKIPPED"
+    assert not formatted_output[by_object_test_case_id]["ars"]["messages"]

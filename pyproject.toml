@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-validation-tests"
-version = "0.0.10"
+version = "0.0.9"
 description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
@@ -54,7 +54,7 @@ deepdiff = "^6.7.1"
 reasoner-validator = "^4.0.2"
 
 #translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", rev = "ef5d68e" }
-translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "main" }
+translator-testing-model = { git = "https://github.com/TranslatorSRI/TranslatorTestingModel.git", branch = "bmt-and-linkml-updates" }
 #translator-testing-model = "^0.2.7"
 
 pytest = "^7.4.2"
