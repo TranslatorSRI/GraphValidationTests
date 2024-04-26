@@ -179,6 +179,7 @@ _infores_obj_id_map = {
     "cam": "cam-kp",
     "spoke": "spoke",
     "molepro": "molepro",
+    "genetics": "genetics-data-provider",
     "textmining": "textmining-kp",
     "cohd": "cohd",
     "openpredict": "openpredict",
