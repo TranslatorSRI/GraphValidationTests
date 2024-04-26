@@ -11,7 +11,7 @@ permissions:
 jobs:
 
   test:
-    uses: TranslatorSRI/GraphValidationTests/.github/workflows/test.yml@main
+    uses: TranslatorSRI/graph-validation-tests/.github/workflows/test.yml@main
 
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
