@@ -19,11 +19,6 @@ pytest_plugins = ('pytest_asyncio',)
 TRAPI_TEST_ENDPOINT = "https://molepro-trapi.transltr.io/molepro/trapi/v1.4"
 
 
-def test_empty_get_component_infores_object_id():
-    with pytest.raises(AssertionError):
-        assert get_component_infores_object_id(component="")
-
-
 @pytest.mark.parametrize(
     "component,infores",
     [

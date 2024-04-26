@@ -7,17 +7,13 @@ from argparse import ArgumentParser
 
 from reasoner_validator.biolink import BiolinkValidator
 from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESSAGES_BY_TEST
-from translator_testing_model.datamodel.pydanticmodel import (
-    TestAsset,
-    TestEnvEnum,
-    ComponentEnum,
-    TestCaseResultEnum
-)
+from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestCaseResultEnum
 
 from graph_validation_test.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
 )
+from graph_validation_test.translator.trapi import get_available_components
 from graph_validation_test.utils.asyncio import gather
 
 import logging
@@ -174,9 +170,10 @@ class GraphValidationTest(BiolinkValidator):
         GraphValidationTest constructor.
 
         :param test_asset: TestAsset, target test asset(s) being processed
-        :param component: Optional[str] = None, target component to be tested, (default: 'ars' assumed)
+        :param component: Optional[str] = None, target component to be tested,
+                          from ComponentEnum (default: 'ars' assumed)
         :param environment: Optional[str] = None, Translator execution environment for the test,
-                                            one of 'dev', 'ci', 'test' or 'prod' (default: 'ci' assumed)
+                            from TestEnvEnum, one of 'dev', 'ci', 'test' or 'prod' (default: 'ci' assumed)
         :param trapi_generators: Optional[List] = None, pointers to code functions that configure
                                  TRAPI query requests. e.g. see one_hop_test.unit_test_templates.
                                  May be empty for some types of tests with fixed TRAPI queries internally?
@@ -452,8 +449,8 @@ class GraphValidationTest(BiolinkValidator):
             object_id: str,
             object_category: str,
             trapi_generators: List,
-            environment: Optional[TestEnvEnum] = TestEnvEnum.ci,
-            components: Optional[List[ComponentEnum]] = None,
+            environment: Optional[str] = "ci",
+            components: Optional[List[str]] = None,
             trapi_version: Optional[str] = None,
             biolink_version: Optional[str] = None,
             runner_settings: Optional[List[str]] = None,
@@ -482,7 +479,7 @@ class GraphValidationTest(BiolinkValidator):
                                  See one_hop_test.unit_test_templates.
 
         - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
-        :param components: Optional[List[ComponentEnum]] = None, comma-delimited list of components to be tested
+        :param components: Optional[List[str]] = None, comma-delimited list of components to be tested
                            (Values specified in ComponentEnum in TranslatorTestingModel; default ['ars'])
         :param environment: Optional[str] = None, Target Translator execution environment for the test,
                             one of 'dev', 'ci', 'test' or 'prod' (default: 'ci')
@@ -495,7 +492,7 @@ class GraphValidationTest(BiolinkValidator):
         :return: Dict { "pks": Dict[<target>, <pk>], "results": Dict[<test_case_id>, <test_case_results>] }
         """
         if not components:
-            components = [ComponentEnum('ars')]
+            components = ['ars']
 
         # TODO: (April 2024) short term limitation: can't test ARS endpoints, see the missing ARS code in
         #       the run_trapi_query() method of the graph_validation_test.translator.trapi package module.
@@ -611,10 +608,11 @@ def get_parameters(tool_name: str):
     parser.add_argument(
         "--components",
         type=str,
+        choices=get_available_components(),
         required=True,  # TODO: later, if and when implemented, the default could become 'ars' if unspecified...
-        help="Names Translator components to be tested taken from the Translator Testing Model 'ComponentEnum'; " +
+        help="Names Translator components to be tested, taken from the Translator Testing Model 'ComponentEnum'; " +
              "which may be a comma separated string of such names (e.g. 'arax,molepro')"
-             # "(Default: if unspecified, the test is run against the 'ars')",
+        # "(Default: if unspecified, the test is run against the 'ars')",
         # default=None
     )
 
@@ -693,9 +691,10 @@ def get_parameters(tool_name: str):
 
     args = parser.parse_args()
 
-    # convert any comma-delimited string of components infores
-    # identifiers into the expected List of ComponentEnum entries
+    # convert any comma-delimited string of components
+    # ComponentEnum enumerated identifiers
+    # into the expected List of entries
     if "components" in args:
-        args["components"] = [ComponentEnum(entry) for entry in args["components"].split(",")]
+        args["components"] = [entry for entry in args["components"].split(",")]
 
     return args

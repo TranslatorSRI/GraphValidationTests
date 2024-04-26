@@ -2,11 +2,12 @@
 Code to submit GraphValidation test queries to
 Translator components - ARS, ARA, KP - via TRAPI
 """
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from functools import lru_cache
 import requests
 
 from reasoner_validator.trapi import call_trapi
+
 from graph_validation_test.translator.registry import (
     DEPLOYMENT_TYPE_MAP,
     get_the_registry_data,
@@ -158,7 +159,39 @@ def retrieve_ars_result(response_id: str, verbose: bool) -> Optional[Dict]:
     return trapi_response
 
 
-def get_component_infores_object_id(component: str) -> str:
+# TODO: the ComponentEnum in the TranslatorTestingModel has the full list
+#       of available Translator components against their InfoRes but the
+#       Pydantic model does not yet publish thus the hacky patch here...
+_infores_obj_id_map = {
+    "ars": "ncats-ars",
+
+    # ARA's
+    "arax": "arax",
+    "explanatory": "explanatory-agent",
+    "improving": "improving-agent",
+    "aragorn": "aragorn",
+    "bte": "biothings-explorer",
+    "unsecret": "unsecret-agent",
+
+    # KP's
+    "rtxkg2": "rtx-kg2",
+    "icees": "icees-kg",
+    "cam": "cam-kp",
+    "spoke": "spoke",
+    "molepro": "molepro",
+    "textmining": "textmining-kp",
+    "cohd": "cohd",
+    "openpredict": "openpredict",
+    "collaboratory": "knowledge-collaboratory",
+    "connections": "connections-hypothesis"
+}
+
+
+def get_available_components() -> List[str]:
+    return list(_infores_obj_id_map.keys())
+
+
+def get_component_infores_object_id(component: str) -> Optional[str]:
     """
     Returns the InfoRes object identifier of a given component.
     :param component: str, acronym of the component
@@ -166,14 +199,9 @@ def get_component_infores_object_id(component: str) -> str:
     """
     # TODO: can I resolve here whether a given component
     #       is an ARA or a KP, and return this to the caller?
-    assert component
-    infores_map = {
-        "arax": "arax",
-        "aragorn": "aragorn",
-        "bte": "biothings-explorer",
-        "improving": "improving-agent",
-    }
-    return infores_map.setdefault(component, component)
+    if component not in _infores_obj_id_map.keys():
+        return None
+    return _infores_obj_id_map[component]
 
 
 @lru_cache()

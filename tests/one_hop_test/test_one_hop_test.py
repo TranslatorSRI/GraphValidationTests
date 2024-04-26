@@ -2,15 +2,11 @@
 Unit tests for One Hop Test code validation
 """
 from sys import stdout, stderr
-from typing import List, Dict
+from typing import Dict
 from json import dump
 import subprocess
 import pytest
 
-from translator_testing_model.datamodel.pydanticmodel import (
-    TestEnvEnum,
-    ComponentEnum
-)
 from graph_validation_test.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
@@ -38,11 +34,8 @@ async def test_one_hop_test():
     results: Dict = await OneHopTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.prod,
-        components=[
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-        ]
+        environment="prod",
+        components=["arax", "molepro"]
     )
     dump(results, stderr, indent=4)
 
@@ -63,7 +56,7 @@ async def test_one_hop_test_of_ars():
     results: Dict = await OneHopTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.prod
+        environment="prod"
     )
     assert not results
 
@@ -72,11 +65,8 @@ async def test_one_hop_test_of_ars():
 async def test_run_one_hop_tests():
     results: Dict = await run_one_hop_tests(
         **SAMPLE_TEST_INPUT_1,
-        environment=TestEnvEnum.prod,
-        components=[
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-        ]
+        environment="prod",
+        components=["arax", "molepro"]
     )
     assert results
     dump(results, stderr, indent=4)
@@ -86,11 +76,8 @@ async def test_run_one_hop_tests():
 async def test_run_one_hop_tests_with_runner_parameters():
     results: Dict = await run_one_hop_tests(
         **SAMPLE_TEST_INPUT_1,
-        environment=TestEnvEnum.prod,
-        components=[
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-        ],
+        environment="prod",
+        components=["arax", "molepro"],
         strict_validation=True
     )
     assert results

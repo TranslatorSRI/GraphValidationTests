@@ -6,7 +6,6 @@ from typing import Dict
 from json import dump
 import pytest
 
-from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum, ComponentEnum
 from graph_validation_test.utils.unit_test_templates import by_subject, by_object
 from standards_validation_test import StandardsValidationTest, run_standards_validation_tests
 from tests import SAMPLE_TEST_INPUT_1
@@ -21,11 +20,8 @@ async def test_standards_validation_test():
     results: Dict = await StandardsValidationTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.prod,
-        components=[
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-        ]
+        environment="prod",
+        components=["arax", "molepro"]
     )
     dump(results, stderr, indent=4)
 
@@ -41,7 +37,7 @@ async def test_standards_validation_test_on_ars():
     results: Dict = await StandardsValidationTest.run_tests(
         **SAMPLE_TEST_INPUT_1,
         trapi_generators=trapi_generators,
-        environment=TestEnvEnum.prod
+        environment="prod"
     )
     assert not results
 
@@ -50,11 +46,8 @@ async def test_standards_validation_test_on_ars():
 async def test_run_standards_validation_tests():
     results: Dict = await run_standards_validation_tests(
         **SAMPLE_TEST_INPUT_1,
-        environment=TestEnvEnum.prod,
-        components=[
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-        ]
+        environment="prod",
+        components=["arax", "molepro"]
     )
     assert results
     dump(results, stderr, indent=4)
