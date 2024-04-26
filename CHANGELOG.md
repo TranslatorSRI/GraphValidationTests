@@ -2,10 +2,11 @@
 
 ## 0.0.9
 
-- constrain Python to ">=3.10,<3.12" (discovered problem with 3.12 for some code runtime situations)
-- update to reasoner-validator 4.0.2 (which updates BMT to 1.4.2 and adds Bioregistry 0.11.0)
-- pulling in update to TranslatorTestingModel
 - formatted test status messages converted from 2-tuple to a dictionary with "status" and "messages"
+- component and environment parameters generally changed to simple strings (not testing model enums)
+- constrain Python to ">=3.10,<3.12" (discovered problem with 3.12 for some code runtime situations)
+- Update to 0.3.1 release of TranslatorTestingModel
+- update to 4.0.2 release of reasoner-validator (which updates BMT to 1.4.2 and adds Bioregistry 0.11.0)
 
 ## 0.0.8
 
