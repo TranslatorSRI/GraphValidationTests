@@ -212,9 +212,9 @@ This is a sample of what the JSON output from test runs currently looks like (th
     },
     "results": {
         "TestAsset_1-by_subject": {
-            "molepro": [
-                "FAILED",
-                {
+            "molepro": {
+                "status": "FAILED",
+                "messages": {
                     "error": {
                         "error.trapi.response.knowledge_graph.missing_expected_edge": {
                             "global": {
@@ -223,12 +223,12 @@ This is a sample of what the JSON output from test runs currently looks like (th
                         }
                     }
                 }
-            ]
+            }
         },
         "TestAsset_1-inverse_by_new_subject": {
-            "molepro": [
-                "FAILED",
-                {
+            "molepro": {
+                "status": "FAILED",
+                "messages": {
                     "critical": {
                         "critical.trapi.request.invalid": {
                             "global": {
@@ -242,94 +242,9 @@ This is a sample of what the JSON output from test runs currently looks like (th
                         }
                     }
                 }
-            ]
+            }
         },
-        "TestAsset_1-by_object": {
-            "molepro": [
-                "FAILED",
-                {
-                    "error": {
-                        "error.trapi.response.knowledge_graph.missing_expected_edge": {
-                            "global": {
-                                "TestAsset_1|(CHEBI:58579#biolink:SmallMolecule)-[biolink:is_active_metabolite_of]->(UniProtKB:Q9NQ88#biolink:Protein)": null
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "TestAsset_1-raise_subject_entity": {
-            "molepro": [
-                "FAILED",
-                {
-                    "critical": {
-                        "critical.trapi.request.invalid": {
-                            "global": {
-                                "subject 'CHEBI:58579[biolink:SmallMolecule]'": [
-                                    {
-                                        "context": "raise_subject_entity",
-                                        "reason": "has no 'is_a' parent since it is either not an ontology term or does not map onto a parent ontology term."
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "TestAsset_1-raise_object_entity": {
-            "molepro": [
-                "FAILED",
-                {
-                    "critical": {
-                        "critical.trapi.request.invalid": {
-                            "global": {
-                                "object 'UniProtKB:Q9NQ88[biolink:Protein]'": [
-                                    {
-                                        "context": "raise_object_entity",
-                                        "reason": "has no 'is_a' parent since it is either not an ontology term or does not map onto a parent ontology term."
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "TestAsset_1-raise_object_by_subject": {
-            "molepro": [
-                "FAILED",
-                {
-                    "error": {
-                        "error.trapi.response.knowledge_graph.missing_expected_edge": {
-                            "global": {
-                                "TestAsset_1|(CHEBI:58579#biolink:SmallMolecule)-[biolink:is_active_metabolite_of]->(UniProtKB:Q9NQ88#biolink:Protein)": null
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "TestAsset_1-raise_predicate_by_subject": {
-            "molepro": [
-                "FAILED",
-                {
-                    "critical": {
-                        "critical.trapi.request.invalid": {
-                            "global": {
-                                "predicate 'biolink:is_active_metabolite_of'": [
-                                    {
-                                        "context": "raise_predicate_by_subject",
-                                        "reason": "has no 'is_a' parent"
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                }
-            ]
-        }
-    }
+        # etc...
 }
 ```
 
