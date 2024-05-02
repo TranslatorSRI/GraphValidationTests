@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.0.10
+
+- Update reasoner-validator to 4.1.2
+- Add back in supported Python 3.9
+- disable a couple of components in unit test of the Translator SmartAPI Registry (probably outdated)
+
 ## 0.0.9
 
 - formatted test status messages converted from 2-tuple to a dictionary with "status" and "messages"
