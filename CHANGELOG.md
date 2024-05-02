@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.0.10
+## 0.0.11 (reissued 0.0.10)
 
 - Update reasoner-validator to 4.1.2
 - Add back in supported Python 3.9
