@@ -110,7 +110,7 @@ charset-normalizer==3.3.2 ; python_version >= "3.9" and python_version < "3.12" 
 click==8.1.7 ; python_version >= "3.9" and python_version < "3.12" \
     --hash=sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28 \
     --hash=sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de
-colorama==0.4.6 ; python_version >= "3.9" and python_version < "3.12" and (sys_platform == "win32" or platform_system == "Windows") \
+colorama==0.4.6 ; python_version >= "3.9" and python_version < "3.12" and (platform_system == "Windows" or sys_platform == "win32") \
     --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
     --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
 contourpy==1.2.1 ; python_version >= "3.9" and python_version < "3.12" \
@@ -672,9 +672,6 @@ pyrsistent==0.20.0 ; python_version >= "3.9" and python_version < "3.12" \
 pystow==0.5.4 ; python_version >= "3.9" and python_version < "3.12" \
     --hash=sha256:2692180cb405bd77259bee6c7f4db545d10e81939980064730609f21750567ff \
     --hash=sha256:c377cc9fff11127007e60eb5c4dc18f2ffd986c0d0cec27134cdcd4c805bc7d8
-pytest-asyncio==0.23.6 ; python_version >= "3.9" and python_version < "3.12" \
-    --hash=sha256:68516fdd1018ac57b846c9846b954f0393b26f094764a28c955eabb0536a4e8a \
-    --hash=sha256:ffe523a89c1c222598c76856e76852b787504ddb72dd5d9b6617ffa8aa2cde5f
 pytest-logging==2015.11.4 ; python_version >= "3.9" and python_version < "3.12" \
     --hash=sha256:cec5c85ecf18aab7b2ead5498a31b9f758680ef5a902b9054ab3f2bdbb77c896
 pytest==7.4.4 ; python_version >= "3.9" and python_version < "3.12" \
