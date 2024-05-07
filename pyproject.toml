@@ -12,8 +12,8 @@ license = "MIT"
 readme = "README.md"
 
 homepage = "https://github.com/TranslatorSRI"
-repository = "https://github.com/TranslatorSRI/GraphValidationTests"
-documentation = "https://github.com/TranslatorSRI/GraphValidationTests/blob/main/README.md"
+repository = "https://github.com/TranslatorSRI/graph-validation-test-runners"
+documentation = "https://github.com/TranslatorSRI/graph-validation-test-runners/blob/main/README.md"
 keywords = [
     "NCATS",
     "Biomedical Data Translator",
@@ -70,8 +70,8 @@ pytest-cov = "^4.1.0"
 pytest-asyncio = "^0.23.3"
 
 [tool.poetry.urls]
-"Change Log" = "https://github.com/TranslatorSRI/GraphValidationTests/blob/master/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/TranslatorSRI/GraphValidationTests/issues"
+"Change Log" = "https://github.com/TranslatorSRI/graph-validation-test-runners/blob/master/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/TranslatorSRI/graph-validation-test-runners/issues"
 
 [tool.poetry.extras]
 
@@ -85,8 +85,8 @@ vcs = "git"
 style = "pep440"
 
 [tool.poetry.scripts]
-standards_validation_test = "standards_validation_test:main"
-one_hop_test = "one_hop_test:main"
+standards_validation_test = "standards_validation_test_runner:main"
+one_hop_test = "one_hop_test_runner:main"
 
 [tool.pytest.ini_options]
 log_cli = true

@@ -1,7 +1,7 @@
 # Graph Validation Tests
 
 [![Pyversions](https://img.shields.io/pypi/pyversions/graph-validation-test-runners)](https://pypi.python.org/pypi/graph-validation-test-runners)
-[![Publish Python Package](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/python-publish.yml/badge.svg)](https://pypi.org/project/graph-validation-tests-runners/)
+[![Publish Python Package](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/python-publish.yml/badge.svg)](https://pypi.org/project/graph-validation-test-runners/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Run tests](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/test.yml/badge.svg)](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/test.yml)
 
@@ -48,12 +48,12 @@ then proceed with [command line execution](#cli) or [script level execution](#pr
 Within a command line terminal, type:
 
 ```shell
-$ standards_validation_test_runner --help
+$ standards_validation_test --help
 ```
 or
 
 ```shell
-$ one_hop_test_runner --help
+$ one_hop_test --help
 ```
 
 should give usage instructions as follows (where <tool name> is either 'standards_validation_test_runner' or 'one_hop_test_runner'):

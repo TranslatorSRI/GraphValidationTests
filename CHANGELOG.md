@@ -5,6 +5,7 @@
 - repository generally renamed to graph-validation-test-runners (but propagate current version)
 - renamed various TestRunner packages to have suffix "_runner"
 - repair some technical debt; patch unit tests
+- added get_compliance_tests() method used by TestHarness
 
 
 ## 0.0.11 (reissued 0.0.10)
