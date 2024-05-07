@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.0.12
+
+- repository generally renamed to graph-validation-test-runners (but propagate current version)
+- renamed various TestRunner packages to have suffix "_runner"
+- repair some technical debt; patch unit tests
+
+
 ## 0.0.11 (reissued 0.0.10)
 
 - Update reasoner-validator to 4.1.2
