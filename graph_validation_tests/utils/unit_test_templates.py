@@ -7,7 +7,7 @@ from bmt import utils
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
 from translator_testing_model.datamodel.pydanticmodel import TestCase
 
-from graph_validation_test_runner.utils.ontology_kp import get_parent_concept
+from graph_validation_tests.utils.ontology_kp import get_parent_concept
 
 
 def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]:

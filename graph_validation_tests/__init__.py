@@ -9,12 +9,12 @@ from reasoner_validator.biolink import BiolinkValidator
 from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESSAGES_BY_TEST
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestCaseResultEnum
 
-from graph_validation_test_runner.translator.registry import (
+from graph_validation_tests.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
 )
-from graph_validation_test_runner.translator.trapi import get_available_components
-from graph_validation_test_runner.utils.asyncio import gather
+from graph_validation_tests.translator.trapi import get_available_components
+from graph_validation_tests.utils.asyncio import gather
 
 import logging
 logger = logging.getLogger(__name__)
@@ -175,7 +175,7 @@ class GraphValidationTest(BiolinkValidator):
         :param environment: Optional[str] = None, Translator execution environment for the test,
                             from TestEnvEnum, one of 'dev', 'ci', 'test' or 'prod' (default: 'ci' assumed)
         :param trapi_generators: Optional[List] = None, pointers to code functions that configure
-                                 TRAPI query requests. e.g. see graph_validation_test_runner.unit_test_templates.
+                                 TRAPI query requests. e.g. see graph_validation_tests.unit_test_templates.
                                  May be empty for some types of tests with fixed TRAPI queries internally?
         :param trapi_version: Optional[str] = None, target TRAPI version (default: current release)
         :param biolink_version: Optional[str], target Biolink Model version (default: current release)
@@ -257,7 +257,7 @@ class GraphValidationTest(BiolinkValidator):
 
         :param test: pointer to a code function that configure an
                      individual TRAPI query request.
-                     See graph_validation_test_runner.unit_test_templates.
+                     See graph_validation_tests.unit_test_templates.
         """
         raise NotImplementedError("Abstract method, implement in subclass!")
 
@@ -476,7 +476,7 @@ class GraphValidationTest(BiolinkValidator):
         - TRAPI JSON query generators for the TestCases using the specified TestAsset
         :param trapi_generators: List, pointers to code functions that
                                  configure an individual TRAPI query request.
-                                 See graph_validation_test_runner.unit_test_templates.
+                                 See graph_validation_tests.unit_test_templates.
 
         - Target endpoint(s) to be tested - one test report or report set generated per endpoint provided.
         :param components: Optional[List[str]] = None, comma-delimited list of components to be tested
@@ -495,7 +495,7 @@ class GraphValidationTest(BiolinkValidator):
             components = ['ars']
 
         # TODO: (April 2024) short term limitation: can't test ARS endpoints, see the missing ARS code in
-        #       the run_trapi_query() method of the graph_validation_test_runner.translator.trapi package module.
+        #       the run_trapi_query() method of the graph_validation_tests.translator.trapi package module.
         if 'ars' in components:
             logger.error("Default ARS testing is not yet supported by GraphValidationTests")
             return dict()

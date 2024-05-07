@@ -7,7 +7,7 @@ from json import dump
 import subprocess
 import pytest
 
-from graph_validation_test_runner.utils.unit_test_templates import (
+from graph_validation_tests.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,

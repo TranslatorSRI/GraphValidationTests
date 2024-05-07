@@ -8,7 +8,7 @@ on:
     paths:
     - 'pyproject.toml'
     - 'poetry.lock'
-    - 'graph_validation_test_runner/**'
+    - 'graph_validation_tests/**'
     - 'one_hop_test_runner/**'
     - 'standards_validation_test_runner/**'
     - 'tests/**'

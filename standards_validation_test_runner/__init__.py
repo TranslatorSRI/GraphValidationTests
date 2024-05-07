@@ -6,16 +6,16 @@ from typing import Optional, Dict
 import asyncio
 
 from reasoner_validator.validator import TRAPIResponseValidator
-from graph_validation_test_runner import (
+from graph_validation_tests import (
     GraphValidationTest,
     TestCaseRun,
     get_parameters
 )
-from graph_validation_test_runner.translator.trapi import run_trapi_query
+from graph_validation_tests.translator.trapi import run_trapi_query
 
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
-from graph_validation_test_runner.utils.unit_test_templates import by_subject, by_object
+from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
 
 
 class StandardsValidationTestCaseRun(TestCaseRun):

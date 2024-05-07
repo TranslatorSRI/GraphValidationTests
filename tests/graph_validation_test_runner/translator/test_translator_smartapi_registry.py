@@ -4,7 +4,7 @@ Unit tests for Translator SmartAPI Registry access
 from typing import Optional, Dict, List, Tuple, Union
 import pytest
 
-from graph_validation_test_runner.translator.registry import (
+from graph_validation_tests.translator.registry import (
     # get_default_url,
     query_smart_api,
     SMARTAPI_QUERY_PARAMETERS,

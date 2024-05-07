@@ -3,8 +3,8 @@ Unit tests for pieces of the GraphValidationTests code
 """
 from typing import List, Dict
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
-from graph_validation_test_runner import TestCaseRun, GraphValidationTest
-from graph_validation_test_runner.utils.unit_test_templates import by_subject, by_object
+from graph_validation_tests import TestCaseRun, GraphValidationTest
+from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
 from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
 
 import logging

@@ -6,7 +6,7 @@ from typing import Dict
 from json import dump
 import pytest
 
-from graph_validation_test_runner.utils.unit_test_templates import by_subject, by_object
+from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
 from standards_validation_test_runner import StandardsValidationTest, run_standards_validation_tests
 from tests import SAMPLE_TEST_INPUT_1
 

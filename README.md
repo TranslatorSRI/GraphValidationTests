@@ -149,7 +149,7 @@ The above wrapper method runs all related TestCases derived from the specified T
 from typing import Dict
 import asyncio
 from standards_validation_test_runner import StandardsValidationTest
-from graph_validation_test_runner.utils.unit_test_templates import (
+from graph_validation_tests.utils.unit_test_templates import (
     # by_subject,
     # inverse_by_new_subject,
     # by_object,

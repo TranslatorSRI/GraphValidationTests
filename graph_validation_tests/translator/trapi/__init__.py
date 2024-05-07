@@ -8,7 +8,7 @@ import requests
 
 from reasoner_validator.trapi import call_trapi
 
-from graph_validation_test_runner.translator.registry import (
+from graph_validation_tests.translator.registry import (
     DEPLOYMENT_TYPE_MAP,
     get_the_registry_data,
     get_component_endpoint_from_registry

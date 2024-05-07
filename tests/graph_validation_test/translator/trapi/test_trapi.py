@@ -4,12 +4,12 @@ Unit tests of the low level TRAPI (ARS, KP & ARA) calling subsystem.
 from typing import Optional
 import pytest
 
-from graph_validation_test_runner.translator.trapi import (
+from graph_validation_tests.translator.trapi import (
     get_component_infores_object_id,
     resolve_component_endpoint
 )
-from graph_validation_test_runner.utils.http import post_query
-from graph_validation_test_runner.utils.ontology_kp import (
+from graph_validation_tests.utils.http import post_query
+from graph_validation_tests.utils.ontology_kp import (
     ONTOLOGY_KP_TRAPI_SERVER,
     NODE_NORMALIZER_SERVER
 )

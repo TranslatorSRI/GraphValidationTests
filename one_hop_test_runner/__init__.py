@@ -9,13 +9,13 @@ import asyncio
 
 from reasoner_validator.trapi import TRAPISchemaValidator
 from reasoner_validator.validator import TRAPIResponseValidator
-from graph_validation_test_runner import (
+from graph_validation_tests import (
     GraphValidationTest,
     TestCaseRun,
     get_parameters
 )
-from graph_validation_test_runner.translator.trapi import run_trapi_query
-from graph_validation_test_runner.utils.unit_test_templates import (
+from graph_validation_tests.translator.trapi import run_trapi_query
+from graph_validation_tests.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,
