@@ -6,7 +6,7 @@ from copy import deepcopy
 from deepdiff import DeepDiff
 import pytest
 
-from graph_validation_test.utils.unit_test_templates import (
+from graph_validation_test_runner.utils.unit_test_templates import (
     create_one_hop_message,
     swap_qualifiers,
     # by_subject,

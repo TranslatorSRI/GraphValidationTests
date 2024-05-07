@@ -5,7 +5,9 @@ from functools import wraps
 
 from bmt import utils
 from reasoner_validator.biolink import get_biolink_model_toolkit, BMTWrapper
-from graph_validation_test.utils.ontology_kp import get_parent_concept
+from translator_testing_model.datamodel.pydanticmodel import TestCase
+
+from graph_validation_test_runner.utils.ontology_kp import get_parent_concept
 
 
 def create_one_hop_message(edge, look_up_subject: bool = False) -> Tuple[Optional[Dict], str]:
@@ -444,3 +446,25 @@ def raise_predicate_by_subject(request) -> Tuple[Optional[Dict], str, str]:
         return message, 'object', 'b'
     else:
         return None, f"raise_predicate_by_subject|predicate '{str(request['predicate_id'])}'", errmsg
+
+
+def get_compliance_tests(test: TestCase) -> Tuple:
+    # TODO: compliance 'test' names - e.g. 'by_subject', etc. - for 'graph-validation-tests'
+    #       are dynamically internally specified and constructed within the respective test runners.
+    #       In fact, each 'test' TestAsset is one-to-many mapped onto such TestCases.
+    #       So how can this test_id be generated in advance of running the test runner?
+    #       Two options: 1) expect a list of the test case identifiers in 'test_runner_settings' or
+    #                    2) retrieve a list of test case names from the test runner module
+    #       In both cases, these would be the values used to 'create' test instances in the IR.
+    #       Since this represents more than one test_id, we need to track them accordingly.
+    if test.test_runner_settings:
+        assert all([test_name in get_unit_test_list() for test_name in test.test_runner_settings]), \
+               f"Unknown test name encountered in TestCase.test_runner_settings '{test.test_runner_settings}'" +\
+               f"Acceptable values are: {','.join(get_unit_test_list())}"
+        return tuple(test.test_runner_settings)
+    if test.test_case_objective == "StandardsValidationTest":
+        return "by_subject", "by_object"
+    elif test.test_case_objective == "OneHopTest":
+        return tuple(get_unit_test_list())
+    else:
+        raise NotImplementedError(f"Unexpected test_case_objective: {test.case_objective}?")

@@ -48,12 +48,12 @@ then proceed with [command line execution](#cli) or [script level execution](#pr
 Within a command line terminal, type:
 
 ```shell
-$ standards_validation_test --help
+$ standards_validation_test_runner --help
 ```
 or
 
 ```shell
-$ one_hop_test --help
+$ one_hop_test_runner --help
 ```
 
 should give usage instructions as follows (where <tool name> is either 'standards_validation_test' or 'one_hop_test'):
@@ -94,7 +94,7 @@ To run TRAPI and Biolink Model validation tests validating query outputs from a 
 from typing import Dict
 import asyncio
 from translator_testing_model.datamodel.pydanticmodel import ComponentEnum
-from standards_validation_test import run_standards_validation_tests
+from standards_validation_test_runner import run_standards_validation_tests
 
 test_data = {
     # One test edge (asset)
@@ -104,8 +104,8 @@ test_data = {
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
     "components": [
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
+        ComponentEnum("arax"),
+        ComponentEnum("molepro")
     ]
     # "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
     # "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
@@ -123,8 +123,7 @@ To run "One Hop" knowledge graph navigation tests validating query outputs from 
 ```python
 from typing import Dict
 import asyncio
-from translator_testing_model.datamodel.pydanticmodel import ComponentEnum
-from one_hop_test import run_one_hop_tests
+from one_hop_test_runner import run_one_hop_tests
 
 test_data = {
     # One test edge (asset)
@@ -133,10 +132,7 @@ test_data = {
     "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
-    "components": [
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-    ]
+    "components": ["arax", "molepro"]
     #
     #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
     #     "trapi_version": trapi_version,  # Optional[str] = None; latest community release if not given
@@ -152,9 +148,8 @@ The above wrapper method runs all related TestCases derived from the specified T
 ```python
 from typing import Dict
 import asyncio
-from standards_validation_test import StandardsValidationTest
-from translator_testing_model.datamodel.pydanticmodel import TestEnvEnum, ComponentEnum
-from graph_validation_test.utils.unit_test_templates import (
+from standards_validation_test_runner import StandardsValidationTest
+from graph_validation_test_runner.utils.unit_test_templates import (
     # by_subject,
     # inverse_by_new_subject,
     # by_object,
@@ -171,11 +166,8 @@ test_data = {
     "predicate_id": "biolink:has_side_effect",
     "object_id": "MONDO:0011426",
     "object_category": "biolink:Disease",
-    "components": [
-            ComponentEnum("arax"),
-            ComponentEnum("molepro")
-    ],
-    "environment": TestEnvEnum.test,
+    "components": ["arax", "molepro"],
+    "environment": "test",
     "trapi_version": "1.5.0-beta",
     "biolink_version": "4.1.6",
     "runner_settings": "Inferred"

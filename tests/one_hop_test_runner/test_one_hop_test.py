@@ -7,7 +7,7 @@ from json import dump
 import subprocess
 import pytest
 
-from graph_validation_test.utils.unit_test_templates import (
+from graph_validation_test_runner.utils.unit_test_templates import (
     by_subject,
     inverse_by_new_subject,
     by_object,
@@ -16,7 +16,7 @@ from graph_validation_test.utils.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
-from one_hop_test import OneHopTest, run_one_hop_tests
+from one_hop_test_runner import OneHopTest, run_one_hop_tests
 from tests import SAMPLE_TEST_INPUT_1, SCRIPTS_DIR
 
 
@@ -92,7 +92,7 @@ async def test_run_one_hop_tests_with_runner_parameters():
 # )
 @pytest.mark.skip("Not yet fully implemented")
 def test_one_hop_cli():
-    # command: List = ["python", "-m", "one_hop_test.__init__"]
+    # command: List = ["python", "-m", "one_hop_test_runner.__init__"]
     # args: Dict = SAMPLE_TEST_INPUT_1.copy()
     # args["components"] = "arax,molepro"
     # [command.extend([f"--{flag}", value]) for flag, value in args.items()]
@@ -101,4 +101,4 @@ def test_one_hop_cli():
     #     "python", "-m", "venv", "--clear", "test_venv", ";",
     #     ".", "test_venv/bin/activate"
     # ])
-    subprocess.run("one_hop_test", stdout=stdout, shell=True, cwd=SCRIPTS_DIR)
+    subprocess.run("one_hop_test_runner", stdout=stdout, shell=True, cwd=SCRIPTS_DIR)
