@@ -1,7 +1,7 @@
 # Graph Validation Tests
 
-[![Pyversions](https://img.shields.io/pypi/pyversions/graph-validation-test-runners)](https://pypi.python.org/pypi/graph-validation-test-runners)
-![PyPI - Version](https://img.shields.io/pypi/v/graph-validation-test-runners)
+![Pyversions](https://img.shields.io/pypi/pyversions/graph-validation-test-runners)
+[![PyPI - Version](https://img.shields.io/pypi/v/graph-validation-test-runners)](https://pypi.python.org/pypi/graph-validation-test-runners)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Run tests](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/test.yml/badge.svg)](https://github.com/TranslatorSRI/graph-validation-test-runners/actions/workflows/test.yml)
 
