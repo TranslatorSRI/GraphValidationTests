@@ -5,7 +5,6 @@ test (using reasoner-validator)
 from typing import Optional, Dict
 import asyncio
 
-from reasoner_validator.validator import TRAPIResponseValidator
 from graph_validation_tests import (
     GraphValidationTest,
     TestCaseRun,
@@ -53,14 +52,8 @@ class StandardsValidationTestCaseRun(TestCaseRun):
 
         else:
             # sanity check: verify first that the TRAPI request
-            # is well-formed by the by_subject(test_asset)
-            validator: TRAPIResponseValidator = \
-                TRAPIResponseValidator(
-                    trapi_version=self.trapi_version,
-                    biolink_version=self.biolink_version
-                )
-            validator.validate(trapi_request, component="Query")
-            self.merge(validator)
+            # is well-formed by the self.test(test_asset)
+            self.validate(trapi_request, component="Query")
 
             # We'll ignore warnings and info messages
             if not (self.has_critical() or self.has_errors() or self.has_skipped()):
@@ -93,7 +86,7 @@ class StandardsValidationTestCaseRun(TestCaseRun):
                         #########################################################
                         # Looks good so far, so now validate the TRAPI response #
                         #########################################################
-                        validator.check_compliance_of_trapi_response(
+                        self.check_compliance_of_trapi_response(
                             response=trapi_response['response_json']
                         )
 

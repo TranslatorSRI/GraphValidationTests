@@ -476,6 +476,10 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
         assert not resource_metadata
 
 
+@pytest.mark.skip(
+    reason="These tests often work fine with fresh data, " +
+           "but fail later due to changes in online resources"
+)
 @pytest.mark.parametrize(
     "component,environment,result",
     [

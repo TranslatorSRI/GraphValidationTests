@@ -8,7 +8,7 @@ import pytest
 
 from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
 from standards_validation_test_runner import StandardsValidationTest, run_standards_validation_tests
-from tests import SAMPLE_MOLEPRO_INPUT_DATA, SAMPLE_ARAX_INPUT_DATA
+from tests import SAMPLE_MOLEPRO_INPUT_DATA, SAMPLE_ARAX_INPUT_DATA, SAMPLE_ARAGORN_INPUT_DATA
 
 
 @pytest.mark.parametrize(
@@ -24,6 +24,12 @@ from tests import SAMPLE_MOLEPRO_INPUT_DATA, SAMPLE_ARAX_INPUT_DATA
             SAMPLE_ARAX_INPUT_DATA,
             "ci",
             "arax",
+            None
+        ),
+        (
+            SAMPLE_ARAGORN_INPUT_DATA,
+            "ci",
+            "aragorn",
             None
         )
     ]
@@ -77,6 +83,12 @@ async def test_standards_validation_test_on_ars():
             SAMPLE_ARAX_INPUT_DATA,
             "ci",
             "arax",
+            None
+        ),
+        (
+            SAMPLE_ARAGORN_INPUT_DATA,
+            "ci",
+            "aragorn",
             None
         )
     ]

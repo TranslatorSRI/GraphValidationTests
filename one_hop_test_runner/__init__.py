@@ -143,6 +143,8 @@ class OneHopTestCaseRun(TestCaseRun):
                             # the contents for which ought to be returned in
                             # the TRAPI Knowledge Graph, as a Result mapping?
                             #
+                            # TODO: perhaps the following block of code could be
+                            #       completely encapsulated inside the reasoner-validator?
                             validator: TRAPIResponseValidator = TRAPIResponseValidator(
                                 trapi_version=self.trapi_version,
                                 biolink_version=self.biolink_version

@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 from argparse import ArgumentParser
 
 from reasoner_validator.biolink import BiolinkValidator
+from reasoner_validator.validator import TRAPIResponseValidator
 from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESSAGES_BY_TEST
 from translator_testing_model.datamodel.pydanticmodel import TestAsset, TestCaseResultEnum
 
@@ -20,7 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class TestCaseRun(BiolinkValidator):
+class TestCaseRun(TRAPIResponseValidator):
     """
     TestCaseRun is a wrapper for BiolinkValidator, used to aggregate
     validation messages from the GraphValidationTest processing of a specific
@@ -40,7 +41,7 @@ class TestCaseRun(BiolinkValidator):
         assert test_run, "'test_run' is uninitialized!"
         self.test_run = test_run
 
-        BiolinkValidator.__init__(
+        TRAPIResponseValidator.__init__(
             self,
             default_test=test.__name__,
             default_target=test_run.default_target,
@@ -372,7 +373,7 @@ class GraphValidationTest(BiolinkValidator):
         # where the 'test_asset_id_#' is something sensible, probably composite of the test asset identifier and
         # the identifier of the test template method used to generate the TestCase-specific TRAPI query.
         #
-        # The <result_#> value could minimally simply be be "PASSED" or "FAILED"; however, perhaps it ought to be
+        # The <result_#> value could minimally simply be "PASSED" or "FAILED"; however, perhaps it ought to be
         # a somewhat more complex informative data value for this TestRunner, accounting for the extensive validation
         # messages categories provided by reasoner-validator, i.e. 'info', 'skipped', 'warning', 'error', 'critical'.
         #

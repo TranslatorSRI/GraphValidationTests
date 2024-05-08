@@ -16,8 +16,6 @@ from graph_validation_tests.utils.ontology_kp import (
 
 pytest_plugins = ('pytest_asyncio',)
 
-TRAPI_TEST_ENDPOINT = "https://molepro-trapi.transltr.io/molepro/trapi/v1.4"
-
 
 @pytest.mark.parametrize(
     "component,infores",
@@ -33,6 +31,10 @@ def test_get_get_component_infores_object_id(component: str, infores: str):
     assert get_component_infores_object_id(component=component) == infores
 
 
+@pytest.mark.skip(
+    reason="These tests often work fine with fresh data, " +
+           "but fail later due to changes in online resources"
+)
 @pytest.mark.parametrize(
     "component,environment,result",
     [

@@ -15,7 +15,7 @@ SAMPLE_MOLEPRO_INPUT_DATA = {
     "subject_id": "CHEBI:16796",   # Melatonin
     "subject_category": "biolink:ChemicalEntity",
     "predicate_id": "biolink:treats",
-    "object_id": "MONDO:0005260",  # Autism spectrum disorder
+    "object_id": "MONDO:0005258",  # Autism
     "object_category": "biolink:Disease",
     #
     #     "environment": environment, # Optional[TestEnvEnum] = None; default: 'TestEnvEnum.ci' if not given
@@ -24,6 +24,7 @@ SAMPLE_MOLEPRO_INPUT_DATA = {
     #     "biolink_version": biolink_version,  # Optional[str] = None; current Biolink Toolkit default if not given
     #     "runner_settings": asset.test_runner_settings,  # Optional[List[str]] = None
 }
+
 SAMPLE_ARAX_INPUT_DATA = {
     "test_asset_id": "TestAsset_1",
     "subject_id": "PUBCHEM.COMPOUND:2801",  # Clomipramine
@@ -31,4 +32,13 @@ SAMPLE_ARAX_INPUT_DATA = {
     "predicate_id": "biolink:treats",
     "object_id": "ORPHANET:33110",  # Autosomal agammaglobulinemia?
     "object_category": "biolink:Disease",
+}
+
+SAMPLE_ARAGORN_INPUT_DATA = {
+    "test_asset_id": "TestAsset_1",
+    "subject_id": "PUBCHEM.COMPOUND:2801",  # Clomipramine
+    "subject_category": "biolink:ChemicalEntity",
+    "predicate_id": "biolink:treats",
+    "object_id": "ORPHANET:251636",  # Ependymoma
+    "object_category": "biolink:Disease"
 }
