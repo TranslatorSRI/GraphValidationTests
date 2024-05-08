@@ -283,7 +283,6 @@ async def run_trapi_query(
     :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return:  Dict, TRAPI response JSON, as a Python data structure.
     """
-    trapi_response: Optional[Dict] = None
     endpoint: str = resolve_component_endpoint(
         component=component,
         environment=environment,

@@ -17,7 +17,7 @@ from graph_validation_tests.utils.unit_test_templates import (
     raise_predicate_by_subject
 )
 from one_hop_test_runner import OneHopTest, run_one_hop_tests
-from tests import SAMPLE_TEST_INPUT_1, SCRIPTS_DIR
+from tests import SAMPLE_MOLEPRO_INPUT_DATA, SCRIPTS_DIR, SAMPLE_ARAX_INPUT_DATA
 
 
 @pytest.mark.asyncio
@@ -32,9 +32,9 @@ async def test_one_hop_test():
         raise_predicate_by_subject
     ]
     results: Dict = await OneHopTest.run_tests(
-        **SAMPLE_TEST_INPUT_1,
+        **SAMPLE_MOLEPRO_INPUT_DATA,
         trapi_generators=trapi_generators,
-        environment="prod",
+        environment="ci",
         components=["arax", "molepro"]
     )
     dump(results, stderr, indent=4)
@@ -54,30 +54,69 @@ async def test_one_hop_test_of_ars():
         raise_predicate_by_subject
     ]
     results: Dict = await OneHopTest.run_tests(
-        **SAMPLE_TEST_INPUT_1,
+        **SAMPLE_MOLEPRO_INPUT_DATA,
         trapi_generators=trapi_generators,
         environment="prod"
     )
     assert not results
 
 
+@pytest.mark.parametrize(
+    "data,environment,component,expected_result",
+    [
+        (
+            SAMPLE_MOLEPRO_INPUT_DATA,
+            "ci",
+            "molepro",
+            None
+        ),
+        (
+            SAMPLE_ARAX_INPUT_DATA,
+            "ci",
+            "arax",
+            None
+        )
+    ]
+)
 @pytest.mark.asyncio
-async def test_run_one_hop_tests():
+async def test_run_one_hop_tests(
+        data: Dict,
+        environment: str,
+        component: str,
+        expected_result
+):
     results: Dict = await run_one_hop_tests(
-        **SAMPLE_TEST_INPUT_1,
-        environment="prod",
-        components=["arax", "molepro"]
+        **data,
+        environment=environment,
+        components=[component]
     )
     assert results
     dump(results, stderr, indent=4)
 
 
+@pytest.mark.parametrize(
+    "data,environment,component,expected_result",
+    [
+        (
+            SAMPLE_MOLEPRO_INPUT_DATA,
+            "ci",
+            "molepro",
+            None
+        )
+    ]
+)
 @pytest.mark.asyncio
-async def test_run_one_hop_tests_with_runner_parameters():
+@pytest.mark.asyncio
+async def test_run_one_hop_tests_with_runner_parameters(
+        data: Dict,
+        environment: str,
+        component: str,
+        expected_result
+):
     results: Dict = await run_one_hop_tests(
-        **SAMPLE_TEST_INPUT_1,
-        environment="prod",
-        components=["arax", "molepro"],
+        **data,
+        environment=environment,
+        components=[component],
         strict_validation=True
     )
     assert results

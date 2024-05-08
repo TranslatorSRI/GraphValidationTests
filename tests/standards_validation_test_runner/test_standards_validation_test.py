@@ -8,20 +8,42 @@ import pytest
 
 from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
 from standards_validation_test_runner import StandardsValidationTest, run_standards_validation_tests
-from tests import SAMPLE_TEST_INPUT_1
+from tests import SAMPLE_MOLEPRO_INPUT_DATA, SAMPLE_ARAX_INPUT_DATA
 
 
+@pytest.mark.parametrize(
+    "data,environment,component,expected_result",
+    [
+        (
+            SAMPLE_MOLEPRO_INPUT_DATA,
+            "ci",
+            "molepro",
+            None
+        ),
+        (
+            SAMPLE_ARAX_INPUT_DATA,
+            "ci",
+            "arax",
+            None
+        )
+    ]
+)
 @pytest.mark.asyncio
-async def test_standards_validation_test():
+async def test_standards_validation_test(
+        data: Dict,
+        environment: str,
+        component: str,
+        expected_result
+):
     trapi_generators = [
         by_subject,
         by_object
     ]
     results: Dict = await StandardsValidationTest.run_tests(
-        **SAMPLE_TEST_INPUT_1,
+        **data,
         trapi_generators=trapi_generators,
-        environment="prod",
-        components=["arax", "molepro"]
+        environment=environment,
+        components=[component]
     )
     dump(results, stderr, indent=4)
 
@@ -35,19 +57,41 @@ async def test_standards_validation_test_on_ars():
         by_object
     ]
     results: Dict = await StandardsValidationTest.run_tests(
-        **SAMPLE_TEST_INPUT_1,
+        **SAMPLE_MOLEPRO_INPUT_DATA,
         trapi_generators=trapi_generators,
         environment="prod"
     )
     assert not results
 
 
+@pytest.mark.parametrize(
+    "data,environment,component,expected_result",
+    [
+        (
+            SAMPLE_MOLEPRO_INPUT_DATA,
+            "ci",
+            "molepro",
+            None
+        ),
+        (
+            SAMPLE_ARAX_INPUT_DATA,
+            "ci",
+            "arax",
+            None
+        )
+    ]
+)
 @pytest.mark.asyncio
-async def test_run_standards_validation_tests():
+async def test_run_standards_validation_tests(
+        data: Dict,
+        environment: str,
+        component: str,
+        expected_result
+):
     results: Dict = await run_standards_validation_tests(
-        **SAMPLE_TEST_INPUT_1,
-        environment="prod",
-        components=["arax", "molepro"]
+        **data,
+        environment=environment,
+        components=[component]
     )
     assert results
     dump(results, stderr, indent=4)

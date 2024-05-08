@@ -198,7 +198,7 @@ class GraphValidationTest(BiolinkValidator):
         self.test_asset: TestAsset = test_asset
 
         # trapi_generators should usually not be empty, but just in case...
-        self.trapi_generators: List = trapi_generators or []
+        self.trapi_generators: Tuple = trapi_generators or ()
 
         self.runner_settings = runner_settings
 
@@ -210,7 +210,7 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: likely need a more appropriate run identifier here, e.g. ARS PK-like?
         return self.default_target
 
-    def get_trapi_generators(self) -> List:
+    def get_trapi_generators(self) -> Tuple:
         return self.trapi_generators
 
     def get_runner_settings(self) -> List[str]:
