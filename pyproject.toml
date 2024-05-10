@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-validation-test-runners"
-version = "0.0.13"
+version = "0.1.0"
 description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
