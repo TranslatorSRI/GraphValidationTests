@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.1
+
+- bug fix patch
+
 ## 0.1.0
 
 - update to reasoner-validator 4.1.4
