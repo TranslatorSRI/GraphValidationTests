@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.2
+
+- update to reasoner-validator 4.1.5 (patches problematic biolink:treats mixin predicate validation)
+
 ## 0.1.1
 
 - bug fix patch
