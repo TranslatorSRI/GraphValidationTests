@@ -3,6 +3,7 @@
 ## 0.1.2
 
 - update to reasoner-validator 4.1.5 (patches problematic biolink:treats mixin predicate validation)
+- fix **`skipped.test`** report messages to align with reasoner-validator 4.1.6 validation code reporting expectations
 
 ## 0.1.1
 
