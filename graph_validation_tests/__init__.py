@@ -114,7 +114,12 @@ class TestCaseRun(TRAPIResponseValidator):
         if messages:
             self.add_messages(messages)
         report_string: str = self.dump_skipped(flat=True)
-        self.report("skipped.test", identifier=report_string)
+        self.report(
+            "skipped.test",
+            identifier=edge_id,
+            context="global",
+            reason=report_string
+        )
 
     def assert_test_outcome(self):
         """

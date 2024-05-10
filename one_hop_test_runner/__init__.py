@@ -50,9 +50,9 @@ class OneHopTestCaseRun(TestCaseRun):
             # expropriated by the 'creator' to return error information
             context = output_element.split("|")
             self.report(
-                code="critical.trapi.request.invalid",
-                identifier=context[1],
-                context=context[0],
+                code="skipped.test",
+                identifier=context[0],
+                context=context[1],
                 reason=output_node_binding
             )
 
