@@ -238,7 +238,7 @@ def inverse_by_new_subject(request) -> Tuple[Optional[Dict], str, str]:
 
     # Not everything has an inverse (it should, and it will, but it doesn't right now)
     if inverse_predicate is None:
-        reason: str = "is an unknown or has no inverse?"
+        reason: str = "is unknown or has no inverse?"
         return None, context, reason
 
     # probably don't need to worry here but just-in-case
