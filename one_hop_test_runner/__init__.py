@@ -58,9 +58,7 @@ class OneHopTestCaseRun(TestCaseRun):
 
         else:
             # sanity check: verify first that the TRAPI request is well-formed by the creator(case)
-            validator: TRAPISchemaValidator = TRAPISchemaValidator(trapi_version=self.trapi_version)
-            validator.validate(trapi_request, component="Query")
-            self.merge(validator)
+            self.validate(trapi_request, component="Query")
             if not self.has_messages():
 
                 # if no messages are reported, then continue with the validation
@@ -142,22 +140,7 @@ class OneHopTestCaseRun(TestCaseRun):
                             #
                             # the contents for which ought to be returned in
                             # the TRAPI Knowledge Graph, as a Result mapping?
-                            #
-                            # TODO: perhaps the following block of code could be
-                            #       completely encapsulated inside the reasoner-validator?
-                            validator: TRAPIResponseValidator = TRAPIResponseValidator(
-                                trapi_version=self.trapi_version,
-                                biolink_version=self.biolink_version
-                            )
-                            if not validator.case_input_found_in_response(test_asset, response, self.trapi_version):
-                                test_edge_id: str = f"{test_asset['idx']}|" \
-                                                    f"({test_asset['subject_id']}#{test_asset['subject_category']})" + \
-                                                    f"-[{test_asset['predicate_id']}]->" + \
-                                                    f"({test_asset['object_id']}#{test_asset['object_category']})"
-                                self.report(
-                                    code="error.trapi.response.knowledge_graph.missing_expected_edge",
-                                    identifier=test_edge_id
-                                )
+                            self.case_input_found_in_response(test_asset, response, self.trapi_version)
                         else:
                             self.report(code="error.trapi.response.empty")
 
