@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.0
+
+- update to reasoner-validator 4.1.4
+- fixed propagation of validation messages within StandardsValidationTest TestRunner
+
 ## 0.0.13
 
 - anchored graph validation test classes on TRAPIResponseValidator rather than BiolinkValidator for more correct and efficient propagation of validation messagess
