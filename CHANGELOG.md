@@ -11,7 +11,7 @@
 
 ## 0.0.13
 
-- anchored graph validation test classes on TRAPIResponseValidator rather than BiolinkValidator for more correct and efficient propagation of validation messagess
+- anchored graph validation test classes on TRAPIResponseValidator rather than BiolinkValidator for more correct and efficient propagation of validation messages
 - improved sample test asset data returns more helpful unit test TestRunner results
 
 ## 0.0.12
