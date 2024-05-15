@@ -223,27 +223,24 @@ def resolve_component_endpoint(
     :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return: Optional[str], environment-specific endpoint for component to be queried. None if not available.
     """
+    endpoint: Optional[str] = None
     if not component:
         component = 'ars'
 
     if not environment:
         environment = 'ci'
 
-    elif environment not in DEPLOYMENT_TYPE_MAP.keys():
+    if environment not in DEPLOYMENT_TYPE_MAP.keys():
         logger.error(
             f"resolve_component_endpoint(): unexpected environment type: '{environment}', Cannot resolve endpoint!"
         )
-        return None
-
-    if component == 'ars':
+    elif component == 'ars':
         ars_env: str = ars_env_spec[environment]
         # TODO: how do I check if the given ARS service is online here?
         return f"https://{ars_env}.transltr.io/ars/api/"
-
     else:
-        endpoint: Optional[str] = None
         err_msg: str = \
-            f"Could not resolve endpoint of component '{component}' " + \
+            f"trapi::resolve_component_endpoint() - Could not resolve endpoint of component '{component}' " + \
             f"within specified environment '{environment}'?"
         try:
             registry_data: Dict = get_the_registry_data()
@@ -256,12 +253,11 @@ def resolve_component_endpoint(
                     target_biolink_version=target_biolink_version
                 )
         except AssertionError as ae:
-            err_msg = f"Exception occurred while resolving: {str(ae)}"
-
+            err_msg += f" Exception occurred while resolving: {str(ae)}"
         if not endpoint:
             logger.error(err_msg)
 
-        return endpoint
+    return endpoint
 
 
 async def run_trapi_query(
@@ -283,21 +279,26 @@ async def run_trapi_query(
     :param target_biolink_version: Optional[str], target Biolink Model version (default: Biolink toolkit release)
     :return:  Dict, TRAPI response JSON, as a Python data structure.
     """
+    trapi_response: Optional[Dict] = None
     endpoint: str = resolve_component_endpoint(
         component=component,
         environment=environment,
         target_trapi_version=target_trapi_version,
         target_biolink_version=target_biolink_version
     )
-    if not endpoint:
-        return None
-
-    if component == 'ars':
-        # TODO: make the (modified) TRAPI query to the ARS
-        raise NotImplementedError("Implement ARS TRAPI query processing!")
+    if endpoint:
+        if component == 'ars':
+            logger.error(
+                "trapi::run_trapi_query() - GraphValidationTest does not yet support ARS TRAPI query processing!"
+            )
+        else:
+            # Make the TRAPI call to the TestCase targeted ARS, KP or
+            # ARA resource, using the case-documented input test edge
+            trapi_response = await call_trapi(endpoint, trapi_request)
     else:
-        # Make the TRAPI call to the TestCase targeted ARS, KP or
-        # ARA resource, using the case-documented input test edge
-        trapi_response = await call_trapi(endpoint, trapi_request)
+        logger.error(
+            "trapi::run_trapi_query() - GraphValidationTest could not resolve endpoint " +
+            f"for component {component} in environment {environment}!"
+        )
 
     return trapi_response
