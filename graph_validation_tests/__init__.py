@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 
 from argparse import ArgumentParser
 
+from reasoner_validator.versioning import get_latest_version
 from reasoner_validator.biolink import BiolinkValidator
 from reasoner_validator.validator import TRAPIResponseValidator
 from reasoner_validator.message import MESSAGES_BY_TARGET, MESSAGE_CATALOG, MESSAGES_BY_TEST
@@ -17,8 +18,14 @@ from graph_validation_tests.translator.registry import (
 from graph_validation_tests.translator.trapi import get_available_components
 from graph_validation_tests.utils.asyncio import gather
 
+from bmt import Toolkit
+
 import logging
 logger = logging.getLogger(__name__)
+
+# as long as TRAPI has major version == "1", we should be OK here
+default_trapi_release: str = get_latest_version("1")
+default_biolink_model_version: str = Toolkit().get_model_version()
 
 
 class TestCaseRun(TRAPIResponseValidator):
@@ -676,16 +683,17 @@ def get_parameters(tool_name: str):
     parser.add_argument(
         "--trapi_version",
         type=str,
-        help="TRAPI version expected for knowledge graph access (Default: use latest TRAPI community release)",
-        default=None
+        help="TRAPI version expected for knowledge graph access" +
+             f" (Default: use latest TRAPI community release: '{default_trapi_release}')",
+        default=default_trapi_release
     )
 
     parser.add_argument(
         "--biolink_version",
         type=str,
         help="Biolink Model version expected for knowledge graph access " +
-             "(Default: use current default release of the Biolink Model Toolkit)",
-        default=None
+             f"(Default: use current default release of the Biolink Model Toolkit: '{default_biolink_model_version}')",
+        default=default_biolink_model_version
     )
 
     parser.add_argument(
