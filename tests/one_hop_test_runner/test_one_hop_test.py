@@ -106,7 +106,6 @@ async def test_run_one_hop_tests(
     ]
 )
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_run_one_hop_tests_with_runner_parameters(
         data: Dict,
         environment: str,
