@@ -279,6 +279,7 @@ class GraphValidationTest(BiolinkValidator):
         # TODO: unsure if one needs to limit concurrent requests here...
         await gather([test_case.run_test_case() for test_case in test_cases])  # , limit=num_concurrent_requests)
 
+    MESSAGE_PRECEDENCE = ("critical", "error", "warning", "skipped", "info")
     FAILURE_MODES = ("error", "critical")
 
     def compute_status(self, tcr: TestCaseRun) -> Tuple[str, TestCaseResultEnum, Dict]:
@@ -300,12 +301,16 @@ class GraphValidationTest(BiolinkValidator):
                 message_catalog: MESSAGE_CATALOG = messages_by_test[test]
                 mtype: str
                 messages: Dict
-                non_empty_messages: MESSAGE_CATALOG = {
-                    mtype: messages for mtype, messages in message_catalog.items() if message_catalog[mtype]
-                }
+                # Load non-empty messages in order of message precedence
+                non_empty_messages: MESSAGE_CATALOG = dict()
+                for mtype in self.MESSAGE_PRECEDENCE:
+                    if mtype in message_catalog and message_catalog[mtype]:
+                        non_empty_messages[mtype] = message_catalog[mtype]
                 # TODO: this first iteration in which FAILURE_MODES are
-                #       immutable (not sensitive to TestRunner parameters)
-                if not non_empty_messages or not any([mtype in non_empty_messages for mtype in self.FAILURE_MODES]):
+                #       immutable (not sensitive to TestRunner parameters);
+                #       Maybe we need to treat "SKIPPED" tests differently here(?)
+                if not non_empty_messages or \
+                        not any([mtype in non_empty_messages for mtype in self.FAILURE_MODES]):
                     return target, TestCaseResultEnum.PASSED, non_empty_messages
                 else:
                     return target, TestCaseResultEnum.FAILED, non_empty_messages
@@ -541,53 +546,6 @@ class GraphValidationTest(BiolinkValidator):
                 runner_settings=runner_settings
             ) for target in components
         ]
-        #
-        # TODO: the following comment is plagiarized from 3rd party TestRunner comments simply as
-        #       a short term source of inspiration for the design of results from this TestRunner
-        # The ARS_test_Runner with the following command:
-        #
-        #       ARS_Test_Runner
-        #           --env 'ci'
-        #           --query_type 'treats_creative'
-        #           --expected_output '["TopAnswer","TopAnswer"]'
-        #           --input_curie 'MONDO:0005301'
-        #           --output_curie  '["PUBCHEM.COMPOUND:107970","UNII:3JB47N2Q2P"]'
-        #
-        # gives a Python dictionary report (serialized to JSON) similar as follows:
-        #
-        # {
-        #     "pks": {
-        #         "parent_pk": "e29c5051-d8d7-4e82-a1a1-b3cc9b8c9657",
-        #         "merged_pk": "56e3d5ac-66b4-4560-9f56-7a4d117e8003",
-        #         "aragorn": "14953570-7451-4d1b-a817-fc9e7879b477",
-        #         "arax": "8c88ead6-6cbf-4c9a-9570-ca76392ddb7a",
-        #         "unsecret": "bd084e27-2a0e-4df4-843c-417bfac6f8c7",
-        #         "bte": "d28a4146-9486-4e98-973d-8cdd33270595",
-        #         "improving": "d8d3c905-ec07-491f-a078-7ef0f489a409"
-        #     },
-        #     "results": [
-        #         {
-        #             "PUBCHEM.COMPOUND:107970": {
-        #                 "aragorn": "Fail",
-        #                 "arax": "Pass",
-        #                 "unsecret": "Fail",
-        #                 "bte": "Pass",
-        #                 "improving": "Pass",
-        #                 "ars": "Pass"
-        #             }
-        #         },
-        #         {
-        #             "UNII:3JB47N2Q2P": {
-        #                 "aragorn": "Fail",
-        #                 "arax": "Pass",
-        #                 "unsecret": "Fail",
-        #                 "bte": "Pass",
-        #                 "improving": "Pass",
-        #                 "ars": "Pass"
-        #             }
-        #         }
-        #     ]
-        # }
         results = {
             "pks": dict(),
             "results": dict()

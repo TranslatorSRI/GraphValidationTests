@@ -4,7 +4,7 @@ Unit tests for pieces of the GraphValidationTests code
 from typing import List, Dict
 from translator_testing_model.datamodel.pydanticmodel import TestAsset
 from graph_validation_tests import TestCaseRun, GraphValidationTest
-from graph_validation_tests.utils.unit_test_templates import by_subject, by_object
+from graph_validation_tests.utils.unit_test_templates import by_subject, by_object, raise_object_entity
 from tests import DEFAULT_TRAPI_VERSION, DEFAULT_BMT
 
 import logging
@@ -103,31 +103,84 @@ def test_test_case_run_report_messages():
 
 
 def test_format_results():
+    # create dummy test and test case runs
+    # with artificially generated validation messages
     test_asset_id: str = "TestAsset_1"
     test_asset: TestAsset = TestAsset(id=test_asset_id)
-    gvt: GraphValidationTest = GraphValidationTest(
+    gvt_0: GraphValidationTest = GraphValidationTest(
         test_asset=test_asset
     )
-    tcr_1: TestCaseRun = TestCaseRun(
-        test_run=gvt,
+    tcr_0: TestCaseRun = TestCaseRun(
+        test_run=gvt_0,
         test=by_subject
     )
+    test_cases_0: List[TestCaseRun] = [tcr_0]
+    formatted_output_0: Dict = gvt_0.format_results(test_cases_0)
+    assert formatted_output_0
+    by_subject_test_case_id: str = f"{test_asset_id}-by_subject"
+    assert formatted_output_0[by_subject_test_case_id]
+    assert "ars" in formatted_output_0[by_subject_test_case_id]
+    assert formatted_output_0[by_subject_test_case_id]["ars"]
+    assert "status" in formatted_output_0[by_subject_test_case_id]["ars"]
+    assert formatted_output_0[by_subject_test_case_id]["ars"]["status"] == "SKIPPED"
+    assert not formatted_output_0[by_subject_test_case_id]["ars"]["messages"]
+
+    gvt_1: GraphValidationTest = GraphValidationTest(
+        test_asset=test_asset
+    )
+    # create some dummy test runs with artificially generated validation messages
+    tcr_1: TestCaseRun = TestCaseRun(
+        test_run=gvt_1,
+        test=by_subject
+    )
+    tcr_1.report("critical.trapi.response.unexpected_http_code", identifier="500")
     tcr_2: TestCaseRun = TestCaseRun(
-        test_run=gvt,
+        test_run=gvt_1,
         test=by_object
+    )
+    tcr_2.report(code="error.trapi.response.empty")
+    tcr_3: TestCaseRun = TestCaseRun(
+        test_run=gvt_1,
+        test=raise_object_entity
+    )
+    tcr_3.report(
+        code="info.knowledge_graph.edge.predicate.mixin",
+        source_trail="my_ara->my_kp->my_ks",
+        identifier="biolink:treats",
+        edge_id="a--(treats)->b"
+    )
+    tcr_3.report(code="warning.trapi.response.schema_version.missing")
+    tcr_3.report(
+        code="error.trapi.response.message.knowledge_graph.node.missing",
+        identifier="foo:missing",
+        context="subject"
+    )
+    tcr_3.report(
+                code="skipped.test",
+                identifier="raise_object_entity",
+                context="object 'foo:missing[biolink:NamedThing]'",
+                reason=" and is a mixin since it is either not an ontology term " +
+                       "or does not map onto a parent ontology term."
+            )
+    tcr_3.report(
+        code="warning.trapi.response.status.unknown",
+        identifier="fake-trapi-response-status"
     )
     test_cases: List[TestCaseRun] = [
         tcr_1,
-        tcr_2
+        tcr_2,
+        tcr_3
     ]
-    formatted_output: Dict = gvt.format_results(test_cases)
-    assert formatted_output
+    formatted_output_1: Dict = gvt_1.format_results(test_cases)
+    assert formatted_output_1
     by_subject_test_case_id: str = f"{test_asset_id}-by_subject"
-    assert formatted_output[by_subject_test_case_id]
+    assert formatted_output_1[by_subject_test_case_id]
     by_object_test_case_id: str = f"{test_asset_id}-by_object"
-    assert formatted_output[by_object_test_case_id]
-    assert "ars" in formatted_output[by_object_test_case_id]
-    assert formatted_output[by_object_test_case_id]["ars"]
-    assert "status" in formatted_output[by_object_test_case_id]["ars"]
-    assert formatted_output[by_object_test_case_id]["ars"]["status"] == "SKIPPED"
-    assert not formatted_output[by_object_test_case_id]["ars"]["messages"]
+    assert formatted_output_1[by_object_test_case_id]
+    raise_object_entity_test_case_id: str = f"{test_asset_id}-raise_object_entity"
+    assert formatted_output_1[raise_object_entity_test_case_id]
+    assert "ars" in formatted_output_1[by_object_test_case_id]
+    assert formatted_output_1[by_object_test_case_id]["ars"]
+    assert "status" in formatted_output_1[by_object_test_case_id]["ars"]
+    assert formatted_output_1[by_object_test_case_id]["ars"]["status"] == "FAILED"
+    assert formatted_output_1[by_object_test_case_id]["ars"]["messages"]
