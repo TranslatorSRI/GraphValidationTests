@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.3
+
+- made ARS unimplemented TRAPI query non-fatal with error messages
+- TestRunner CLI defaults are set in the CLI as the current TRAPI and Biolink release SemVers, not just 'None'
+- Formatted output of non-empty TestRunner error message dictionary entries sorted by message precedence: "critical" > "error" > "warning" > "skipped" > "info"
+
 ## 0.1.2
 
 - update to reasoner-validator 4.1.5 (patches problematic biolink:treats mixin predicate validation)
