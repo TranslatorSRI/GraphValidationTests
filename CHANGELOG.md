@@ -1,12 +1,9 @@
 # Change Log
 
-# 0.1.4
+# 0.1.3
 
 - upgrade to reasoner-validator 4.2.0
 - fix bug in completely returning of result message dictionaries from test runs with a list of more than one target component
-
-## 0.1.3
-
 - made ARS unimplemented TRAPI query non-fatal with error messages
 - TestRunner CLI defaults are set in the CLI as the current TRAPI and Biolink release SemVers, not just 'None'
 - Formatted output of non-empty TestRunner error message dictionary entries sorted by message precedence: "critical" > "error" > "warning" > "skipped" > "info"
