@@ -554,7 +554,12 @@ class GraphValidationTest(BiolinkValidator):
             target: str = tr.default_target
             test_run_id: str = tr.get_run_id()
             results["pks"].update({target: test_run_id})
-            results["results"].update(await tr.process_test_run(**kwargs))
+            result: Dict = await tr.process_test_run(**kwargs)
+            for test_case_id, result in result.items():
+                if test_case_id not in results["results"]:
+                    results["results"][test_case_id] = dict()
+
+                results["results"][test_case_id].update(result)
 
         return results
 
