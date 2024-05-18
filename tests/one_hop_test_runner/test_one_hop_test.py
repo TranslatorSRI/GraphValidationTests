@@ -2,7 +2,7 @@
 Unit tests for One Hop Test code validation
 """
 from sys import stdout, stderr
-from typing import Dict
+from typing import List, Dict
 from json import dump
 import subprocess
 import pytest
@@ -16,8 +16,16 @@ from graph_validation_tests.utils.unit_test_templates import (
     raise_object_by_subject,
     raise_predicate_by_subject
 )
-from one_hop_test_runner import OneHopTest, run_one_hop_tests
-from tests import SAMPLE_MOLEPRO_INPUT_DATA, SCRIPTS_DIR, SAMPLE_ARAX_INPUT_DATA
+from one_hop_test_runner import (
+    OneHopTest,
+    run_one_hop_tests
+)
+from tests import (
+    SCRIPTS_DIR,
+    SAMPLE_MOLEPRO_INPUT_DATA,
+    SAMPLE_ARAX_INPUT_DATA,
+    SAMPLE_ARAGORN_INPUT_DATA
+)
 
 
 @pytest.mark.asyncio
@@ -35,7 +43,7 @@ async def test_one_hop_test():
         **SAMPLE_MOLEPRO_INPUT_DATA,
         trapi_generators=trapi_generators,
         environment="ci",
-        components=["arax", "molepro"]
+        components=["aragorn", "molepro"]
     )
     dump(results, stderr, indent=4)
 
@@ -56,7 +64,7 @@ async def test_one_hop_test_of_ars():
     results: Dict = await OneHopTest.run_tests(
         **SAMPLE_MOLEPRO_INPUT_DATA,
         trapi_generators=trapi_generators,
-        environment="prod"
+        environment="ci"
     )
     assert not results
 
@@ -95,12 +103,30 @@ async def test_run_one_hop_tests(
 
 
 @pytest.mark.parametrize(
-    "data,environment,component,expected_result",
+    "data,environment,components,expected_result",
     [
-        (
+        (   # Query 0 - MolePro test
             SAMPLE_MOLEPRO_INPUT_DATA,
             "ci",
-            "molepro",
+            ["molepro"],
+            None
+        ),
+        (   # Query 1 - ARAX test
+            SAMPLE_ARAX_INPUT_DATA,
+            "ci",
+            ["arax"],
+            None
+        ),
+        (   # Query 2 - Aragorn test
+            SAMPLE_ARAGORN_INPUT_DATA,
+            "ci",
+            ["aragorn"],
+            None
+        ),
+        (   # Query 3 - Combined ARAX and MolePro test
+            SAMPLE_MOLEPRO_INPUT_DATA,
+            "ci",
+            ["molepro", "arax", "aragorn"],
             None
         )
     ]
@@ -109,13 +135,13 @@ async def test_run_one_hop_tests(
 async def test_run_one_hop_tests_with_runner_parameters(
         data: Dict,
         environment: str,
-        component: str,
+        components: List[str],
         expected_result
 ):
     results: Dict = await run_one_hop_tests(
         **data,
         environment=environment,
-        components=[component],
+        components=components,
         strict_validation=True
     )
     assert results

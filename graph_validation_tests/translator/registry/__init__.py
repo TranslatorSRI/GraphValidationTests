@@ -248,9 +248,10 @@ def live_trapi_endpoint(url: str) -> Optional[Dict]:
             request = requests.get(test_url)
             if request.status_code == 200:
                 # Success! given url is deemed a 'live' TRAPI endpoint
-                # TODO: since we are accessing this endpoint now, perhaps we can
+                # TODO: since we are accessing this endpoint now, perhaps can we
                 #       harvest some of its metadata here, for validation purposes?
                 data: Optional[Dict] = request.json()
+                logger.info(f"live_trapi_endpoint(): TRAPI endpoint '{test_url}' successfully accessed!")
                 return data
             else:
                 logger.warning(
@@ -258,7 +259,7 @@ def live_trapi_endpoint(url: str) -> Optional[Dict]:
                     f"Status code: {request.status_code}?"
                 )
         except RequestException as re:
-            logger.warning(f"live_trapi_endpoint(): requests.get() exception {str(re)}?")
+            logger.warning(f"live_trapi_endpoint(): requests.get({test_url}) exception {str(re)}?")
     return None
 
 
