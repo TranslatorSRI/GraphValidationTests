@@ -26,7 +26,7 @@ SAMPLE_MOLEPRO_INPUT_DATA = {
 }
 
 SAMPLE_ARAX_INPUT_DATA = {
-    "test_asset_id": "TestAsset_1",
+    "test_asset_id": "TestAsset_2",
     "subject_id": "PUBCHEM.COMPOUND:2801",  # Clomipramine
     "subject_category": "biolink:ChemicalEntity",
     "predicate_id": "biolink:treats",
@@ -35,10 +35,19 @@ SAMPLE_ARAX_INPUT_DATA = {
 }
 
 SAMPLE_ARAGORN_INPUT_DATA = {
-    "test_asset_id": "TestAsset_1",
+    "test_asset_id": "TestAsset_3",
     "subject_id": "PUBCHEM.COMPOUND:2801",  # Clomipramine
     "subject_category": "biolink:ChemicalEntity",
     "predicate_id": "biolink:treats",
     "object_id": "ORPHANET:251636",  # Ependymoma
     "object_category": "biolink:Disease"
+}
+
+SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA = {
+    "test_asset_id": "TestAsset_4",
+    "subject_id": "PUBCHEM.COMPOUND:2733526",  # Tamoxifen
+    "subject_category": "biolink:ChemicalEntity",
+    "predicate_id": "biolink:affects",
+    "object_id": "NCBIGene:843632",  # PS2 inorganic pyrophosphatase 1
+    "object_category": "biolink:Gene"
 }

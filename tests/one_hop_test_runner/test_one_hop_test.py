@@ -24,7 +24,8 @@ from tests import (
     SCRIPTS_DIR,
     SAMPLE_MOLEPRO_INPUT_DATA,
     SAMPLE_ARAX_INPUT_DATA,
-    SAMPLE_ARAGORN_INPUT_DATA
+    SAMPLE_ARAGORN_INPUT_DATA,
+    SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA
 )
 
 
@@ -123,10 +124,16 @@ async def test_run_one_hop_tests(
             ["aragorn"],
             None
         ),
-        (   # Query 3 - Combined ARAX and MolePro test
+        (   # Query 3 - Combined MolePro, ARAX and Aragorn test
             SAMPLE_MOLEPRO_INPUT_DATA,
             "ci",
             ["molepro", "arax", "aragorn"],
+            None
+        ),
+        (   # Query 4 - Combined ARAX and MolePro test
+            SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA,
+            "ci",
+            ["molepro", "arax"],
             None
         )
     ]
