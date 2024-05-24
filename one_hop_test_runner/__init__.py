@@ -140,7 +140,7 @@ class OneHopTestCaseRun(TestCaseRun):
                             #
                             # the contents for which ought to be returned in
                             # the TRAPI Knowledge Graph, as a Result mapping?
-                            self.case_input_found_in_response(test_asset, response)
+                            self.testcase_input_found_in_response(test_asset, response)
                         else:
                             self.report(code="error.trapi.response.empty")
 
