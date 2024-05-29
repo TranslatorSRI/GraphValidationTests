@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.1.4
+
+- upgrade to reasoner-validator 4.2.3 with enhanced OneHop validation.
+
 # 0.1.3
 
 - upgrade to reasoner-validator 4.2.0

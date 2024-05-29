@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graph-validation-test-runners"
-version = "0.1.3"
+version = "0.1.4"
 description = "Validation of Translator Knowledge Graphs - TRAPI, Biolink Model and One Hop navigation"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
@@ -54,7 +54,7 @@ tqdm = "^4.66.2"
 requests = "^2.31.0"
 matplotlib = "^3.8.3"
 
-reasoner-validator = "^4.2.1"
+reasoner-validator = "^4.2.3"
 translator-testing-model = "^0.3.1"
 
 [tool.poetry.group.dev.dependencies]
