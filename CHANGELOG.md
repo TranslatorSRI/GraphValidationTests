@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.1.5
+
+- upgrade to reasoner-validator 4.2.4 with enhanced OneHop validation of fuzzy matching of identifiers against Node Normalization.
+
 # 0.1.4
 
 - upgrade to reasoner-validator 4.2.3 with enhanced OneHop validation.
