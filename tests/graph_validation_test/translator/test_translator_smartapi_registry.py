@@ -276,10 +276,10 @@ def test_select_endpoint(server_urls: Dict[str, List[str]], endpoint: Optional[T
 
 
 # Current default major.minor TRAPI SemVer version"
-DEF_M_M_TRAPI = "1.4"
+DEF_M_M_TRAPI = "1.5"
 
 # Current default major.minor.patch TRAPI SemVer version"
-DEF_M_M_P_TRAPI = "1.4.0"
+DEF_M_M_P_TRAPI = "1.5.0"
 
 KP_INFORES = "molepro"
 KP_TEST_DATA_URL = "https://github.com/broadinstitute/molecular-data-provider/blob/" + \
