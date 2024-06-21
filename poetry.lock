@@ -404,20 +404,20 @@ tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
 name = "deepdiff"
-version = "6.7.1"
+version = "7.0.1"
 description = "Deep Difference and Search of any Python object/data. Recreate objects by adding adding deltas to each other."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "deepdiff-6.7.1-py3-none-any.whl", hash = "sha256:58396bb7a863cbb4ed5193f548c56f18218060362311aa1dc36397b2f25108bd"},
-    {file = "deepdiff-6.7.1.tar.gz", hash = "sha256:b367e6fa6caac1c9f500adc79ada1b5b1242c50d5f716a1a4362030197847d30"},
+    {file = "deepdiff-7.0.1-py3-none-any.whl", hash = "sha256:447760081918216aa4fd4ca78a4b6a848b81307b2ea94c810255334b759e1dc3"},
+    {file = "deepdiff-7.0.1.tar.gz", hash = "sha256:260c16f052d4badbf60351b4f77e8390bee03a0b516246f6839bc813fb429ddf"},
 ]
 
 [package.dependencies]
-ordered-set = ">=4.0.2,<4.2.0"
+ordered-set = ">=4.1.0,<4.2.0"
 
 [package.extras]
-cli = ["click (==8.1.3)", "pyyaml (==6.0.1)"]
+cli = ["click (==8.1.7)", "pyyaml (==6.0.1)"]
 optimize = ["orjson"]
 
 [[package]]
@@ -490,13 +490,13 @@ wmi = ["wmi (>=1.5.1)"]
 
 [[package]]
 name = "email-validator"
-version = "2.1.2"
+version = "2.2.0"
 description = "A robust email address syntax and deliverability validation library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "email_validator-2.1.2-py3-none-any.whl", hash = "sha256:d89f6324e13b1e39889eab7f9ca2f91dc9aebb6fa50a6d8bd4329ab50f251115"},
-    {file = "email_validator-2.1.2.tar.gz", hash = "sha256:14c0f3d343c4beda37400421b39fa411bbe33a75df20825df73ad53e06a9f04c"},
+    {file = "email_validator-2.2.0-py3-none-any.whl", hash = "sha256:561977c2d73ce3611850a06fa56b414621e0c8faa9d66f2611407d87465da631"},
+    {file = "email_validator-2.2.0.tar.gz", hash = "sha256:cb690f344c617a714f22e66ae771445a1ceb46821152df8e165c5f9a364582b7"},
 ]
 
 [package.dependencies]
@@ -1935,13 +1935,13 @@ networkx = ["networkx (>=2.0.0,<3.0.0)"]
 
 [[package]]
 name = "reasoner-validator"
-version = "4.2.4"
+version = "4.2.5"
 description = "Validation tools for Reasoner API"
 optional = false
 python-versions = "<3.12,>=3.9"
 files = [
-    {file = "reasoner_validator-4.2.4-py3-none-any.whl", hash = "sha256:9851407a444b1de6c31c1594650a6f6d577dad22e5eb6c83a5022f35a3d366fa"},
-    {file = "reasoner_validator-4.2.4.tar.gz", hash = "sha256:44ef9d50f1aa07951f5f70303531c26d45e232bc44032ba337a0d661c84670bb"},
+    {file = "reasoner_validator-4.2.5-py3-none-any.whl", hash = "sha256:da8c1f2e3d34486f11d96210e334629bd75b89809580cfcb414a344085a765e8"},
+    {file = "reasoner_validator-4.2.5.tar.gz", hash = "sha256:14248711fc14280737d3bcaef73ba202af573605db6f560abd0a9e7976f61f66"},
 ]
 
 [package.dependencies]
@@ -2610,4 +2610,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "a22825dceb910ccb3f839cf20b9cff0eaa5772e345d980fc10aa7a8edf5a9bb6"
+content-hash = "6c7d88962733adf3c820c7b2815a143bc64760d43fdfe6a395a5f2b8d25e2c01"
