@@ -20,6 +20,8 @@ from graph_validation_tests.translator.trapi import get_available_components, ru
 from graph_validation_tests.utils.asyncio import gather
 
 from bmt import Toolkit
+from bmt.toolkit import RELATED_TO
+from bmt.utils import format_element as biolink_curie
 
 import logging
 logger = logging.getLogger(__name__)
@@ -27,6 +29,8 @@ logger = logging.getLogger(__name__)
 # as long as TRAPI has major version == "1", we should be OK here
 default_trapi_release: str = get_latest_version("1")
 default_biolink_model_version: str = Toolkit().get_model_version()
+
+DEFAULT_BIOLINK_PREDICATE = "biolink:related_to"
 
 
 class TestCaseRun(TRAPIResponseValidator):
@@ -70,7 +74,8 @@ class TestCaseRun(TRAPIResponseValidator):
             **kwargs
         )
 
-        # Convert the TestCase into an internally expected format
+        # Convert previously GraphValidationTest provided
+        # TestAsset into the internally expected format
         self.test_asset: Optional[Dict[str, Any]] = self.translate_test_asset()
 
         # the 'test' itself should be an executable piece of code
@@ -181,17 +186,34 @@ class TestCaseRun(TRAPIResponseValidator):
         #########################################################
         self.validate_test_case()
 
-    @staticmethod
-    def get_predicate_id(predicate_name: str) -> str:
+    def get_predicate_id(self, predicate_name: Optional[str], edge_id: str) -> str:
         """
         SME's (like Jenn) like plain English (possibly capitalized) names
         for their predicates, whereas, we need regular Biolink CURIES here.
-        :param predicate_name: predicate name string
+        :param predicate_name: predicate name string. Note that if the 'predicate_name'
+                               is not given, we return the most generic
+                               Biolink Model predicate, which is "related to"
+        :param edge_id: str, edge context of the predicate being vetted.
         :return: str, predicate CURIE (presumed to be from the Biolink Model?)
         """
-        # TODO: maybe validate the predicate name here against the Biolink Model?
-        predicate = predicate_name.lower().replace(" ", "_")
-        return f"biolink:{predicate}"
+        if not predicate_name:
+            self.report(
+                code="error.input_edge.predicate.missing",
+                identifier=edge_id
+            )
+            predicate_name = RELATED_TO
+
+        # even if it is not missing, the predicate name might
+        # denote a valid predicate in the current Biolink Model?
+        if self.validate_biolink() and not self.bmt.is_predicate(predicate_name):
+            self.report(
+                code="error.input_edge.predicate.unknown",
+                identifier=str(predicate_name),
+                edge_id=edge_id
+            )
+            predicate_name = RELATED_TO
+
+        return biolink_curie(self.bmt.get_element(predicate_name))
 
     def translate_test_asset(self) -> Dict[str, str]:
         """
@@ -207,7 +229,11 @@ class TestCaseRun(TRAPIResponseValidator):
         test_edge["subject_id"] = self.get_test_asset().input_id
         test_edge["subject_category"] = self.get_test_asset().input_category
         test_edge["predicate_id"] = self.get_test_asset().predicate_id \
-            if self.get_test_asset().predicate_id else self.get_predicate_id(self.get_test_asset().predicate_name)
+            if self.get_test_asset().predicate_id \
+            else self.get_predicate_id(
+            self.get_test_asset().predicate_name,
+            self.get_test_asset().id
+        )
         test_edge["object_id"] = self.get_test_asset().output_id
         test_edge["object_category"] = self.get_test_asset().output_category
         test_edge["biolink_version"] = self.biolink_version

@@ -18,7 +18,7 @@ TEST_ASSET_1 = {
     "object_category": "biolink:Disease"
 }
 
-TEST_ASSET_ID = "TestAsset_1"
+SAMPLE_TEST_ASSET_ID = "TestAsset_1"
 TEST_SUBJECT_ID = "MONDO:0005301"
 TEST_SUBJECT_CATEGORY = "biolink:Disease"
 TEST_PREDICATE_NAME = "treats"
@@ -26,7 +26,7 @@ TEST_PREDICATE_ID = f"biolink:{TEST_PREDICATE_NAME}"
 TEST_OBJECT_ID = "PUBCHEM.COMPOUND:107970"
 TEST_OBJECT_CATEGORY = "biolink:SmallMolecule"
 SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
-    test_asset_id=TEST_ASSET_ID,
+    test_asset_id=SAMPLE_TEST_ASSET_ID,
     subject_id=TEST_SUBJECT_ID,
     subject_category=TEST_SUBJECT_CATEGORY,
     predicate_id=TEST_PREDICATE_ID,
@@ -36,7 +36,7 @@ SAMPLE_TEST_ASSET: TestAsset = GraphValidationTest.build_test_asset(
 
 
 def test_build_test_asset():
-    assert SAMPLE_TEST_ASSET.id == TEST_ASSET_ID
+    assert SAMPLE_TEST_ASSET.id == SAMPLE_TEST_ASSET_ID
     assert SAMPLE_TEST_ASSET.input_id == TEST_SUBJECT_ID
     assert SAMPLE_TEST_ASSET.input_category == TEST_SUBJECT_CATEGORY
     assert SAMPLE_TEST_ASSET.predicate_id == TEST_PREDICATE_ID
@@ -103,12 +103,10 @@ def test_test_case_run_report_messages():
 
 
 def test_format_results():
-    # create dummy test and test case runs
+    # create dummy test asset and test case runs
     # with artificially generated validation messages
-    test_asset_id: str = "TestAsset_1"
-    test_asset: TestAsset = TestAsset(id=test_asset_id)
     gvt_0: GraphValidationTest = GraphValidationTest(
-        test_asset=test_asset
+        test_asset=SAMPLE_TEST_ASSET
     )
     tcr_0: TestCaseRun = TestCaseRun(
         test_run=gvt_0,
@@ -117,16 +115,19 @@ def test_format_results():
     test_cases_0: List[TestCaseRun] = [tcr_0]
     formatted_output_0: Dict = gvt_0.format_results(test_cases_0)
     assert formatted_output_0
-    by_subject_test_case_id: str = f"{test_asset_id}-by_subject"
+    by_subject_test_case_id: str = f"{SAMPLE_TEST_ASSET_ID}-by_subject"
     assert formatted_output_0[by_subject_test_case_id]
     assert "ars" in formatted_output_0[by_subject_test_case_id]
     assert formatted_output_0[by_subject_test_case_id]["ars"]
     assert "status" in formatted_output_0[by_subject_test_case_id]["ars"]
+
+    # the results were formatted as 'failed' given that we now
+    # report the 'predicate_name' missing from the above TestAsset?
     assert formatted_output_0[by_subject_test_case_id]["ars"]["status"] == "SKIPPED"
     assert not formatted_output_0[by_subject_test_case_id]["ars"]["messages"]
 
     gvt_1: GraphValidationTest = GraphValidationTest(
-        test_asset=test_asset
+        test_asset=SAMPLE_TEST_ASSET
     )
     # create some dummy test runs with artificially generated validation messages
     tcr_1: TestCaseRun = TestCaseRun(
@@ -173,11 +174,11 @@ def test_format_results():
     ]
     formatted_output_1: Dict = gvt_1.format_results(test_cases)
     assert formatted_output_1
-    by_subject_test_case_id: str = f"{test_asset_id}-by_subject"
+    by_subject_test_case_id: str = f"{SAMPLE_TEST_ASSET_ID}-by_subject"
     assert formatted_output_1[by_subject_test_case_id]
-    by_object_test_case_id: str = f"{test_asset_id}-by_object"
+    by_object_test_case_id: str = f"{SAMPLE_TEST_ASSET_ID}-by_object"
     assert formatted_output_1[by_object_test_case_id]
-    raise_object_entity_test_case_id: str = f"{test_asset_id}-raise_object_entity"
+    raise_object_entity_test_case_id: str = f"{SAMPLE_TEST_ASSET_ID}-raise_object_entity"
     assert formatted_output_1[raise_object_entity_test_case_id]
     assert "ars" in formatted_output_1[by_object_test_case_id]
     assert formatted_output_1[by_object_test_case_id]["ars"]
