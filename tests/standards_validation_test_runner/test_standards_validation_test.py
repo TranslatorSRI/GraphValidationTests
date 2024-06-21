@@ -1,10 +1,14 @@
 """
 Unit tests for Standards Validation Test code validation
 """
+from os.path import join
+import json
 from sys import stderr
 from typing import List, Dict
 from json import dump
 import pytest
+
+from translator_testing_model.datamodel.pydanticmodel import TestAsset
 
 from graph_validation_tests.utils.unit_test_templates import (
     by_subject,
@@ -15,9 +19,10 @@ from standards_validation_test_runner import (
     run_standards_validation_tests
 )
 from tests import (
+    TEST_DATA_DIR,
     SAMPLE_MOLEPRO_INPUT_DATA,
     SAMPLE_ARAX_INPUT_DATA,
-    SAMPLE_ARAGORN_INPUT_DATA
+    SAMPLE_ARAGORN_INPUT_DATA, SAMPLE_MOLEPRO_TEST_ASSET
 )
 
 
@@ -123,3 +128,34 @@ async def test_run_standards_validation_tests(
     )
     assert results
     dump(results, stderr, indent=4)
+
+
+@pytest.mark.parametrize(
+    "environment,component,trapi_response_filename",
+    [
+        (   # Query 0 - a full MolePro generated TRAPI Response
+            "ci",
+            "molepro",
+            "standards_validation_test_response.json"
+        )
+    ]
+)
+def test_standards_validation_tests_validate_test_case(
+        environment: str,
+        component: str,
+        trapi_response_filename: str
+):
+    test_file = join(TEST_DATA_DIR, trapi_response_filename)
+    with (open(test_file, mode="r") as trapi_json_file):
+        # Standards Testing doesn't actually care
+        # about the TestAsset, only the JSON output?
+        test_asset: TestAsset = TestAsset(**SAMPLE_MOLEPRO_TEST_ASSET)
+        trapi_response: Dict = json.load(trapi_json_file)
+        svt = StandardsValidationTest(
+            test_asset=test_asset,
+            environment=environment,
+            component=component
+        )
+        results: Dict = svt.test_case_processor(trapi_response=trapi_response)
+        assert results
+        dump(results, stderr, indent=4)

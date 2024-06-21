@@ -1,7 +1,7 @@
 """
 Abstract base class for the GraphValidation TestRunners
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from argparse import ArgumentParser
 
@@ -15,7 +15,8 @@ from graph_validation_tests.translator.registry import (
     get_the_registry_data,
     extract_component_test_metadata_from_registry
 )
-from graph_validation_tests.translator.trapi import get_available_components
+
+from graph_validation_tests.translator.trapi import get_available_components, run_trapi_query
 from graph_validation_tests.utils.asyncio import gather
 
 from bmt import Toolkit
@@ -36,33 +37,50 @@ class TestCaseRun(TRAPIResponseValidator):
     based on a TRAPI query against the test_run bound 'target' endpoint. Results
     of a TestCaseRun are stored within the parent BiolinkValidator class.
     """
-    def __init__(self, test_run, test, **kwargs):
+    def __init__(
+            self,
+            test_run,
+            test: Optional = None,
+            trapi_response: Optional[Dict[str, Any]] = None,
+            **kwargs):
         """
-        Constructor for a TestCaseRun.
+        Constructor for a TestCaseRun. Either 'test' or 'trapi_response' must generally be provided (i.e. not 'None').
 
         :param test_run: owner of the use case, which should be an instance of a subclass of GraphValidationTest.
-        :param test: declared generator of a TestCase TRAPI query being processed (generally, an executable function).
-        :param kwargs: Dict, optional extra named BiolinkValidator parameters
-                             which may be specified for the test run.
+        :param test: Optional, declared generator of a TestCase TRAPI query being processed
+                            (generally, an executable function). May be 'None' if the TestRunner
+                            doesn't itself run the TRAPI query to get a TRAPI Response for validation.
+        :param trapi_response: Optional[Dict[str, Any]], pre-run TRAPI Response for validation.
+                               May be 'None' if this is a 'test' driven TestCaseRunn(default: None)
+        :param kwargs: Dict, optional dictionary of extra named BiolinkValidator
+                             parameters which may be applied to the test run.
         """
         assert test_run, "'test_run' is uninitialized!"
         self.test_run = test_run
 
+        assert (test is None) ^ (trapi_response is None), \
+            "At least one of 'test' or 'trapi_response' must not be None!"
+
         TRAPIResponseValidator.__init__(
             self,
-            default_test=test.__name__,
+            default_test=test.__name__ if test is not None else test_run.__class__.__name__,
             default_target=test_run.default_target,
             trapi_version=test_run.trapi_version,
             biolink_version=test_run.biolink_version,
             **kwargs
         )
 
+        # Convert the TestCase into an internally expected format
+        self.test_asset: Optional[Dict[str, Any]] = self.translate_test_asset()
+
         # the 'test' itself should be an executable piece of code
         # that defines how a TestCase is derived from the TestAsset
-        self.test = test
+        # Maybe be None if the TestRunner doesn't itself run the
+        # TRAPI query, to get a TRAPI Response for validation.
+        self.test: Optional = test
 
-        self.trapi_request: Optional[Dict] = None
-        self.trapi_response: Optional[Dict[str, int]] = None
+        self.trapi_request: Optional[Dict[str, Any]] = None
+        self.trapi_response: Optional[Dict[str, Any]] = trapi_response
 
     def get_test_asset(self) -> TestAsset:
         return self.test_run.test_asset
@@ -73,8 +91,95 @@ class TestCaseRun(TRAPIResponseValidator):
     def get_environment(self) -> str:
         return self.test_run.environment
 
-    async def run_test_case(self):
+    async def run_test_case_query(self):
+        """
+        Method to execute a TRAPI lookup query of a single TestCase
+        using the GraphValidationTest associated TestAsset.
+
+        :return: None, results are captured as validation
+                       messages within the TestCaseRun parent.
+        """
+        output_element: Optional[str]
+        output_node_binding: Optional[str]
+
+        trapi_request, output_element, output_node_binding = self.test(self.test_asset)
+
+        if not trapi_request:
+            # output_element and output_node_binding were
+            # expropriated by the 'test' to return error information
+            context = output_element.split("|")
+            self.report(
+                code="skipped.test",
+                identifier=context[0],
+                context=context[1],
+                reason=output_node_binding
+            )
+
+        else:
+            # sanity check: verify first that the TRAPI request
+            # is well-formed by the self.test(test_asset)
+            self.validate(trapi_request, component="Query")
+
+            # We'll ignore warnings and info messages
+            if not (self.has_critical() or self.has_errors() or self.has_skipped()):
+                # if no error or skipped test messages are reported,
+                # then continue with the validation.
+
+                # First, record the raw TRAPI query request for later reporting.
+                self.trapi_request = trapi_request
+
+                # Make the TRAPI call to the TestCase targeted ARS, KP or
+                # ARA resource, using the case-documented input test edge
+                # Capture the raw TRAPI query response for later reporting
+                http_response: Optional[Dict] = await run_trapi_query(
+                    trapi_request=trapi_request,
+                    component=self.get_component(),
+                    environment=self.get_environment(),
+                    target_trapi_version=self.trapi_version,
+                    target_biolink_version=self.biolink_version
+                )
+
+                if not http_response:
+                    self.report(code="error.trapi.response.empty")
+
+                else:
+                    # Second sanity check: check whether the web service (HTTP) call itself was successful?
+                    status_code: int = http_response['status_code']
+                    if status_code != 200:
+                        self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
+                    else:
+                        #############################################################
+                        # Looks good so far, so now capture the TRAPI Response JSON #
+                        #############################################################
+                        self.trapi_response: Optional[Dict] = http_response['response_json']
+
+    def validate_test_case(self) -> Dict:
+        """
+        Validates a previously run TRAPI response JSON result
+        resulting from a provided TestAsset, against the output
+        validation criteria of the given StandardsValidationTest.
+
+        The 'test_asset' and 'trapi_response' values are expected
+        to be pre-recorded as TestCaseRun instance attributes.
+
+        :return: Dict, a dictionary containing the Translator Test results
+        """
         raise NotImplementedError("Implement me within a suitable test-type specific subclass of TestCaseRun!")
+
+    async def run_test_case(self):
+        """
+        Method to execute a TRAPI lookup a single TestCase
+        using the GraphValidationTest associated TestAsset.
+
+        :return: None, results are captured as validation
+                       messages within the TestCaseRun parent.
+        """
+        await self.run_test_case_query()
+
+        #########################################################
+        # Looks good so far, so now validate the TRAPI response #
+        #########################################################
+        self.validate_test_case()
 
     @staticmethod
     def get_predicate_id(predicate_name: str) -> str:
@@ -96,7 +201,8 @@ class TestCaseRun(TRAPIResponseValidator):
         """
         test_edge: Dict[str, str] = dict()
 
-        # TODO: should "idx" be renamed to "test_asset_id" or will this break the reasoner-validator?
+        # TODO: should "idx" be renamed to "test_asset_id"
+        #       or will this break the reasoner-validator?
         test_edge["idx"] = self.get_test_asset().id
         test_edge["subject_id"] = self.get_test_asset().input_id
         test_edge["subject_category"] = self.get_test_asset().input_category
@@ -213,7 +319,7 @@ class GraphValidationTest(BiolinkValidator):
         # trapi_generators should usually not be empty, but just in case...
         self.trapi_generators: Tuple = trapi_generators or ()
 
-        self.runner_settings = runner_settings
+        self.runner_settings: Optional[List[str]] = runner_settings
 
         self.results: Dict = dict()
 
@@ -262,17 +368,45 @@ class GraphValidationTest(BiolinkValidator):
             output_category=object_category
         )
 
-    def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
+    def test_case_wrapper(
+            self,
+            test: Optional = None,
+            trapi_response: Optional[Dict[str, Any]] = None,
+            **kwargs
+    ) -> TestCaseRun:
         """
         Converts currently bound TestAsset into a runnable
         test case.  Implementation is subclassed, to give
         access to a specialized TestCaseRun class wrapped code.
 
-        :param test: pointer to a code function that configure an
-                     individual TRAPI query request.
+        :param test: Optional, pointer to a code function that
+                     configures an individual TRAPI query request (default: None)
                      See graph_validation_tests.unit_test_templates.
+        :param trapi_response: Optional[Dict[str, Any]], pre-run TRAPI Response for validation (default: None)
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+        :return: TestCaseRun object
         """
         raise NotImplementedError("Abstract method, implement in subclass!")
+
+    def test_case_processor(self, trapi_response: Dict[str, Any], **kwargs) -> Dict:
+        """
+        Standalone validation of a previously run TRAPI Response result,
+        using output validation criteria of the given GraphValidationTest subtype.
+
+        :param trapi_response: Dict[str, Any], pre-run TRAPI Response for validation. Not expected to be null here!
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+
+        :return: Dict, a dictionary containing the Translator Test results
+        """
+        assert trapi_response, f"Expected a non-empty TRAPI Response"
+
+        test_case_run = self.test_case_wrapper(trapi_response=trapi_response, **kwargs)
+
+        # perform the validation...
+        test_case_run.validate_test_case()
+
+        # ... then, return the results
+        return self.format_results(test_cases=[test_case_run])
 
     @staticmethod
     async def run_test_cases(test_cases: List[TestCaseRun]):

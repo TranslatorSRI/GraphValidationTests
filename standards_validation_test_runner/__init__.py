@@ -2,7 +2,7 @@
 TRAPI and Biolink Model Standards Validation
 test (using reasoner-validator)
 """
-from typing import Optional, Dict
+from typing import Any, Optional, Dict
 import asyncio
 
 from graph_validation_tests import (
@@ -10,7 +10,6 @@ from graph_validation_tests import (
     TestCaseRun,
     get_parameters
 )
-from graph_validation_tests.translator.trapi import run_trapi_query
 
 # For the initial implementation of the StandardsValidation,
 # we just do a simply 'by_subject' TRAPI query
@@ -19,81 +18,47 @@ from graph_validation_tests.utils.unit_test_templates import by_subject, by_obje
 
 class StandardsValidationTestCaseRun(TestCaseRun):
 
-    # default constructor is inherited
-    # from BiolinkValidator via TestCaseRun
-
-    async def run_test_case(self):
+    async def validate_test_case(self):
         """
-        Method to execute a TRAPI lookup a single TestCase
-        using the GraphValidationTest associated TestAsset.
+        Validates a previously run TRAPI response JSON result
+        resulting from a provided TestAsset, against the output
+        validation criteria of the given StandardsValidationTest.
+        The test_asset and trapi_response values are expected
+        to be recorded in the TestCaseRun instance attributes.
 
-        :return: None, results are captured as validation
-                       messages within the TestCaseRun parent.
+        :return: Dict, a dictionary containing the Translator Test results
         """
-        output_element: Optional[str]
-        output_node_binding: Optional[str]
-
-        # TODO: not sure if this is necessary - is the remapping
-        #       of test asset fields already accomplished elsewhere?
-        test_asset = self.translate_test_asset()
-
-        trapi_request, output_element, output_node_binding = self.test(test_asset)
-
-        if not trapi_request:
-            # output_element and output_node_binding return values were
-            # expropriated by 'by_subject' to return error information
-            context = output_element.split("|")
-            self.report(
-                code="critical.trapi.request.invalid",
-                identifier=context[1],
-                context=context[0],
-                reason=output_node_binding
-            )
-
-        else:
-            # sanity check: verify first that the TRAPI request
-            # is well-formed by the self.test(test_asset)
-            self.validate(trapi_request, component="Query")
-
-            # We'll ignore warnings and info messages
-            if not (self.has_critical() or self.has_errors() or self.has_skipped()):
-
-                # Capture the raw TRAPI query request for reporting
-                self.trapi_request = trapi_request
-
-                # Make the TRAPI call to the TestCase targeted ARS, KP or
-                # ARA resource, using the case-documented input test edge
-                trapi_response: Optional[Dict] = await run_trapi_query(
-                    trapi_request=trapi_request,
-                    component=self.get_component(),
-                    environment=self.get_environment(),
-                    target_trapi_version=self.trapi_version,
-                    target_biolink_version=self.biolink_version
-                )
-
-                if not trapi_response:
-                    self.report(code="error.trapi.response.empty")
-
-                else:
-                    # Capture the raw TRAPI query response for reporting
-                    self.trapi_response = trapi_response
-
-                    # Second sanity check: was the web service (HTTP) call itself successful?
-                    status_code: int = trapi_response['status_code']
-                    if status_code != 200:
-                        self.report("critical.trapi.response.unexpected_http_code", identifier=status_code)
-                    else:
-                        #########################################################
-                        # Looks good so far, so now validate the TRAPI response #
-                        #########################################################
-                        self.check_compliance_of_trapi_response(
-                            response=trapi_response['response_json']
-                        )
+        # We assume that there is some kind of TRAPI Response to this point,
+        # then we check whether the TRAPI Response JSON is compliant with
+        # current TRAPI and Biolink Model version expectations,
+        # assessed without any reference back to the input TestAsset.
+        self.check_compliance_of_trapi_response(response=self.trapi_response)
 
 
 class StandardsValidationTest(GraphValidationTest):
-    def test_case_wrapper(self, test, **kwargs) -> TestCaseRun:
-        return StandardsValidationTestCaseRun(test_run=self, test=test, **kwargs)
+    def test_case_wrapper(
+            self,
+            test: Optional = None,
+            trapi_response: Optional[Dict[str, Any]] = None,
+            **kwargs
+    ) -> TestCaseRun:
+        """
+        Converts currently bound TestAsset into
+        a usable StandardsValidationTestCaseRun.
+
+        :param test: Optional, pointer to a code function that
+                     configures an individual TRAPI query request (default: None)
+                     See graph_validation_tests.unit_test_templates.
+        :param trapi_response: Optional[Dict[str, Any]], pre-run TRAPI Response for validation (default: None)
+        :param kwargs: Dict, optional extra named parameters to passed to TestCase TestRunner.
+        :return: TestCaseRun object
+        """
+        return StandardsValidationTestCaseRun(
+            test_run=self,
+            test=test,
+            trapi_response=trapi_response,
+            **kwargs
+        )
 
 
 async def run_standards_validation_tests(**kwargs) -> Dict:

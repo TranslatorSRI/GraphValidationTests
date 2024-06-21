@@ -3,12 +3,27 @@ from reasoner_validator.biolink import get_biolink_model_toolkit
 from reasoner_validator.versioning import get_latest_version
 import os
 
-TEST_DIR = os.path.abspath(os.path.dirname(__file__))
-PROJECT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
-SCRIPTS_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "scripts")
+TEST_DIR_NAME = os.path.dirname(__file__)
+TEST_DIR = os.path.abspath(TEST_DIR_NAME)
+TEST_DATA_DIR = os.path.join(TEST_DIR, "data")
+PROJECT_DIR = os.path.join(TEST_DIR, "..")
+SCRIPTS_DIR = os.path.join(TEST_DIR, "scripts")
 
 DEFAULT_TRAPI_VERSION = get_latest_version("1")
 DEFAULT_BMT: Toolkit = get_biolink_model_toolkit()
+
+# Some callers of the system will use 'canonical' test assets.
+# Thus, this sample TestAsset is the untransformed version
+# of the MolePro input data below it...
+SAMPLE_MOLEPRO_TEST_ASSET = {
+    "id": "TestAsset_1",
+    "input_id": "CHEBI:16796",   # Melatonin
+    "input_category": "biolink:ChemicalEntity",
+    "predicate_id": "biolink:treats",
+    "output_id": "MONDO:0005258",  # Autism
+    "output_category": "biolink:Disease"
+}
+
 SAMPLE_MOLEPRO_INPUT_DATA = {
     # One test edge (asset)
     "test_asset_id": "TestAsset_1",
