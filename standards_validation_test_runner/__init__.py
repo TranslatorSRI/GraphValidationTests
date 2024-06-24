@@ -18,7 +18,7 @@ from graph_validation_tests.utils.unit_test_templates import by_subject, by_obje
 
 class StandardsValidationTestCaseRun(TestCaseRun):
 
-    async def validate_test_case(self):
+    def validate_test_case(self):
         """
         Validates a previously run TRAPI response JSON result
         resulting from a provided TestAsset, against the output
