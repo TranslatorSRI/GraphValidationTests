@@ -93,7 +93,6 @@ To run TRAPI and Biolink Model validation tests validating query outputs from a 
 ```python
 from typing import Dict
 import asyncio
-from translator_testing_model.datamodel.pydanticmodel import ComponentEnum
 from standards_validation_test_runner import run_standards_validation_tests
 
 test_data = {
@@ -189,6 +188,47 @@ results: Dict = asyncio.run(StandardsValidationTest.run_tests(
 ```
 
 Note that the trapi_generation variables - defined in the **graph_validation_test.utils.unit_test_templates** module - are all simply Python functions returning TRAPI JSON messages to send to the target components. In principle, if one understands what those functions are doing, you could write your own methods to do other kinds of TRAPI queries whose output can then be validated against the specified TRAPI and Biolink Model releases.
+
+### Running Tests Directly on TRAPI Response output
+
+The new Translator testing framework has the notion of a "QueryRunner" which prepares and runs TRAPI queries then hands over the TRAPI Response (with the original TestAsset) over to a TestRunner for validation. 
+
+For this use case, yet another script design pattern may be used, somewhat as follows:
+
+```python
+from typing import Dict
+from sys import stderr
+import json
+from standards_validation_test_runner import StandardsValidationTest
+from translator_testing_model.datamodel.pydanticmodel import TestAsset
+test_data = {
+    # One test edge (asset)
+    "subject_id": "DRUGBANK:DB01592",
+    "subject_category": "biolink:SmallMolecule",
+    "predicate_id": "biolink:has_side_effect",
+    "object_id": "MONDO:0011426",
+    "object_category": "biolink:Disease",
+    "components": ["molepro"],
+    "environment": "test",
+    "trapi_version": "1.5.0-beta",
+    "biolink_version": "4.1.6",
+    "runner_settings": "Inferred"
+}
+
+with (open("TRAPI-Response-filename", mode="r") as trapi_json_file):
+    test_asset: TestAsset = TestAsset(**test_data)
+    trapi_response: Dict = json.load(trapi_json_file)
+    svt = StandardsValidationTest(
+        test_asset=test_asset,
+        environment=test_data["environment"],
+        component=test_data["components"][0]
+    )
+    results: Dict = svt.test_case_processor(trapi_response=trapi_response)
+    assert results
+    json.dump(results, stderr, indent=4)
+```
+
+Note that even through the TRAPI query is not run inside the TestRunner, that the source component ("infores" CURIE reference identifier (e.g. 'molepro')) plus target environment (e.g. 'test') need to be given to the system as strings in the StandardsValidationTest() constructor, for use in properly indexing the 'results' dictionary.
 
 ### Sample Output
 
