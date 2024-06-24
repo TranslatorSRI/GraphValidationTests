@@ -1,7 +1,7 @@
 """
 Unit tests for Standards Validation Test code validation
 """
-from os.path import join
+import os
 import json
 from sys import stderr
 from typing import List, Dict
@@ -22,7 +22,9 @@ from tests import (
     TEST_DATA_DIR,
     SAMPLE_MOLEPRO_INPUT_DATA,
     SAMPLE_ARAX_INPUT_DATA,
-    SAMPLE_ARAGORN_INPUT_DATA, SAMPLE_MOLEPRO_TEST_ASSET
+    SAMPLE_ARAGORN_INPUT_DATA,
+    SAMPLE_MOLEPRO_TEST_ASSET,
+    FULL_TEST
 )
 
 
@@ -49,6 +51,10 @@ from tests import (
         )
     ]
 )
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_standards_validation_test(
         data: Dict,
@@ -71,6 +77,10 @@ async def test_standards_validation_test(
 
 # ARS tests not yet supported so yes... results will
 # always be empty, with a logger message to inform why
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_standards_validation_test_on_ars():
     trapi_generators = [
@@ -114,6 +124,10 @@ async def test_standards_validation_test_on_ars():
         )
     ]
 )
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_run_standards_validation_tests(
         data: Dict,
@@ -145,7 +159,7 @@ def test_standards_validation_tests_validate_test_case(
         component: str,
         trapi_response_filename: str
 ):
-    test_file = join(TEST_DATA_DIR, trapi_response_filename)
+    test_file = os.path.join(TEST_DATA_DIR, trapi_response_filename)
     with (open(test_file, mode="r") as trapi_json_file):
         # Standards Testing doesn't actually care
         # about the TestAsset, only the JSON output?

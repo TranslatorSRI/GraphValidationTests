@@ -66,3 +66,5 @@ SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA = {
     "object_id": "NCBIGene:843632",  # PS2 inorganic pyrophosphatase 1
     "object_category": "biolink:Gene"
 }
+
+FULL_TEST: bool = os.environ.get('FULL_TEST', '0') == '1'

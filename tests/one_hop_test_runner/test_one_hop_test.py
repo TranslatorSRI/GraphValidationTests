@@ -1,10 +1,14 @@
 """
 Unit tests for One Hop Test code validation
 """
-from sys import stdout, stderr
+import os
+from sys import (
+    # stdout,
+    stderr
+)
 from typing import List, Dict
 from json import dump
-import subprocess
+# import subprocess
 import pytest
 
 from graph_validation_tests.utils.unit_test_templates import (
@@ -21,14 +25,19 @@ from one_hop_test_runner import (
     run_one_hop_tests
 )
 from tests import (
-    SCRIPTS_DIR,
+    # SCRIPTS_DIR,
     SAMPLE_MOLEPRO_INPUT_DATA,
     SAMPLE_ARAX_INPUT_DATA,
     SAMPLE_ARAGORN_INPUT_DATA,
-    SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA
+    SAMPLE_JOINT_MOLEPRO_ARAX_INPUT_DATA,
+    FULL_TEST
 )
 
 
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_one_hop_test():
     trapi_generators = [
@@ -51,6 +60,10 @@ async def test_one_hop_test():
 
 # ARS tests not yet supported so yes... results will
 # always be empty, with a logger message to inform why
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_one_hop_test_of_ars():
     trapi_generators = [
@@ -87,6 +100,10 @@ async def test_one_hop_test_of_ars():
         )
     ]
 )
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_run_one_hop_tests(
         data: Dict,
@@ -103,6 +120,10 @@ async def test_run_one_hop_tests(
     dump(results, stderr, indent=4)
 
 
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.parametrize(
     "data,environment,components,expected_result",
     [
@@ -138,6 +159,10 @@ async def test_run_one_hop_tests(
         )
     ]
 )
+@pytest.mark.skipif(
+    not FULL_TEST,
+    reason="This test is a long running TRAPI query on active resources. Best not to run on CI!"
+)
 @pytest.mark.asyncio
 async def test_run_one_hop_tests_with_runner_parameters(
         data: Dict,
@@ -161,15 +186,15 @@ async def test_run_one_hop_tests_with_runner_parameters(
 #     check=False, encoding=None, errors=None, text=None, env=None,
 #     universal_newlines=None, **other_popen_kwargs
 # )
-@pytest.mark.skip("Not yet fully implemented")
-def test_one_hop_cli():
-    # command: List = ["python", "-m", "one_hop_test_runner.__init__"]
-    # args: Dict = SAMPLE_TEST_INPUT_1.copy()
-    # args["components"] = "arax,molepro"
-    # [command.extend([f"--{flag}", value]) for flag, value in args.items()]
-    # results = check_output(["dir"])
-    # results = check_output([
-    #     "python", "-m", "venv", "--clear", "test_venv", ";",
-    #     ".", "test_venv/bin/activate"
-    # ])
-    subprocess.run("one_hop_test_runner", stdout=stdout, shell=True, cwd=SCRIPTS_DIR)
+# @pytest.mark.skip("Not yet fully implemented")
+# def test_one_hop_cli():
+#     # command: List = ["python", "-m", "one_hop_test_runner.__init__"]
+#     # args: Dict = SAMPLE_TEST_INPUT_1.copy()
+#     # args["components"] = "arax,molepro"
+#     # [command.extend([f"--{flag}", value]) for flag, value in args.items()]
+#     # results = check_output(["dir"])
+#     # results = check_output([
+#     #     "python", "-m", "venv", "--clear", "test_venv", ";",
+#     #     ".", "test_venv/bin/activate"
+#     # ])
+#     subprocess.run("one_hop_test_runner", stdout=stdout, shell=True, cwd=SCRIPTS_DIR)

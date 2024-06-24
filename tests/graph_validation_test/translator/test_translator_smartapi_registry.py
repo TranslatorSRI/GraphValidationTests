@@ -21,6 +21,9 @@ from graph_validation_tests.translator.registry import (
 )
 
 import logging
+
+from tests import FULL_TEST
+
 logger = logging.getLogger(__name__)
 
 
@@ -476,7 +479,8 @@ def test_validate_testable_resource(index: int, service: Dict, outcome: bool, ur
         assert not resource_metadata
 
 
-@pytest.mark.skip(
+@pytest.mark.skipif(
+    not FULL_TEST,
     reason="These tests often work fine with fresh data, " +
            "but fail later due to changes in online resources"
 )
