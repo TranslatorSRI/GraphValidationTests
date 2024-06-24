@@ -7,9 +7,9 @@ anyio==4.4.0 ; python_version >= "3.9" and python_version < "3.12" \
 attrs==23.2.0 ; python_version >= "3.9" and python_version < "3.12" \
     --hash=sha256:935dc3b529c262f6cf76e50877d35a4bd3c1de194fd41f47a2b7ae8f19971f30 \
     --hash=sha256:99b87a485a5820b23b879f04c2305b44b951b502fd64be915879d77a7e8fc6f1
-bioregistry==0.11.9 ; python_version >= "3.9" and python_version < "3.12" \
-    --hash=sha256:a89b88121759586fd599204d06bbbc453de9b134f8e7f0a86732c0b537022da5 \
-    --hash=sha256:b46462ab37faceaab3493f006ec3bcc51f07401676aa90101a67247282c0ae48
+bioregistry==0.11.10 ; python_version >= "3.9" and python_version < "3.12" \
+    --hash=sha256:0af02ca586024f3791364dae2c04e03156e01df9b6d7eb7f3cb6be5682a40a2d \
+    --hash=sha256:d3e155ba38d88f5e4a84a2d337c33109f3434f6b2e64a285eba14817ed5c4492
 bmt==1.4.3 ; python_version >= "3.9" and python_version < "3.12" \
     --hash=sha256:96bb9a6a6b979e46432282ac52b96ae530b52cd31a6d650f9faadc2b56424be9 \
     --hash=sha256:a5cbae7918e481eba985fee2de01b7c4d5c6b8d5590b587f52852ad6e0e2ffff

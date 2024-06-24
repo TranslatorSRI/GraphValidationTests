@@ -2,6 +2,10 @@
 
 These notes are only of interest to developers maintaining this repository.
 
+## Unit Tests
+
+Several of the unit tests do attempt to run the TestRunners against active Translator components. Such tests may occasionally fail due to changes in the target components, or may be much longer running. For both reasons, the FULL_TEST environment variable needs to be set to '1' (== 'True') to run all such tests (but has a default value of '0' == 'False'). This ensures that these 'exhaustive' tests are not attempted in CI (i.e. in GitHub Action) environments.
+
 ## Maintaining Dependencies
 
 This project uses the [poetry dependency management](https://python-poetry.org) tool to orchestrate its installation and dependencies. As such, new or revised Python module dependencies are curated within the **pyproject.toml** file.
@@ -24,7 +28,7 @@ Steps to properly issue a new project release:
 
 1. Run the unit test suite to ensure that nothing fails. Iterate to fix failures (in the code or in terms of revised unit tests to reflect fresh code designs)
 2. Document release changes in the **CHANGELOG.md**
-3. Update the **`[Tool Poetry]version =`** field in the **pyprojects.yaml**, e.g. "0.1.4"
+3. Update the **`[Tool Poetry]version =`** field in the **pyprojects.yaml**, e.g. "0.1.5"
 4. Run **`poetry update`** (preferably, within a **`poetry shell`**)
 5. The project pip **requirements.txt** file snapshot of dependencies should also be updated at this point (type **`$ poetry export --output requirements.txt`**, assuming that the [proper poetry export plugin is installed](https://python-poetry.org/docs/pre-commit-hooks#poetry-export)). This may facilitate module deployment within environments that prefer to use pip rather than poetry to manage their deployments.
 6. Commit or pull request merge all files (including the **poetry.lock** file) to the local **main** branch.

@@ -2,7 +2,10 @@
 
 # 0.1.5
 
-- upgrade to reasoner-validator 4.2.4 with enhanced OneHop validation of fuzzy matching of identifiers against Node Normalization.
+- Upgrade to reasoner-validator 4.2.4 with enhanced OneHop validation of fuzzy matching of identifiers against Node Normalization.
+- Added the **`GraphValidationTests.test_case_processor()`** function to directly validate a previously run TRAPI Response previously. This is mainly of utility to the StandardsValidationTestRunner for now (OneHopTestRunner isn't yet fully ported to run this way). Note that creation of this mode of operation triggered a significant internal DRY code refactor of the test runner code (for which, unit tests still successfully pass)
+- FULL_TEST gatekeeper environment variable now suppresses 'real asset' related tests.
+- Cleaned up a bit of technical debt
 
 # 0.1.4
 
